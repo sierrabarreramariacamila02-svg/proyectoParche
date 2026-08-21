@@ -1,6 +1,9 @@
-const express = require('express');
-const cors = require('cors');
-require('dotenv').config();
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+
+// Configurar variables de entorno
+dotenv.config();
 
 // 1. Inicializar Express primero
 const app = express();
@@ -10,19 +13,19 @@ app.use(cors());
 app.use(express.json());
 
 // 3. Importar todas las rutas
-const authRoutes = require('./routes/auth');
-const recuperarRoutes = require('./routes/recuperar');
-const usuarioRoutes = require('./routes/usuario');
-const productoRoutes = require('./routes/producto');
-const pedidoRoutes = require('./routes/pedido');
-const detallePedidoRoutes = require('./routes/detallePedido');
-const cocinaRoutes = require('./routes/cocina');
-const domiciliarioRoutes = require('./routes/domiciliario');
-const meseroRoutes = require('./routes/mesero');
-const calificacionRoutes = require('./routes/calificacion');
-const mensajesRoutes = require('./routes/mensajes');
+import authRoutes from './routes/auth.js';
+import recuperarRoutes from './routes/recuperar.js';
+import usuarioRoutes from './routes/usuario.js';
+import productoRoutes from './routes/producto.js';
+import pedidoRoutes from './routes/pedido.js';
+import detallePedidoRoutes from './routes/detallePedido.js';
+import cocinaRoutes from './routes/cocina.js';
+import domiciliarioRoutes from './routes/domiciliario.js';
+import meseroRoutes from './routes/mesero.js';
+import calificacionRoutes from './routes/calificacion.js';
+import mensajesRoutes from './routes/mensajes.js';
 
-// 4. Enlazar middlewares de rutas (después de importar y configurar app)
+// 4. Enlazar middlewares de rutas
 app.use('/api/auth', authRoutes);
 app.use('/api/recuperar', recuperarRoutes);
 app.use('/api/usuarios', usuarioRoutes);
