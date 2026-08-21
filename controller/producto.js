@@ -1,5 +1,6 @@
 const productoModel = require('../models/producto');
 const { exito, error } = require('../utils/respuestas');
+const { upload } = require('../config/cloudinary');
 
 const listar = async (req, res) => {
   try {
