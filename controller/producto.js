@@ -31,9 +31,13 @@ const obtenerPorId = async (req, res) => {
 const crear = async (req, res) => {
   try {
     const { nombre, precio, categoria } = req.body;
-    if (!nombre || precio === undefined || !categoria) {
-      return error(res, 'nombre, precio y categoria son obligatorios', 400);
+    if (!nombre || precio === undefined || !categoria || !imagen_url) {
+      return error(res, 'nombre, precio, categoria e imagen_url son obligatorios', 400);
     }
+
+   //cloudinary almacena la URL segura en req.file.path
+        const imagen_url = req.file ? req.file.path : null;
+
     const producto = await productoModel.crearProducto(req.body);
     return exito(res, producto, 201);
   } catch (err) {
