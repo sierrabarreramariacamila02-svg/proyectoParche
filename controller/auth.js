@@ -1,6 +1,6 @@
 import usuarioModel from '../models/usuario.js';
 import { exito, error } from '../utils/respuestas.js';
-import bcrypt from 'bcrypt'; // o 'bcryptjs' según lo que uses en tu package.json
+import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
 export const login = async (req, res) => {
