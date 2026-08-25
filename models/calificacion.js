@@ -1,12 +1,12 @@
-const supabase = require('../config/supabase');
+import supabase from '../config/supabase.js';
 
-const crearCalificacion = async (calificacion) => {
+export const crearCalificacion = async (calificacion) => {
   const { data, error } = await supabase.from('calificacion').insert([calificacion]).select().single();
   if (error) throw error;
   return data;
 };
 
-const obtenerPorPedido = async (pedido_id) => {
+export const obtenerPorPedido = async (pedido_id) => {
   const { data, error } = await supabase
     .from('calificacion')
     .select('*')
@@ -16,7 +16,7 @@ const obtenerPorPedido = async (pedido_id) => {
   return data;
 };
 
-const listarPorUsuario = async (usuario_id) => {
+export const listarPorUsuario = async (usuario_id) => {
   const { data, error } = await supabase
     .from('calificacion')
     .select('*')
@@ -26,7 +26,7 @@ const listarPorUsuario = async (usuario_id) => {
   return data;
 };
 
-const promedioGeneral = async () => {
+export const promedioGeneral = async () => {
   const { data, error } = await supabase.from('calificacion').select('puntuacion');
   if (error) throw error;
   if (!data.length) return 0;
@@ -34,4 +34,9 @@ const promedioGeneral = async () => {
   return Number((suma / data.length).toFixed(2));
 };
 
-module.exports = { crearCalificacion, obtenerPorPedido, listarPorUsuario, promedioGeneral };
+export default {
+  crearCalificacion,
+  obtenerPorPedido,
+  listarPorUsuario,
+  promedioGeneral
+};

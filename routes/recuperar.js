@@ -1,8 +1,9 @@
-const express = require('express');
+import express from 'express';
+import recuperarController from '../controller/recuperar.js';
+
 const router = express.Router();
-const recuperarController = require('../controller/recuperar');
 
 router.post('/solicitar', recuperarController.solicitarRecuperacion);
 router.post('/restablecer', recuperarController.restablecerContrasena);
 
-module.exports = router;
+export default router;

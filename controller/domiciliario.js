@@ -1,7 +1,7 @@
-const domiciliarioModel = require('../models/domiciliario');
-const { exito, error } = require('../utils/respuestas');
+import domiciliarioModel from '../models/domiciliario.js';
+import { exito, error } from '../utils/respuestas.js';
 
-const listar = async (req, res) => {
+export const listar = async (req, res) => {
   try {
     const domiciliarios = await domiciliarioModel.listarDomiciliarios();
     return exito(res, domiciliarios);
@@ -10,7 +10,7 @@ const listar = async (req, res) => {
   }
 };
 
-const listarDisponibles = async (req, res) => {
+export const listarDisponibles = async (req, res) => {
   try {
     const domiciliarios = await domiciliarioModel.listarDisponibles();
     return exito(res, domiciliarios);
@@ -19,7 +19,7 @@ const listarDisponibles = async (req, res) => {
   }
 };
 
-const obtenerPorId = async (req, res) => {
+export const obtenerPorId = async (req, res) => {
   try {
     const domiciliario = await domiciliarioModel.obtenerPorId(req.params.id);
     return exito(res, domiciliario);
@@ -28,7 +28,7 @@ const obtenerPorId = async (req, res) => {
   }
 };
 
-const crear = async (req, res) => {
+export const crear = async (req, res) => {
   try {
     const domiciliario = await domiciliarioModel.crearDomiciliario(req.body);
     return exito(res, domiciliario, 201);
@@ -37,7 +37,7 @@ const crear = async (req, res) => {
   }
 };
 
-const actualizar = async (req, res) => {
+export const actualizar = async (req, res) => {
   try {
     const domiciliario = await domiciliarioModel.actualizarDomiciliario(req.params.id, req.body);
     return exito(res, domiciliario);
@@ -46,7 +46,7 @@ const actualizar = async (req, res) => {
   }
 };
 
-const cambiarDisponibilidad = async (req, res) => {
+export const cambiarDisponibilidad = async (req, res) => {
   try {
     const { disponible } = req.body;
     const domiciliario = await domiciliarioModel.cambiarDisponibilidad(req.params.id, disponible);
@@ -56,4 +56,11 @@ const cambiarDisponibilidad = async (req, res) => {
   }
 };
 
-module.exports = { listar, listarDisponibles, obtenerPorId, crear, actualizar, cambiarDisponibilidad };
+export default {
+  listar,
+  listarDisponibles,
+  obtenerPorId,
+  crear,
+  actualizar,
+  cambiarDisponibilidad
+};

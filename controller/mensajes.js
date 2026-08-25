@@ -1,7 +1,7 @@
-const mensajesModel = require('../models/mensajes');
-const { exito, error } = require('../utils/respuestas');
+import mensajesModel from '../models/mensajes.js';
+import { exito, error } from '../utils/respuestas.js';
 
-const enviar = async (req, res) => {
+export const enviar = async (req, res) => {
   try {
     const { pedido_id, emisor_id, receptor_id, contenido } = req.body;
     if (!pedido_id || !emisor_id || !contenido) {
@@ -20,7 +20,7 @@ const enviar = async (req, res) => {
   }
 };
 
-const listarPorPedido = async (req, res) => {
+export const listarPorPedido = async (req, res) => {
   try {
     const mensajes = await mensajesModel.listarPorPedido(req.params.pedido_id);
     return exito(res, mensajes);
@@ -29,7 +29,7 @@ const listarPorPedido = async (req, res) => {
   }
 };
 
-const marcarLeido = async (req, res) => {
+export const marcarLeido = async (req, res) => {
   try {
     const mensaje = await mensajesModel.marcarLeido(req.params.id);
     return exito(res, mensaje);
@@ -38,4 +38,8 @@ const marcarLeido = async (req, res) => {
   }
 };
 
-module.exports = { enviar, listarPorPedido, marcarLeido };
+export default {
+  enviar,
+  listarPorPedido,
+  marcarLeido
+};

@@ -1,6 +1,6 @@
-const jwt = require('jsonwebtoken');
+import jwt from 'jsonwebtoken';
 
-const verificarToken = (req, res, next) => {
+export const verificarToken = (req, res, next) => {
   const header = req.headers['authorization'];
   const token = header && header.startsWith('Bearer ') ? header.split(' ')[1] : header;
 
@@ -17,7 +17,7 @@ const verificarToken = (req, res, next) => {
   }
 };
 
-const verificarRol = (...rolesPermitidos) => {
+export const verificarRol = (...rolesPermitidos) => {
   return (req, res, next) => {
     if (!req.usuario) {
       return res.status(401).json({ mensaje: 'No autenticado' });
@@ -29,4 +29,7 @@ const verificarRol = (...rolesPermitidos) => {
   };
 };
 
-module.exports = { verificarToken, verificarRol };
+export default {
+  verificarToken,
+  verificarRol
+};

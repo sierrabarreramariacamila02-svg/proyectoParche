@@ -1,8 +1,9 @@
-const express = require('express');
+import express from 'express';
+import productoController from '../controller/producto.js';
+import { verificarToken, verificarRol } from '../middlewares/auth.js';
+import upload from '../config/cloudinary.js';
+
 const router = express.Router();
-const productoController = require('../controller/producto');
-const { verificarToken, verificarRol } = require('../middlewares/auth');
-const upload = require('../config/cloudinary');
 
 router.get('/', productoController.listar);
 router.get('/disponibles', productoController.listarDisponibles);
@@ -11,4 +12,4 @@ router.post('/', verificarToken, verificarRol('admin'), upload.single('imagen'),
 router.put('/:id', verificarToken, verificarRol('admin'), upload.single('imagen'), productoController.actualizar);
 router.delete('/:id', verificarToken, verificarRol('admin'), productoController.eliminar);
 
-module.exports = router;
+export default router;

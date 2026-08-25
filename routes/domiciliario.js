@@ -1,7 +1,8 @@
-const express = require('express');
+import express from 'express';
+import domiciliarioController from '../controller/domiciliario.js';
+import { verificarToken, verificarRol } from '../middlewares/auth.js';
+
 const router = express.Router();
-const domiciliarioController = require('../controller/domiciliario');
-const { verificarToken, verificarRol } = require('../middlewares/auth');
 
 router.get('/', verificarToken, verificarRol('admin'), domiciliarioController.listar);
 router.get('/disponibles', verificarToken, domiciliarioController.listarDisponibles);
@@ -10,4 +11,4 @@ router.post('/', verificarToken, verificarRol('admin'), domiciliarioController.c
 router.put('/:id', verificarToken, domiciliarioController.actualizar);
 router.patch('/:id/disponibilidad', verificarToken, domiciliarioController.cambiarDisponibilidad);
 
-module.exports = router;
+export default router;

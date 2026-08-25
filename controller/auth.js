@@ -1,9 +1,9 @@
-const usuarioModel = require('../models/usuario');
-const { exito, error } = require('../utils/respuestas');
-const bcrypt = require('bcrypt'); // o bcryptjs según tengas en tu package.json
-const jwt = require('jsonwebtoken');
+import usuarioModel from '../models/usuario.js';
+import { exito, error } from '../utils/respuestas.js';
+import bcrypt from 'bcrypt'; // o 'bcryptjs' según lo que uses en tu package.json
+import jwt from 'jsonwebtoken';
 
-const login = async (req, res) => {
+export const login = async (req, res) => {
   try {
     const { correo, contrasena } = req.body;
 
@@ -44,6 +44,6 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = {
+export default {
   login
 };

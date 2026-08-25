@@ -1,31 +1,30 @@
-const calificacionModel = require('../models/calificacion');
-const {exito, error} = require('../utils/respuestas');
+import calificacionModel from '../models/calificacion.js';
+import { exito, error } from '../utils/respuestas.js';
 
-const crearCalificacion = async (req, res) => {
-try {
-
-const {pedido_id, usuario_id, puntuacion, comentario} = req.body;
-if(!pedido_id || !usuario_id || !puntuacion || !comentario){
-  return error(res, 'pedido, usuario y puntuacion son requeridos', 400);
-}
-if (puntuacion < 1 || puntuacion > 5) {
-  return error(res, 'la puntuación debe estar entre 1 y 5', 400);
-}
-const calificacion = await calificacionModel.crearCalificacion({
-  pedido_id,
-  usuario_id,
-  puntuacion,
-  comentario
-});
-return exito(res, calificacion, 201);
+export const crearCalificacion = async (req, res) => {
+  try {
+    const { pedido_id, usuario_id, puntuacion, comentario } = req.body;
+    if (!pedido_id || !usuario_id || !puntuacion || !comentario) {
+      return error(res, 'pedido, usuario y puntuacion son requeridos', 400);
+    }
+    if (puntuacion < 1 || puntuacion > 5) {
+      return error(res, 'la puntuación debe estar entre 1 y 5', 400);
+    }
+    const calificacion = await calificacionModel.crearCalificacion({
+      pedido_id,
+      usuario_id,
+      puntuacion,
+      comentario
+    });
+    return exito(res, calificacion, 201);
   } catch (err) {
     return error(res, 'Error al crear calificación', 500, err.message);
   }
 };
 
-const obtenerPorPedido = async (req, res) => {
-  try{
-    const {pedido_id} = req.params;
+export const obtenerPorPedido = async (req, res) => {
+  try {
+    const { pedido_id } = req.params;
     const calificaciones = await calificacionModel.obtenerPorPedido(pedido_id);
     return exito(res, calificaciones, 200);
   } catch (err) {
@@ -33,7 +32,7 @@ const obtenerPorPedido = async (req, res) => {
   }
 };
 
-const listarPorUsuario = async (req, res) => {
+export const listarPorUsuario = async (req, res) => {
   try {
     const calificaciones = await calificacionModel.listarPorUsuario(req.params.usuario_id);
     return exito(res, calificaciones);
@@ -42,7 +41,7 @@ const listarPorUsuario = async (req, res) => {
   }
 };
 
-const promedioGeneral = async (req, res) => {
+export const promedioGeneral = async (req, res) => {
   try {
     const promedio = await calificacionModel.promedioGeneral();
     return exito(res, { promedio });
@@ -51,4 +50,9 @@ const promedioGeneral = async (req, res) => {
   }
 };
 
-module.exports = { crearCalificacion, obtenerPorPedido, listarPorUsuario, promedioGeneral };
+export default {
+  crearCalificacion,
+  obtenerPorPedido,
+  listarPorUsuario,
+  promedioGeneral
+};

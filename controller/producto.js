@@ -1,8 +1,8 @@
-const productoModel = require('../models/producto');
-const { exito, error } = require('../utils/respuestas');
-const { upload } = require('../config/cloudinary');
+import productoModel from '../models/producto.js';
+import { exito, error } from '../utils/respuestas.js';
+import { upload } from '../config/cloudinary.js';
 
-const listar = async (req, res) => {
+export const listar = async (req, res) => {
   try {
     const productos = await productoModel.listarProductos();
     return exito(res, productos);
@@ -11,7 +11,7 @@ const listar = async (req, res) => {
   }
 };
 
-const listarDisponibles = async (req, res) => {
+export const listarDisponibles = async (req, res) => {
   try {
     const productos = await productoModel.listarDisponibles();
     return exito(res, productos);
@@ -20,7 +20,7 @@ const listarDisponibles = async (req, res) => {
   }
 };
 
-const obtenerPorId = async (req, res) => {
+export const obtenerPorId = async (req, res) => {
   try {
     const producto = await productoModel.obtenerPorId(req.params.id);
     return exito(res, producto);
@@ -29,24 +29,28 @@ const obtenerPorId = async (req, res) => {
   }
 };
 
-const crear = async (req, res) => {
+export const crear = async (req, res) => {
   try {
+    // Cloudinary almacena la URL segura en req.file.path
+    const imagen_url = req.file ? req.file.path : null;
     const { nombre, precio, categoria } = req.body;
+
     if (!nombre || precio === undefined || !categoria || !imagen_url) {
       return error(res, 'nombre, precio, categoria e imagen_url son obligatorios', 400);
     }
 
-   //cloudinary almacena la URL segura en req.file.path
-        const imagen_url = req.file ? req.file.path : null;
-
-    const producto = await productoModel.crearProducto(req.body);
+    const producto = await productoModel.crearProducto({
+      ...req.body,
+      imagen_url
+    });
+    
     return exito(res, producto, 201);
   } catch (err) {
     return error(res, 'Error al crear producto', 500, err.message);
   }
 };
 
-const actualizar = async (req, res) => {
+export const actualizar = async (req, res) => {
   try {
     const producto = await productoModel.actualizarProducto(req.params.id, req.body);
     return exito(res, producto);
@@ -55,7 +59,7 @@ const actualizar = async (req, res) => {
   }
 };
 
-const eliminar = async (req, res) => {
+export const eliminar = async (req, res) => {
   try {
     await productoModel.eliminarProducto(req.params.id);
     return exito(res, { mensaje: 'Producto eliminado' });
@@ -64,4 +68,11 @@ const eliminar = async (req, res) => {
   }
 };
 
-module.exports = { listar, listarDisponibles, obtenerPorId, crear, actualizar, eliminar };
+export default {
+  listar,
+  listarDisponibles,
+  obtenerPorId,
+  crear,
+  actualizar,
+  eliminar
+};

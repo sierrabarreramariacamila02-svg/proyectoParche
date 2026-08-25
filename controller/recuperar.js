@@ -1,10 +1,10 @@
-const usuarioModel = require('../models/usuario');
-const { exito, error } = require('../utils/respuestas');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+import usuarioModel from '../models/usuario.js';
+import { exito, error } from '../utils/respuestas.js';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 // Solicitar token/código para restablecer contraseña
-const solicitarRecuperacion = async (req, res) => {
+export const solicitarRecuperacion = async (req, res) => {
   try {
     const { correo } = req.body;
 
@@ -34,7 +34,7 @@ const solicitarRecuperacion = async (req, res) => {
 };
 
 // Cambiar la contraseña con el token validado
-const restablecerContrasena = async (req, res) => {
+export const restablecerContrasena = async (req, res) => {
   try {
     const { token, nuevaContrasena } = req.body;
 
@@ -61,7 +61,7 @@ const restablecerContrasena = async (req, res) => {
   }
 };
 
-module.exports = {
+export default {
   solicitarRecuperacion,
   restablecerContrasena
 };

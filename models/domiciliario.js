@@ -1,30 +1,30 @@
-const supabase = require('../config/supabase');
+import supabase from '../config/supabase.js';
 
-const listarDomiciliarios = async () => {
+export const listarDomiciliarios = async () => {
   const { data, error } = await supabase.from('domiciliario').select('*');
   if (error) throw error;
   return data;
 };
 
-const listarDisponibles = async () => {
+export const listarDisponibles = async () => {
   const { data, error } = await supabase.from('domiciliario').select('*').eq('disponible', true);
   if (error) throw error;
   return data;
 };
 
-const obtenerPorId = async (id) => {
+export const obtenerPorId = async (id) => {
   const { data, error } = await supabase.from('domiciliario').select('*').eq('id', id).single();
   if (error) throw error;
   return data;
 };
 
-const crearDomiciliario = async (domiciliario) => {
+export const crearDomiciliario = async (domiciliario) => {
   const { data, error } = await supabase.from('domiciliario').insert([domiciliario]).select().single();
   if (error) throw error;
   return data;
 };
 
-const actualizarDomiciliario = async (id, cambios) => {
+export const actualizarDomiciliario = async (id, cambios) => {
   const { data, error } = await supabase
     .from('domiciliario')
     .update(cambios)
@@ -35,7 +35,7 @@ const actualizarDomiciliario = async (id, cambios) => {
   return data;
 };
 
-const cambiarDisponibilidad = async (id, disponible) => {
+export const cambiarDisponibilidad = async (id, disponible) => {
   const { data, error } = await supabase
     .from('domiciliario')
     .update({ disponible })
@@ -46,7 +46,7 @@ const cambiarDisponibilidad = async (id, disponible) => {
   return data;
 };
 
-module.exports = {
+export default {
   listarDomiciliarios,
   listarDisponibles,
   obtenerPorId,

@@ -1,12 +1,12 @@
-const supabase = require('../config/supabase');
+import supabase from '../config/supabase.js';
 
-const listarProductos = async () => {
+export const listarProductos = async () => {
   const { data, error } = await supabase.from('producto').select('*').order('nombre');
   if (error) throw error;
   return data;
 };
 
-const listarDisponibles = async () => {
+export const listarDisponibles = async () => {
   const { data, error } = await supabase
     .from('producto')
     .select('*')
@@ -16,31 +16,31 @@ const listarDisponibles = async () => {
   return data;
 };
 
-const obtenerPorId = async (id) => {
+export const obtenerPorId = async (id) => {
   const { data, error } = await supabase.from('producto').select('*').eq('id', id).single();
   if (error) throw error;
   return data;
 };
 
-const crearProducto = async (producto) => {
+export const crearProducto = async (producto) => {
   const { data, error } = await supabase.from('producto').insert([producto]).select().single();
   if (error) throw error;
   return data;
 };
 
-const actualizarProducto = async (id, cambios) => {
+export const actualizarProducto = async (id, cambios) => {
   const { data, error } = await supabase.from('producto').update(cambios).eq('id', id).select().single();
   if (error) throw error;
   return data;
 };
 
-const eliminarProducto = async (id) => {
+export const eliminarProducto = async (id) => {
   const { error } = await supabase.from('producto').delete().eq('id', id);
   if (error) throw error;
   return true;
 };
 
-module.exports = {
+export default {
   listarProductos,
   listarDisponibles,
   obtenerPorId,

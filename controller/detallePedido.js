@@ -1,7 +1,7 @@
-const detalleModel = require('../models/detallePedido');
-const { exito, error } = require('../utils/respuestas');
+import detalleModel from '../models/detallePedido.js';
+import { exito, error } from '../utils/respuestas.js';
 
-const listarPorPedido = async (req, res) => {
+export const listarPorPedido = async (req, res) => {
   try {
     const items = await detalleModel.listarPorPedido(req.params.pedido_id);
     return exito(res, items);
@@ -10,7 +10,7 @@ const listarPorPedido = async (req, res) => {
   }
 };
 
-const agregarItem = async (req, res) => {
+export const agregarItem = async (req, res) => {
   try {
     const item = await detalleModel.agregarItem(req.body);
     return exito(res, item, 201);
@@ -19,7 +19,7 @@ const agregarItem = async (req, res) => {
   }
 };
 
-const actualizarItem = async (req, res) => {
+export const actualizarItem = async (req, res) => {
   try {
     const item = await detalleModel.actualizarItem(req.params.id, req.body);
     return exito(res, item);
@@ -28,7 +28,7 @@ const actualizarItem = async (req, res) => {
   }
 };
 
-const eliminarItem = async (req, res) => {
+export const eliminarItem = async (req, res) => {
   try {
     await detalleModel.eliminarItem(req.params.id);
     return exito(res, { mensaje: 'Ítem eliminado' });
@@ -37,4 +37,9 @@ const eliminarItem = async (req, res) => {
   }
 };
 
-module.exports = { listarPorPedido, agregarItem, actualizarItem, eliminarItem };
+export default {
+  listarPorPedido,
+  agregarItem,
+  actualizarItem,
+  eliminarItem
+};

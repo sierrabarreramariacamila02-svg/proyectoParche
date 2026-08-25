@@ -1,7 +1,7 @@
-const cocinaModel = require('../models/cocina');
-const { exito, error } = require('../utils/respuestas');
+import cocinaModel from '../models/cocina.js';
+import { exito, error } from '../utils/respuestas.js';
 
-const listarPendientes = async (req, res) => {
+export const listarPendientes = async (req, res) => {
   try {
     const pedidos = await cocinaModel.listarPedidosPendientes();
     return exito(res, pedidos);
@@ -10,7 +10,7 @@ const listarPendientes = async (req, res) => {
   }
 };
 
-const iniciarPreparacion = async (req, res) => {
+export const iniciarPreparacion = async (req, res) => {
   try {
     const pedido = await cocinaModel.marcarEnPreparacion(req.params.pedido_id);
     return exito(res, pedido);
@@ -19,7 +19,7 @@ const iniciarPreparacion = async (req, res) => {
   }
 };
 
-const marcarListo = async (req, res) => {
+export const marcarListo = async (req, res) => {
   try {
     const pedido = await cocinaModel.marcarListo(req.params.pedido_id);
     return exito(res, pedido);
@@ -28,4 +28,8 @@ const marcarListo = async (req, res) => {
   }
 };
 
-module.exports = { listarPendientes, iniciarPreparacion, marcarListo };
+export default {
+  listarPendientes,
+  iniciarPreparacion,
+  marcarListo
+};
