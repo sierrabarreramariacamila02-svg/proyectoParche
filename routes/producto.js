@@ -1,8 +1,7 @@
 import express from 'express';
 import productoController from '../controller/producto.js';
 import { verificarToken, verificarRol } from '../middlewares/auth.js';
-import upload from '../config/cloudinary.js';
-
+import { upload } from '../config/cloudinary.js';
 const router = express.Router();
 
 router.get('/', productoController.listar);
