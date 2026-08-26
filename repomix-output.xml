@@ -1,0 +1,1821 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+config/
+  cloudinary.js
+  supabase.js
+controller/
+  auth.js
+  calificacion.js
+  cocina.js
+  detallePedido.js
+  domiciliario.js
+  mensajes.js
+  mesero.js
+  pedido.js
+  producto.js
+  recuperar.js
+  usuario.js
+middlewares/
+  auth.js
+models/
+  calificacion.js
+  cocina.js
+  detallePedido.js
+  domiciliario.js
+  mensajes.js
+  mesero.js
+  pedido.js
+  producto.js
+  usuario.js
+routes/
+  auth.js
+  calificacion.js
+  cocina.js
+  detallePedido.js
+  domiciliario.js
+  mensajes.js
+  mesero.js
+  pedido.js
+  producto.js
+  recuperar.js
+  usuario.js
+utils/
+  respuestas.js
+  sendEmail.js
+.env.example
+.gitignore
+index.js
+package.json
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="config/cloudinary.js">
+import { v2 as cloudinary } from 'cloudinary';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
+import multer from 'multer';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'heladeria/helados',
+    resource_type: 'auto',
+    allowed_formats: ['jpg', 'png', 'jpeg', 'avif', 'webp', 'mp4', 'avil']
+  }
+});
+
+export const upload = multer({
+  storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024
+  } // 10 MB
+});
+export { cloudinary };
+</file>
+
+<file path="controller/calificacion.js">
+import calificacionModel from '../models/calificacion.js';
+import { exito, error } from '../utils/respuestas.js';
+
+export const crearCalificacion = async (req, res) => {
+  try {
+    const { pedido_id, usuario_id, puntuacion, comentario } = req.body;
+    if (!pedido_id || !usuario_id || !puntuacion || !comentario) {
+      return error(res, 'pedido, usuario y puntuacion son requeridos', 400);
+    }
+    if (puntuacion < 1 || puntuacion > 5) {
+      return error(res, 'la puntuación debe estar entre 1 y 5', 400);
+    }
+    const calificacion = await calificacionModel.crearCalificacion({
+      pedido_id,
+      usuario_id,
+      puntuacion,
+      comentario
+    });
+    return exito(res, calificacion, 201);
+  } catch (err) {
+    return error(res, 'Error al crear calificación', 500, err.message);
+  }
+};
+
+export const obtenerPorPedido = async (req, res) => {
+  try {
+    const { pedido_id } = req.params;
+    const calificaciones = await calificacionModel.obtenerPorPedido(pedido_id);
+    return exito(res, calificaciones, 200);
+  } catch (err) {
+    return error(res, 'Error al obtener calificaciones', 500, err.message);
+  }
+};
+
+export const listarPorUsuario = async (req, res) => {
+  try {
+    const calificaciones = await calificacionModel.listarPorUsuario(req.params.usuario_id);
+    return exito(res, calificaciones);
+  } catch (err) {
+    return error(res, 'Error al listar calificaciones', 500, err.message);
+  }
+};
+
+export const promedioGeneral = async (req, res) => {
+  try {
+    const promedio = await calificacionModel.promedioGeneral();
+    return exito(res, { promedio });
+  } catch (err) {
+    return error(res, 'Error al calcular promedio', 500, err.message);
+  }
+};
+
+export default {
+  crearCalificacion,
+  obtenerPorPedido,
+  listarPorUsuario,
+  promedioGeneral
+};
+</file>
+
+<file path="controller/cocina.js">
+import cocinaModel from '../models/cocina.js';
+import { exito, error } from '../utils/respuestas.js';
+
+export const listarPendientes = async (req, res) => {
+  try {
+    const pedidos = await cocinaModel.listarPedidosPendientes();
+    return exito(res, pedidos);
+  } catch (err) {
+    return error(res, 'Error al listar pedidos pendientes', 500, err.message);
+  }
+};
+
+export const iniciarPreparacion = async (req, res) => {
+  try {
+    const pedido = await cocinaModel.marcarEnPreparacion(req.params.pedido_id);
+    return exito(res, pedido);
+  } catch (err) {
+    return error(res, 'Error al iniciar preparación', 500, err.message);
+  }
+};
+
+export const marcarListo = async (req, res) => {
+  try {
+    const pedido = await cocinaModel.marcarListo(req.params.pedido_id);
+    return exito(res, pedido);
+  } catch (err) {
+    return error(res, 'Error al marcar pedido como listo', 500, err.message);
+  }
+};
+
+export default {
+  listarPendientes,
+  iniciarPreparacion,
+  marcarListo
+};
+</file>
+
+<file path="controller/detallePedido.js">
+import detalleModel from '../models/detallePedido.js';
+import { exito, error } from '../utils/respuestas.js';
+
+export const listarPorPedido = async (req, res) => {
+  try {
+    const items = await detalleModel.listarPorPedido(req.params.pedido_id);
+    return exito(res, items);
+  } catch (err) {
+    return error(res, 'Error al listar detalle del pedido', 500, err.message);
+  }
+};
+
+export const agregarItem = async (req, res) => {
+  try {
+    const item = await detalleModel.agregarItem(req.body);
+    return exito(res, item, 201);
+  } catch (err) {
+    return error(res, 'Error al agregar ítem', 500, err.message);
+  }
+};
+
+export const actualizarItem = async (req, res) => {
+  try {
+    const item = await detalleModel.actualizarItem(req.params.id, req.body);
+    return exito(res, item);
+  } catch (err) {
+    return error(res, 'Error al actualizar ítem', 500, err.message);
+  }
+};
+
+export const eliminarItem = async (req, res) => {
+  try {
+    await detalleModel.eliminarItem(req.params.id);
+    return exito(res, { mensaje: 'Ítem eliminado' });
+  } catch (err) {
+    return error(res, 'Error al eliminar ítem', 500, err.message);
+  }
+};
+
+export default {
+  listarPorPedido,
+  agregarItem,
+  actualizarItem,
+  eliminarItem
+};
+</file>
+
+<file path="controller/domiciliario.js">
+import domiciliarioModel from '../models/domiciliario.js';
+import { exito, error } from '../utils/respuestas.js';
+
+export const listar = async (req, res) => {
+  try {
+    const domiciliarios = await domiciliarioModel.listarDomiciliarios();
+    return exito(res, domiciliarios);
+  } catch (err) {
+    return error(res, 'Error al listar domiciliarios', 500, err.message);
+  }
+};
+
+export const listarDisponibles = async (req, res) => {
+  try {
+    const domiciliarios = await domiciliarioModel.listarDisponibles();
+    return exito(res, domiciliarios);
+  } catch (err) {
+    return error(res, 'Error al listar domiciliarios disponibles', 500, err.message);
+  }
+};
+
+export const obtenerPorId = async (req, res) => {
+  try {
+    const domiciliario = await domiciliarioModel.obtenerPorId(req.params.id);
+    return exito(res, domiciliario);
+  } catch (err) {
+    return error(res, 'Domiciliario no encontrado', 404, err.message);
+  }
+};
+
+export const crear = async (req, res) => {
+  try {
+    const domiciliario = await domiciliarioModel.crearDomiciliario(req.body);
+    return exito(res, domiciliario, 201);
+  } catch (err) {
+    return error(res, 'Error al crear domiciliario', 500, err.message);
+  }
+};
+
+export const actualizar = async (req, res) => {
+  try {
+    const domiciliario = await domiciliarioModel.actualizarDomiciliario(req.params.id, req.body);
+    return exito(res, domiciliario);
+  } catch (err) {
+    return error(res, 'Error al actualizar domiciliario', 500, err.message);
+  }
+};
+
+export const cambiarDisponibilidad = async (req, res) => {
+  try {
+    const { disponible } = req.body;
+    const domiciliario = await domiciliarioModel.cambiarDisponibilidad(req.params.id, disponible);
+    return exito(res, domiciliario);
+  } catch (err) {
+    return error(res, 'Error al cambiar disponibilidad', 500, err.message);
+  }
+};
+
+export default {
+  listar,
+  listarDisponibles,
+  obtenerPorId,
+  crear,
+  actualizar,
+  cambiarDisponibilidad
+};
+</file>
+
+<file path="controller/mensajes.js">
+import mensajesModel from '../models/mensajes.js';
+import { exito, error } from '../utils/respuestas.js';
+
+export const enviar = async (req, res) => {
+  try {
+    const { pedido_id, emisor_id, receptor_id, contenido } = req.body;
+    if (!pedido_id || !emisor_id || !contenido) {
+      return error(res, 'pedido_id, emisor_id y contenido son obligatorios', 400);
+    }
+    const mensaje = await mensajesModel.enviarMensaje({
+      pedido_id,
+      emisor_id,
+      receptor_id,
+      contenido,
+      leido: false
+    });
+    return exito(res, mensaje, 201);
+  } catch (err) {
+    return error(res, 'Error al enviar mensaje', 500, err.message);
+  }
+};
+
+export const listarPorPedido = async (req, res) => {
+  try {
+    const mensajes = await mensajesModel.listarPorPedido(req.params.pedido_id);
+    return exito(res, mensajes);
+  } catch (err) {
+    return error(res, 'Error al listar mensajes', 500, err.message);
+  }
+};
+
+export const marcarLeido = async (req, res) => {
+  try {
+    const mensaje = await mensajesModel.marcarLeido(req.params.id);
+    return exito(res, mensaje);
+  } catch (err) {
+    return error(res, 'Error al marcar mensaje como leído', 500, err.message);
+  }
+};
+
+export default {
+  enviar,
+  listarPorPedido,
+  marcarLeido
+};
+</file>
+
+<file path="controller/mesero.js">
+import meseroModel from '../models/mesero.js';
+import { exito, error } from '../utils/respuestas.js';
+
+export const listar = async (req, res) => {
+  try {
+    const meseros = await meseroModel.listarMeseros();
+    return exito(res, meseros);
+  } catch (err) {
+    return error(res, 'Error al listar meseros', 500, err.message);
+  }
+};
+
+export const obtenerPorId = async (req, res) => {
+  try {
+    const mesero = await meseroModel.obtenerPorId(req.params.id);
+    return exito(res, mesero);
+  } catch (err) {
+    return error(res, 'Mesero no encontrado', 404, err.message);
+  }
+};
+
+export const crear = async (req, res) => {
+  try {
+    const mesero = await meseroModel.crearMesero(req.body);
+    return exito(res, mesero, 201);
+  } catch (err) {
+    return error(res, 'Error al crear mesero', 500, err.message);
+  }
+};
+
+export const actualizar = async (req, res) => {
+  try {
+    const mesero = await meseroModel.actualizarMesero(req.params.id, req.body);
+    return exito(res, mesero);
+  } catch (err) {
+    return error(res, 'Error al actualizar mesero', 500, err.message);
+  }
+};
+
+export const eliminar = async (req, res) => {
+  try {
+    await meseroModel.eliminarMesero(req.params.id);
+    return exito(res, { mensaje: 'Mesero eliminado' });
+  } catch (err) {
+    return error(res, 'Error al eliminar mesero', 500, err.message);
+  }
+};
+
+export const crearPedidoEnMesa = async (req, res) => {
+  try {
+    const { mesero_id, mesa_numero, items } = req.body;
+    if (!items || items.length === 0) {
+      return error(res, 'El pedido debe tener al menos un producto', 400);
+    }
+    const pedido = await meseroModel.crearPedidoEnMesa(mesero_id, mesa_numero, items);
+    return exito(res, pedido, 201);
+  } catch (err) {
+    return error(res, 'Error al crear pedido en mesa', 500, err.message);
+  }
+};
+
+export default {
+  listar,
+  obtenerPorId,
+  crear,
+  actualizar,
+  eliminar,
+  crearPedidoEnMesa
+};
+</file>
+
+<file path="controller/pedido.js">
+import pedidoModel from '../models/pedido.js';
+import { exito, error } from '../utils/respuestas.js';
+
+export const crear = async (req, res) => {
+  try {
+    const { usuario_id, direccion_entrega, items } = req.body;
+    if (!items || items.length === 0) {
+      return error(res, 'El pedido debe tener al menos un producto', 400);
+    }
+    const pedido = await pedidoModel.crearPedido(usuario_id, direccion_entrega, items);
+    return exito(res, pedido, 201);
+  } catch (err) {
+    return error(res, 'Error al crear el pedido', 500, err.message);
+  }
+};
+
+export const obtenerPorId = async (req, res) => {
+  try {
+    const pedido = await pedidoModel.obtenerPedidoPorId(req.params.id);
+    return exito(res, pedido);
+  } catch (err) {
+    return error(res, 'Pedido no encontrado', 404, err.message);
+  }
+};
+
+export const listarPorUsuario = async (req, res) => {
+  try {
+    const pedidos = await pedidoModel.listarPedidosPorUsuario(req.params.usuario_id);
+    return exito(res, pedidos);
+  } catch (err) {
+    return error(res, 'Error al listar pedidos', 500, err.message);
+  }
+};
+
+export const listarPorEstado = async (req, res) => {
+  try {
+    const pedidos = await pedidoModel.listarPorEstado(req.params.estado);
+    return exito(res, pedidos);
+  } catch (err) {
+    return error(res, 'Error al listar pedidos', 500, err.message);
+  }
+};
+
+export const cambiarEstado = async (req, res) => {
+  try {
+    const { estado } = req.body;
+    const pedido = await pedidoModel.actualizarEstadoPedido(req.params.id, estado);
+    return exito(res, pedido);
+  } catch (err) {
+    return error(res, 'Error al actualizar estado', 400, err.message);
+  }
+};
+
+export const asignarDomiciliario = async (req, res) => {
+  try {
+    const { domiciliario_id } = req.body;
+    const pedido = await pedidoModel.asignarDomiciliario(req.params.id, domiciliario_id);
+    return exito(res, pedido);
+  } catch (err) {
+    return error(res, 'Error al asignar domiciliario', 500, err.message);
+  }
+};
+
+export default {
+  crear,
+  obtenerPorId,
+  listarPorUsuario,
+  listarPorEstado,
+  cambiarEstado,
+  asignarDomiciliario
+};
+</file>
+
+<file path="controller/usuario.js">
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import usuarioModel from '../models/usuario.js';
+import { exito, error } from '../utils/respuestas.js';
+
+export const registrar = async (req, res) => {
+  try {
+    const { nombre, email, password, telefono, direccion, rol } = req.body;
+
+    if (!nombre || !email || !password) {
+      return error(res, 'nombre, email y password son obligatorios', 400);
+    }
+
+    const existente = await usuarioModel.obtenerPorEmail(email);
+    if (existente) return error(res, 'Ese email ya está registrado', 409);
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const nuevoUsuario = await usuarioModel.crearUsuario({
+      nombre,
+      email,
+      password: passwordHash,
+      telefono,
+      direccion,
+      rol: rol || 'cliente' // cliente, admin, cocina, domiciliario, mesero
+    });
+
+    delete nuevoUsuario.password;
+    return exito(res, nuevoUsuario, 201);
+  } catch (err) {
+    return error(res, 'Error al registrar usuario', 500, err.message);
+  }
+};
+
+export const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) return error(res, 'email y password son obligatorios', 400);
+
+    const usuario = await usuarioModel.obtenerPorEmail(email);
+    if (!usuario) return error(res, 'Credenciales inválidas', 401);
+
+    const passwordValido = await bcrypt.compare(password, usuario.password);
+    if (!passwordValido) return error(res, 'Credenciales inválidas', 401);
+
+    const token = jwt.sign(
+      { id: usuario.id, email: usuario.email, rol: usuario.rol },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    delete usuario.password;
+    return exito(res, { usuario, token });
+  } catch (err) {
+    return error(res, 'Error al iniciar sesión', 500, err.message);
+  }
+};
+
+export const perfil = async (req, res) => {
+  try {
+    const usuario = await usuarioModel.obtenerPorId(req.usuario.id);
+    return exito(res, usuario);
+  } catch (err) {
+    return error(res, 'No se pudo obtener el perfil', 404, err.message);
+  }
+};
+
+export const listar = async (req, res) => {
+  try {
+    const usuarios = await usuarioModel.listarUsuarios();
+    return exito(res, usuarios);
+  } catch (err) {
+    return error(res, 'Error al listar usuarios', 500, err.message);
+  }
+};
+
+export const actualizar = async (req, res) => {
+  try {
+    const cambios = { ...req.body };
+    if (cambios.password) {
+      cambios.password = await bcrypt.hash(cambios.password, 10);
+    }
+    const usuario = await usuarioModel.actualizarUsuario(req.params.id, cambios);
+    delete usuario.password;
+    return exito(res, usuario);
+  } catch (err) {
+    return error(res, 'Error al actualizar usuario', 500, err.message);
+  }
+};
+
+export const eliminar = async (req, res) => {
+  try {
+    await usuarioModel.eliminarUsuario(req.params.id);
+    return exito(res, { mensaje: 'Usuario eliminado' });
+  } catch (err) {
+    return error(res, 'Error al eliminar usuario', 500, err.message);
+  }
+};
+
+export default {
+  registrar,
+  login,
+  perfil,
+  listar,
+  actualizar,
+  eliminar
+};
+</file>
+
+<file path="middlewares/auth.js">
+import jwt from 'jsonwebtoken';
+
+export const verificarToken = (req, res, next) => {
+  const header = req.headers['authorization'];
+  const token = header && header.startsWith('Bearer ') ? header.split(' ')[1] : header;
+
+  if (!token) {
+    return res.status(401).json({ mensaje: 'Token requerido' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.usuario = decoded;
+    next();
+  } catch (error) {
+    return res.status(403).json({ mensaje: 'Token inválido o expirado' });
+  }
+};
+
+export const verificarRol = (...rolesPermitidos) => {
+  return (req, res, next) => {
+    if (!req.usuario) {
+      return res.status(401).json({ mensaje: 'No autenticado' });
+    }
+    if (!rolesPermitidos.includes(req.usuario.rol)) {
+      return res.status(403).json({ mensaje: 'No tienes permisos para esta acción' });
+    }
+    next();
+  };
+};
+
+export default {
+  verificarToken,
+  verificarRol
+};
+</file>
+
+<file path="models/calificacion.js">
+import supabase from '../config/supabase.js';
+
+export const crearCalificacion = async (calificacion) => {
+  const { data, error } = await supabase.from('calificacion').insert([calificacion]).select().single();
+  if (error) throw error;
+  return data;
+};
+
+export const obtenerPorPedido = async (pedido_id) => {
+  const { data, error } = await supabase
+    .from('calificacion')
+    .select('*')
+    .eq('pedido_id', pedido_id)
+    .single();
+  if (error && error.code !== 'PGRST116') throw error;
+  return data;
+};
+
+export const listarPorUsuario = async (usuario_id) => {
+  const { data, error } = await supabase
+    .from('calificacion')
+    .select('*')
+    .eq('usuario_id', usuario_id)
+    .order('fecha', { ascending: false });
+  if (error) throw error;
+  return data;
+};
+
+export const promedioGeneral = async () => {
+  const { data, error } = await supabase.from('calificacion').select('puntuacion');
+  if (error) throw error;
+  if (!data.length) return 0;
+  const suma = data.reduce((acc, c) => acc + c.puntuacion, 0);
+  return Number((suma / data.length).toFixed(2));
+};
+
+export default {
+  crearCalificacion,
+  obtenerPorPedido,
+  listarPorUsuario,
+  promedioGeneral
+};
+</file>
+
+<file path="models/cocina.js">
+import supabase from '../config/supabase.js';
+
+// "Cocina" gestiona la cola de pedidos que debe preparar
+export const listarPedidosPendientes = async () => {
+  const { data, error } = await supabase
+    .from('pedido')
+    .select('*, detallePedido(*, producto(*))')
+    .in('estado', ['pendiente', 'en_preparacion'])
+    .order('fecha_creacion', { ascending: true });
+  if (error) throw error;
+  return data;
+};
+
+export const marcarEnPreparacion = async (pedido_id) => {
+  const { data, error } = await supabase
+    .from('pedido')
+    .update({ estado: 'en_preparacion' })
+    .eq('id', pedido_id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+};
+
+export const marcarListo = async (pedido_id) => {
+  const { data, error } = await supabase
+    .from('pedido')
+    .update({ estado: 'listo' })
+    .eq('id', pedido_id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+};
+
+export default {
+  listarPedidosPendientes,
+  marcarEnPreparacion,
+  marcarListo
+};
+</file>
+
+<file path="models/detallePedido.js">
+import supabase from '../config/supabase.js';
+
+export const listarDomiciliarios = async () => {
+  const { data, error } = await supabase.from('domiciliario').select('*');
+  if (error) throw error;
+  return data;
+};
+
+export const listarDisponibles = async () => {
+  const { data, error } = await supabase.from('domiciliario').select('*').eq('disponible', true);
+  if (error) throw error;
+  return data;
+};
+
+export const obtenerPorId = async (id) => {
+  const { data, error } = await supabase.from('domiciliario').select('*').eq('id', id).single();
+  if (error) throw error;
+  return data;
+};
+
+export const crearDomiciliario = async (domiciliario) => {
+  const { data, error } = await supabase.from('domiciliario').insert([domiciliario]).select().single();
+  if (error) throw error;
+  return data;
+};
+
+export const actualizarDomiciliario = async (id, cambios) => {
+  const { data, error } = await supabase
+    .from('domiciliario')
+    .update(cambios)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+};
+
+export const cambiarDisponibilidad = async (id, disponible) => {
+  const { data, error } = await supabase
+    .from('domiciliario')
+    .update({ disponible })
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+};
+
+export default {
+  listarDomiciliarios,
+  listarDisponibles,
+  obtenerPorId,
+  crearDomiciliario,
+  actualizarDomiciliario,
+  cambiarDisponibilidad
+};
+</file>
+
+<file path="models/domiciliario.js">
+import supabase from '../config/supabase.js';
+
+export const listarDomiciliarios = async () => {
+  const { data, error } = await supabase.from('domiciliario').select('*');
+  if (error) throw error;
+  return data;
+};
+
+export const listarDisponibles = async () => {
+  const { data, error } = await supabase.from('domiciliario').select('*').eq('disponible', true);
+  if (error) throw error;
+  return data;
+};
+
+export const obtenerPorId = async (id) => {
+  const { data, error } = await supabase.from('domiciliario').select('*').eq('id', id).single();
+  if (error) throw error;
+  return data;
+};
+
+export const crearDomiciliario = async (domiciliario) => {
+  const { data, error } = await supabase.from('domiciliario').insert([domiciliario]).select().single();
+  if (error) throw error;
+  return data;
+};
+
+export const actualizarDomiciliario = async (id, cambios) => {
+  const { data, error } = await supabase
+    .from('domiciliario')
+    .update(cambios)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+};
+
+export const cambiarDisponibilidad = async (id, disponible) => {
+  const { data, error } = await supabase
+    .from('domiciliario')
+    .update({ disponible })
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+};
+
+export default {
+  listarDomiciliarios,
+  listarDisponibles,
+  obtenerPorId,
+  crearDomiciliario,
+  actualizarDomiciliario,
+  cambiarDisponibilidad
+};
+</file>
+
+<file path="models/mensajes.js">
+import supabase from '../config/supabase.js';
+
+export const enviarMensaje = async (mensaje) => {
+  const { data, error } = await supabase.from('mensajes').insert([mensaje]).select().single();
+  if (error) throw error;
+  return data;
+};
+
+export const listarPorPedido = async (pedido_id) => {
+  const { data, error } = await supabase
+    .from('mensajes')
+    .select('*')
+    .eq('pedido_id', pedido_id)
+    .order('fecha', { ascending: true });
+  if (error) throw error;
+  return data;
+};
+
+export const marcarLeido = async (id) => {
+  const { data, error } = await supabase
+    .from('mensajes')
+    .update({ leido: true })
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+};
+
+export default {
+  enviarMensaje,
+  listarPorPedido,
+  marcarLeido
+};
+</file>
+
+<file path="models/mesero.js">
+import supabase from '../config/supabase.js';
+
+export const listarMeseros = async () => {
+  const { data, error } = await supabase.from('mesero').select('*');
+  if (error) throw error;
+  return data;
+};
+
+export const obtenerPorId = async (id) => {
+  const { data, error } = await supabase.from('mesero').select('*').eq('id', id).single();
+  if (error) throw error;
+  return data;
+};
+
+export const crearMesero = async (mesero) => {
+  const { data, error } = await supabase.from('mesero').insert([mesero]).select().single();
+  if (error) throw error;
+  return data;
+};
+
+export const actualizarMesero = async (id, cambios) => {
+  const { data, error } = await supabase.from('mesero').update(cambios).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+};
+
+export const eliminarMesero = async (id) => {
+  const { error } = await supabase.from('mesero').delete().eq('id', id);
+  if (error) throw error;
+  return true;
+};
+
+// Crear un pedido tomado en mesa por el mesero (mismo flujo que pedido, con mesa_numero)
+export const crearPedidoEnMesa = async (mesero_id, mesa_numero, items) => {
+  const total = items.reduce((sum, item) => sum + item.cantidad * item.precio_unitario, 0);
+
+  const { data: pedido, error: errorPedido } = await supabase
+    .from('pedido')
+    .insert([{ mesero_id, mesa_numero, total, estado: 'pendiente', tipo: 'mesa' }])
+    .select()
+    .single();
+  if (errorPedido) throw errorPedido;
+
+  const detalles = items.map((item) => ({ ...item, pedido_id: pedido.id }));
+  const { error: errorDetalle } = await supabase.from('detallePedido').insert(detalles);
+  if (errorDetalle) throw errorDetalle;
+
+  return pedido;
+};
+
+export default {
+  listarMeseros,
+  obtenerPorId,
+  crearMesero,
+  actualizarMesero,
+  eliminarMesero,
+  crearPedidoEnMesa
+};
+</file>
+
+<file path="models/pedido.js">
+import supabase from '../config/supabase.js';
+
+export const ESTADOS = ['pendiente', 'en_preparacion', 'listo', 'en_camino', 'entregado', 'cancelado'];
+
+export const crearPedido = async (usuario_id, direccion_entrega, items) => {
+  const total = items.reduce((sum, item) => sum + item.cantidad * item.precio_unitario, 0);
+
+  const { data: pedido, error: errorPedido } = await supabase
+    .from('pedido')
+    .insert([{ usuario_id, direccion_entrega, total, estado: 'pendiente' }])
+    .select()
+    .single();
+
+  if (errorPedido) throw errorPedido;
+
+  const detalles = items.map((item) => ({ ...item, pedido_id: pedido.id }));
+
+  const { error: errorDetalle } = await supabase.from('detallePedido').insert(detalles);
+  if (errorDetalle) throw errorDetalle;
+
+  return pedido;
+};
+
+export const obtenerPedidoPorId = async (id) => {
+  const { data, error } = await supabase
+    .from('pedido')
+    .select('*, detallePedido(*, producto(*))')
+    .eq('id', id)
+    .single();
+  if (error) throw error;
+  return data;
+};
+
+export const listarPedidosPorUsuario = async (usuario_id) => {
+  const { data, error } = await supabase
+    .from('pedido')
+    .select('*')
+    .eq('usuario_id', usuario_id)
+    .order('fecha_creacion', { ascending: false });
+  if (error) throw error;
+  return data;
+};
+
+export const listarPorEstado = async (estado) => {
+  const { data, error } = await supabase
+    .from('pedido')
+    .select('*, detallePedido(*, producto(*))')
+    .eq('estado', estado)
+    .order('fecha_creacion', { ascending: true });
+  if (error) throw error;
+  return data;
+};
+
+export const actualizarEstadoPedido = async (id, estado) => {
+  if (!ESTADOS.includes(estado)) {
+    throw new Error(`Estado inválido. Debe ser uno de: ${ESTADOS.join(', ')}`);
+  }
+  const { data, error } = await supabase
+    .from('pedido')
+    .update({ estado })
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+};
+
+export const asignarDomiciliario = async (id, domiciliario_id) => {
+  const { data, error } = await supabase
+    .from('pedido')
+    .update({ domiciliario_id, estado: 'en_camino' })
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+};
+
+export default {
+  ESTADOS,
+  crearPedido,
+  obtenerPedidoPorId,
+  listarPedidosPorUsuario,
+  listarPorEstado,
+  actualizarEstadoPedido,
+  asignarDomiciliario
+};
+</file>
+
+<file path="models/producto.js">
+import supabase from '../config/supabase.js';
+
+export const listarProductos = async () => {
+  const { data, error } = await supabase.from('producto').select('*').order('nombre');
+  if (error) throw error;
+  return data;
+};
+
+export const listarDisponibles = async () => {
+  const { data, error } = await supabase
+    .from('producto')
+    .select('*')
+    .eq('disponible', true)
+    .order('categoria');
+  if (error) throw error;
+  return data;
+};
+
+export const obtenerPorId = async (id) => {
+  const { data, error } = await supabase.from('producto').select('*').eq('id', id).single();
+  if (error) throw error;
+  return data;
+};
+
+export const crearProducto = async (producto) => {
+  const { data, error } = await supabase.from('producto').insert([producto]).select().single();
+  if (error) throw error;
+  return data;
+};
+
+export const actualizarProducto = async (id, cambios) => {
+  const { data, error } = await supabase.from('producto').update(cambios).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+};
+
+export const eliminarProducto = async (id) => {
+  const { error } = await supabase.from('producto').delete().eq('id', id);
+  if (error) throw error;
+  return true;
+};
+
+export default {
+  listarProductos,
+  listarDisponibles,
+  obtenerPorId,
+  crearProducto,
+  actualizarProducto,
+  eliminarProducto
+};
+</file>
+
+<file path="models/usuario.js">
+import supabase from '../config/supabase.js';
+
+export const crearUsuario = async (usuario) => {
+  const { data, error } = await supabase.from('usuario').insert([usuario]).select().single();
+  if (error) throw error;
+  return data;
+};
+
+export const obtenerPorEmail = async (email) => {
+  const { data, error } = await supabase.from('usuario').select('*').eq('email', email).single();
+  if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows
+  return data;
+};
+
+export const obtenerPorId = async (id) => {
+  const { data, error } = await supabase
+    .from('usuario')
+    .select('id, nombre, email, telefono, direccion, rol')
+    .eq('id', id)
+    .single();
+  if (error) throw error;
+  return data;
+};
+
+export const listarUsuarios = async () => {
+  const { data, error } = await supabase
+    .from('usuario')
+    .select('id, nombre, email, telefono, direccion, rol');
+  if (error) throw error;
+  return data;
+};
+
+export const actualizarUsuario = async (id, cambios) => {
+  const { data, error } = await supabase.from('usuario').update(cambios).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+};
+
+export const eliminarUsuario = async (id) => {
+  const { error } = await supabase.from('usuario').delete().eq('id', id);
+  if (error) throw error;
+  return true;
+};
+
+export default {
+  crearUsuario,
+  obtenerPorEmail,
+  obtenerPorId,
+  listarUsuarios,
+  actualizarUsuario,
+  eliminarUsuario
+};
+</file>
+
+<file path="routes/auth.js">
+import express from 'express';
+import authController from '../controller/auth.js';
+
+const router = express.Router();
+
+router.post('/login', authController.login);
+
+export default router;
+</file>
+
+<file path="routes/calificacion.js">
+import express from 'express';
+import calificacionController from '../controller/calificacion.js';
+import { verificarToken } from '../middlewares/auth.js';
+
+const router = express.Router();
+
+// En routes/calificacion.js
+router.post('/', verificarToken, calificacionController.crearCalificacion);
+router.get('/pedido/:pedido_id', verificarToken, calificacionController.obtenerPorPedido);
+router.get('/usuario/:usuario_id', verificarToken, calificacionController.listarPorUsuario);
+router.get('/promedio', calificacionController.promedioGeneral);
+
+export default router;
+</file>
+
+<file path="routes/cocina.js">
+import express from 'express';
+import cocinaController from '../controller/cocina.js';
+import { verificarToken, verificarRol } from '../middlewares/auth.js';
+
+const router = express.Router();
+
+router.get('/pendientes', verificarToken, verificarRol('cocina', 'admin'), cocinaController.listarPendientes);
+router.patch('/:pedido_id/iniciar', verificarToken, verificarRol('cocina', 'admin'), cocinaController.iniciarPreparacion);
+router.patch('/:pedido_id/listo', verificarToken, verificarRol('cocina', 'admin'), cocinaController.marcarListo);
+
+export default router;
+</file>
+
+<file path="routes/detallePedido.js">
+import express from 'express';
+import detalleController from '../controller/detallePedido.js';
+import { verificarToken } from '../middlewares/auth.js';
+
+const router = express.Router();
+
+router.get('/pedido/:pedido_id', verificarToken, detalleController.listarPorPedido);
+router.post('/', verificarToken, detalleController.agregarItem);
+router.put('/:id', verificarToken, detalleController.actualizarItem);
+router.delete('/:id', verificarToken, detalleController.eliminarItem);
+
+export default router;
+</file>
+
+<file path="routes/domiciliario.js">
+import express from 'express';
+import domiciliarioController from '../controller/domiciliario.js';
+import { verificarToken, verificarRol } from '../middlewares/auth.js';
+
+const router = express.Router();
+
+router.get('/', verificarToken, verificarRol('admin'), domiciliarioController.listar);
+router.get('/disponibles', verificarToken, domiciliarioController.listarDisponibles);
+router.get('/:id', verificarToken, domiciliarioController.obtenerPorId);
+router.post('/', verificarToken, verificarRol('admin'), domiciliarioController.crear);
+router.put('/:id', verificarToken, domiciliarioController.actualizar);
+router.patch('/:id/disponibilidad', verificarToken, domiciliarioController.cambiarDisponibilidad);
+
+export default router;
+</file>
+
+<file path="routes/mensajes.js">
+import express from 'express';
+import mensajesController from '../controller/mensajes.js';
+import { verificarToken } from '../middlewares/auth.js';
+
+const router = express.Router();
+
+router.post('/', verificarToken, mensajesController.enviar);
+router.get('/pedido/:pedido_id', verificarToken, mensajesController.listarPorPedido);
+router.patch('/:id/leido', verificarToken, mensajesController.marcarLeido);
+
+export default router;
+</file>
+
+<file path="routes/mesero.js">
+import express from 'express';
+import meseroController from '../controller/mesero.js';
+import { verificarToken, verificarRol } from '../middlewares/auth.js';
+
+const router = express.Router();
+
+router.get('/', verificarToken, verificarRol('admin'), meseroController.listar);
+router.get('/:id', verificarToken, meseroController.obtenerPorId);
+router.post('/', verificarToken, verificarRol('admin'), meseroController.crear);
+router.put('/:id', verificarToken, meseroController.actualizar);
+router.delete('/:id', verificarToken, verificarRol('admin'), meseroController.eliminar);
+router.post('/pedido-mesa', verificarToken, verificarRol('mesero', 'admin'), meseroController.crearPedidoEnMesa);
+
+export default router;
+</file>
+
+<file path="routes/pedido.js">
+import express from 'express';
+import pedidoController from '../controller/pedido.js';
+import { verificarToken } from '../middlewares/auth.js';
+
+const router = express.Router();
+
+router.post('/', verificarToken, pedidoController.crear);
+router.get('/:id', verificarToken, pedidoController.obtenerPorId);
+router.get('/usuario/:usuario_id', verificarToken, pedidoController.listarPorUsuario);
+router.get('/estado/:estado', verificarToken, pedidoController.listarPorEstado);
+router.patch('/:id/estado', verificarToken, pedidoController.cambiarEstado);
+router.patch('/:id/domiciliario', verificarToken, pedidoController.asignarDomiciliario);
+
+export default router;
+</file>
+
+<file path="routes/recuperar.js">
+import express from 'express';
+import recuperarController from '../controller/recuperar.js';
+
+const router = express.Router();
+
+router.post('/solicitar', recuperarController.solicitarRecuperacion);
+router.post('/restablecer', recuperarController.restablecerContrasena);
+
+export default router;
+</file>
+
+<file path="routes/usuario.js">
+import express from 'express';
+import usuarioController from '../controller/usuario.js';
+import { verificarToken, verificarRol } from '../middlewares/auth.js';
+
+const router = express.Router();
+
+router.post('/registro', usuarioController.registrar);
+router.post('/login', usuarioController.login);
+router.get('/perfil', verificarToken, usuarioController.perfil);
+router.get('/', verificarToken, verificarRol('admin'), usuarioController.listar);
+router.put('/:id', verificarToken, usuarioController.actualizar);
+router.delete('/:id', verificarToken, verificarRol('admin'), usuarioController.eliminar);
+
+export default router;
+</file>
+
+<file path="utils/respuestas.js">
+// Helper para respuestas consistentes en toda la API
+export const exito = (res, data, status = 200) => {
+  return res.status(status).json({ ok: true, data });
+};
+
+export const error = (res, mensaje, status = 500, detalle = null) => {
+  return res.status(status).json({ ok: false, mensaje, detalle });
+};
+
+export default {
+  exito,
+  error
+};
+</file>
+
+<file path=".env.example">
+SUPABASE_URL=
+SUPABASE_KEY=
+JWT_SECRET =
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+</file>
+
+<file path=".gitignore">
+node_modules/
+.env
+</file>
+
+<file path="config/supabase.js">
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error('⚠️ Faltan las variables SUPABASE_URL o SUPABASE_KEY en el .env');
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+export default supabase;
+</file>
+
+<file path="controller/recuperar.js">
+import usuarioModel from '../models/usuario.js';
+import { exito, error } from '../utils/respuestas.js';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+
+// Solicitar token/código para restablecer contraseña
+export const solicitarRecuperacion = async (req, res) => {
+  try {
+    const { correo } = req.body;
+
+    if (!correo) {
+      return error(res, 'El correo electrónico es obligatorio', 400);
+    }
+
+    const usuario = await usuarioModel.obtenerPorCorreo(correo);
+    if (!usuario) {
+      // Por seguridad suele responderse éxito aunque no exista el correo
+      return exito(res, null, 200, 'Si el correo existe, se enviarán las instrucciones');
+    }
+
+    // Generar token de recuperación con expiración corta (ej. 15 minutos)
+    const resetToken = jwt.sign(
+      { id: usuario.id },
+      process.env.JWT_SECRET || 'secreto_super_seguro',
+      { expiresIn: '15m' }
+    );
+
+    // TODO: Aquí integras Nodemailer u otro servicio de correos para enviar 'resetToken'
+    
+    return exito(res, { token: resetToken }, 200, 'Instrucciones enviadas al correo');
+  } catch (err) {
+    return error(res, 'Error al solicitar recuperación', 500, err.message);
+  }
+};
+
+// Cambiar la contraseña con el token validado
+export const restablecerContrasena = async (req, res) => {
+  try {
+    const { token, nuevaContrasena } = req.body;
+
+    if (!token || !nuevaContrasena) {
+      return error(res, 'El token y la nueva contraseña son obligatorios', 400);
+    }
+
+    // Validar token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secreto_super_seguro');
+
+    // Encriptar la nueva contraseña
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(nuevaContrasena, salt);
+
+    // Actualizar en BD usando el ID decodificado del token
+    await usuarioModel.actualizarContrasena(decoded.id, hashedPassword);
+
+    return exito(res, null, 200, 'Contraseña actualizada correctamente');
+  } catch (err) {
+    if (err.name === 'TokenExpiredError') {
+      return error(res, 'El token ha expirado, solicita uno nuevo', 400);
+    }
+    return error(res, 'Error al restablecer la contraseña', 500, err.message);
+  }
+};
+
+export default {
+  solicitarRecuperacion,
+  restablecerContrasena
+};
+</file>
+
+<file path="utils/sendEmail.js">
+import nodemailer from 'nodemailer';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+// Configura el transportador con las credenciales del .env
+const transporter = nodemailer.createTransport({
+  host: process.env.EMAIL_HOST,       // ej: smtp.gmail.com
+  port: process.env.EMAIL_PORT || 587,
+  secure: process.env.EMAIL_PORT == 465, // true si usas puerto 465
+  auth: {
+    user: process.env.EMAIL_USER,     // tu correo
+    pass: process.env.EMAIL_PASS      // contraseña o "app password"
+  }
+});
+
+/**
+ * Envía un correo genérico
+ * @param {string} to - correo destino
+ * @param {string} subject - asunto
+ * @param {string} html - contenido HTML del correo
+ * @param {string} [text] - contenido en texto plano (opcional, fallback)
+ */
+export const sendEmail = async ({ to, subject, html, text }) => {
+  try {
+    const info = await transporter.sendMail({
+      from: `"${process.env.EMAIL_FROM_NAME || 'Comida Rápida App'}" <${process.env.EMAIL_USER}>`,
+      to,
+      subject,
+      text: text || subject,
+      html
+    });
+    return info;
+  } catch (error) {
+    console.error('Error al enviar correo:', error.message);
+    throw error;
+  }
+};
+
+/* ---------- Plantillas listas para usar en la app ---------- */
+
+// Correo de bienvenida al registrarse
+export const sendWelcomeEmail = async (to, nombre) => {
+  return sendEmail({
+    to,
+    subject: '¡Bienvenido a Comida Rápida App! 🍔',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 500px; margin: auto;">
+        <h2>¡Hola, ${nombre}!</h2>
+        <p>Gracias por registrarte en nuestra app. Ya puedes empezar a pedir tu comida favorita.</p>
+        <p style="color:#888; font-size:12px;">Si no creaste esta cuenta, ignora este mensaje.</p>
+      </div>
+    `
+  });
+};
+
+// Confirmación de pedido
+export const sendOrderConfirmation = async (to, nombre, pedido) => {
+  const itemsHtml = (pedido.detallePedido || [])
+    .map(
+      (item) =>
+        `<li>${item.cantidad}x ${item.producto?.nombre || 'Producto'} - $${item.precio_unitario}</li>`
+    )
+    .join('');
+
+  return sendEmail({
+    to,
+    subject: `Pedido #${pedido.id} confirmado ✅`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 500px; margin: auto;">
+        <h2>¡Gracias por tu pedido, ${nombre}!</h2>
+        <p>Tu pedido <strong>#${pedido.id}</strong> fue recibido y está en preparación.</p>
+        <ul>${itemsHtml}</ul>
+        <p><strong>Total: $${pedido.total}</strong></p>
+        <p>Dirección de entrega: ${pedido.direccion_entrega}</p>
+      </div>
+    `
+  });
+};
+
+// Notificación de cambio de estado del pedido
+export const sendOrderStatusUpdate = async (to, nombre, pedidoId, estado) => {
+  const mensajesEstado = {
+    en_preparacion: 'tu pedido está siendo preparado 👨‍🍳',
+    listo: 'tu pedido está listo para salir 📦',
+    en_camino: 'tu pedido va en camino 🛵',
+    entregado: '¡tu pedido fue entregado! Buen provecho 🎉',
+    cancelado: 'tu pedido fue cancelado ❌'
+  };
+
+  return sendEmail({
+    to,
+    subject: `Actualización de tu pedido #${pedidoId}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 500px; margin: auto;">
+        <h2>Hola, ${nombre}</h2>
+        <p>${mensajesEstado[estado] || `El estado de tu pedido cambió a: ${estado}`}</p>
+      </div>
+    `
+  });
+};
+
+// Recuperación de contraseña
+export const sendPasswordReset = async (to, nombre, resetLink) => {
+  return sendEmail({
+    to,
+    subject: 'Recupera tu contraseña',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 500px; margin: auto;">
+        <h2>Hola, ${nombre}</h2>
+        <p>Solicitaste restablecer tu contraseña. Haz clic en el siguiente enlace (válido por 1 hora):</p>
+        <a href="${resetLink}" style="display:inline-block;padding:10px 20px;background:#e63946;color:#fff;text-decoration:none;border-radius:5px;">Restablecer contraseña</a>
+        <p style="color:#888; font-size:12px;">Si no solicitaste esto, ignora este correo.</p>
+      </div>
+    `
+  });
+};
+
+export default {
+  sendEmail,
+  sendWelcomeEmail,
+  sendOrderConfirmation,
+  sendOrderStatusUpdate,
+  sendPasswordReset
+};
+</file>
+
+<file path="controller/auth.js">
+import usuarioModel from '../models/usuario.js';
+import { exito, error } from '../utils/respuestas.js';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+
+export const login = async (req, res) => {
+  try {
+    const { correo, contrasena } = req.body;
+
+    // 1. Validar campos requeridos
+    if (!correo || !contrasena) {
+      return error(res, 'Correo y contraseña son obligatorios', 400);
+    }
+
+    // 2. Buscar si el usuario existe en la base de datos
+    const usuario = await usuarioModel.obtenerPorCorreo(correo);
+    if (!usuario) {
+      return error(res, 'Credenciales inválidas', 401);
+    }
+
+    // 3. Validar contraseña
+    const esPasswordValida = await bcrypt.compare(contrasena, usuario.contrasena);
+    if (!esPasswordValida) {
+      return error(res, 'Credenciales inválidas', 401);
+    }
+
+    // 4. Generar Token JWT
+    const token = jwt.sign(
+      {
+        id: usuario.id,
+        rol: usuario.rol,
+        correo: usuario.correo
+      },
+      process.env.JWT_SECRET || 'secreto_super_seguro',
+      { expiresIn: '8h' }
+    );
+
+    // 5. Excluir contraseña antes de responder
+    delete usuario.contrasena;
+
+    return exito(res, { usuario, token }, 200, 'Inicio de sesión exitoso');
+  } catch (err) {
+    return error(res, 'Error al iniciar sesión', 500, err.message);
+  }
+};
+
+export default {
+  login
+};
+</file>
+
+<file path="controller/producto.js">
+import productoModel from '../models/producto.js';
+import { exito, error } from '../utils/respuestas.js';
+import { upload } from '../config/cloudinary.js';
+
+export const listar = async (req, res) => {
+  try {
+    const productos = await productoModel.listarProductos();
+    return exito(res, productos);
+  } catch (err) {
+    return error(res, 'Error al obtener productos', 500, err.message);
+  }
+};
+
+export const listarDisponibles = async (req, res) => {
+  try {
+    const productos = await productoModel.listarDisponibles();
+    return exito(res, productos);
+  } catch (err) {
+    return error(res, 'Error al obtener el menú', 500, err.message);
+  }
+};
+
+export const obtenerPorId = async (req, res) => {
+  try {
+    const producto = await productoModel.obtenerPorId(req.params.id);
+    return exito(res, producto);
+  } catch (err) {
+    return error(res, 'Producto no encontrado', 404, err.message);
+  }
+};
+
+export const crear = async (req, res) => {
+  try {
+    // Cloudinary almacena la URL segura en req.file.path
+    const imagen_url = req.file ? req.file.path : null;
+    const { nombre, precio, categoria } = req.body;
+
+    if (!nombre || precio === undefined || !categoria || !imagen_url) {
+      return error(res, 'nombre, precio, categoria e imagen_url son obligatorios', 400);
+    }
+
+    const producto = await productoModel.crearProducto({
+      ...req.body,
+      imagen_url
+    });
+    
+    return exito(res, producto, 201);
+  } catch (err) {
+    return error(res, 'Error al crear producto', 500, err.message);
+  }
+};
+
+export const actualizar = async (req, res) => {
+  try {
+    const producto = await productoModel.actualizarProducto(req.params.id, req.body);
+    return exito(res, producto);
+  } catch (err) {
+    return error(res, 'Error al actualizar producto', 500, err.message);
+  }
+};
+
+export const eliminar = async (req, res) => {
+  try {
+    await productoModel.eliminarProducto(req.params.id);
+    return exito(res, { mensaje: 'Producto eliminado' });
+  } catch (err) {
+    return error(res, 'Error al eliminar producto', 500, err.message);
+  }
+};
+
+export default {
+  listar,
+  listarDisponibles,
+  obtenerPorId,
+  crear,
+  actualizar,
+  eliminar
+};
+</file>
+
+<file path="routes/producto.js">
+import express from 'express';
+import productoController from '../controller/producto.js';
+import { verificarToken, verificarRol } from '../middlewares/auth.js';
+import { upload } from '../config/cloudinary.js';
+const router = express.Router();
+
+router.get('/', productoController.listar);
+router.get('/disponibles', productoController.listarDisponibles);
+router.get('/:id', productoController.obtenerPorId);
+router.post('/', verificarToken, verificarRol('admin'), upload.single('imagen'), productoController.crear);
+router.put('/:id', verificarToken, verificarRol('admin'), upload.single('imagen'), productoController.actualizar);
+router.delete('/:id', verificarToken, verificarRol('admin'), productoController.eliminar);
+
+export default router;
+</file>
+
+<file path="index.js">
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+
+// Configurar variables de entorno
+dotenv.config();
+
+// 1. Inicializar Express primero
+const app = express();
+
+// 2. Middlewares globales
+app.use(cors());
+app.use(express.json());
+
+// 3. Importar todas las rutas
+import authRoutes from './routes/auth.js';
+import recuperarRoutes from './routes/recuperar.js';
+import usuarioRoutes from './routes/usuario.js';
+import productoRoutes from './routes/producto.js';
+import pedidoRoutes from './routes/pedido.js';
+import detallePedidoRoutes from './routes/detallePedido.js';
+import cocinaRoutes from './routes/cocina.js';
+import domiciliarioRoutes from './routes/domiciliario.js';
+import meseroRoutes from './routes/mesero.js';
+import calificacionRoutes from './routes/calificacion.js';
+import mensajesRoutes from './routes/mensajes.js';
+
+// 4. Enlazar middlewares de rutas
+app.use('/api/auth', authRoutes);
+app.use('/api/recuperar', recuperarRoutes);
+app.use('/api/usuarios', usuarioRoutes);
+app.use('/api/productos', productoRoutes);
+app.use('/api/pedidos', pedidoRoutes);
+app.use('/api/detalle-pedidos', detallePedidoRoutes);
+app.use('/api/cocina', cocinaRoutes);
+app.use('/api/domiciliarios', domiciliarioRoutes);
+app.use('/api/meseros', meseroRoutes);
+app.use('/api/calificaciones', calificacionRoutes);
+app.use('/api/mensajes', mensajesRoutes);
+
+// Ruta de salud
+app.get('/', (req, res) => {
+  res.json({ mensaje: 'API de comida rápida funcionando 🍔' });
+});
+
+// Manejo de errores centralizado
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ ok: false, mensaje: 'Error interno del servidor' });
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`));
+</file>
+
+<file path="package.json">
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon",
+    "dev": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.112.3",
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
+    "cloudinary": "^1.41.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.2.0",
+    "multer-storage-cloudinary": "^4.0.0",
+    "nodemailer": "^9.0.3",
+    "nodemon": "^3.1.14",
+    "supabase": "^2.110.0"
+  }
+}
+</file>
+
+</files>

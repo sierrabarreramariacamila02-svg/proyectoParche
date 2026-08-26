@@ -1,32 +1,27 @@
 import supabase from '../config/supabase.js';
 
-export const listarDomiciliarios = async () => {
-  const { data, error } = await supabase.from('domiciliario').select('*');
-  if (error) throw error;
-  return data;
-};
-
-export const listarDisponibles = async () => {
-  const { data, error } = await supabase.from('domiciliario').select('*').eq('disponible', true);
-  if (error) throw error;
-  return data;
-};
-
-export const obtenerPorId = async (id) => {
-  const { data, error } = await supabase.from('domiciliario').select('*').eq('id', id).single();
-  if (error) throw error;
-  return data;
-};
-
-export const crearDomiciliario = async (domiciliario) => {
-  const { data, error } = await supabase.from('domiciliario').insert([domiciliario]).select().single();
-  if (error) throw error;
-  return data;
-};
-
-export const actualizarDomiciliario = async (id, cambios) => {
+export const listarPorPedido = async (pedido_id) => {
   const { data, error } = await supabase
-    .from('domiciliario')
+    .from('detallePedido')
+    .select('*, producto(*)')
+    .eq('pedido_id', pedido_id);
+  if (error) throw error;
+  return data;
+};
+
+export const agregarItem = async (item) => {
+  const { data, error } = await supabase
+    .from('detallePedido')
+    .insert([item])
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+};
+
+export const actualizarItem = async (id, cambios) => {
+  const { data, error } = await supabase
+    .from('detallePedido')
     .update(cambios)
     .eq('id', id)
     .select()
@@ -35,22 +30,18 @@ export const actualizarDomiciliario = async (id, cambios) => {
   return data;
 };
 
-export const cambiarDisponibilidad = async (id, disponible) => {
-  const { data, error } = await supabase
-    .from('domiciliario')
-    .update({ disponible })
-    .eq('id', id)
-    .select()
-    .single();
+export const eliminarItem = async (id) => {
+  const { error } = await supabase
+    .from('detallePedido')
+    .delete()
+    .eq('id', id);
   if (error) throw error;
-  return data;
+  return true;
 };
 
 export default {
-  listarDomiciliarios,
-  listarDisponibles,
-  obtenerPorId,
-  crearDomiciliario,
-  actualizarDomiciliario,
-  cambiarDisponibilidad
+  listarPorPedido,
+  agregarItem,
+  actualizarItem,
+  eliminarItem
 };
