@@ -1,6 +1,5 @@
 import productoModel from '../models/producto.js';
 import { exito, error } from '../utils/respuestas.js';
-import { upload } from '../config/cloudinary.js';
 
 export const listar = async (req, res) => {
   try {
@@ -31,12 +30,12 @@ export const obtenerPorId = async (req, res) => {
 
 export const crear = async (req, res) => {
   try {
-    // Cloudinary almacena la URL segura en req.file.path
+    // Cloudinary devuelve la URL pública en req.file.path
     const imagen_url = req.file ? req.file.path : null;
     const { nombre, precio, categoria } = req.body;
 
     if (!nombre || precio === undefined || !categoria || !imagen_url) {
-      return error(res, 'nombre, precio, categoria e imagen_url son obligatorios', 400);
+      return error(res, 'nombre, precio, categoria e imagen son obligatorios', 400);
     }
 
     const producto = await productoModel.crearProducto({
@@ -52,7 +51,13 @@ export const crear = async (req, res) => {
 
 export const actualizar = async (req, res) => {
   try {
-    const producto = await productoModel.actualizarProducto(req.params.id, req.body);
+    // Si viene un archivo nuevo en la actualización, actualizamos la imagen
+    const datosActualizar = { ...req.body };
+    if (req.file) {
+      datosActualizar.imagen_url = req.file.path;
+    }
+
+    const producto = await productoModel.actualizarProducto(req.params.id, datosActualizar);
     return exito(res, producto);
   } catch (err) {
     return error(res, 'Error al actualizar producto', 500, err.message);
