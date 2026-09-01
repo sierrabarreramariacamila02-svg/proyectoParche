@@ -1,7 +1,7 @@
-import domiciliarioModel from '../models/domiciliario.js';
-import { exito, error } from '../utils/respuestas.js';
+const domiciliarioModel = require('../models/domiciliario');
+const { exito, error } = require('../utils/respuestas');
 
-export const listar = async (req, res) => {
+const listar = async (req, res) => {
   try {
     const domiciliarios = await domiciliarioModel.listarDomiciliarios();
     return exito(res, domiciliarios);
@@ -10,7 +10,7 @@ export const listar = async (req, res) => {
   }
 };
 
-export const listarDisponibles = async (req, res) => {
+const listarDisponibles = async (req, res) => {
   try {
     const domiciliarios = await domiciliarioModel.listarDisponibles();
     return exito(res, domiciliarios);
@@ -19,7 +19,7 @@ export const listarDisponibles = async (req, res) => {
   }
 };
 
-export const obtenerPorId = async (req, res) => {
+const obtenerPorId = async (req, res) => {
   try {
     const domiciliario = await domiciliarioModel.obtenerPorId(req.params.id);
     return exito(res, domiciliario);
@@ -28,7 +28,7 @@ export const obtenerPorId = async (req, res) => {
   }
 };
 
-export const crear = async (req, res) => {
+const crear = async (req, res) => {
   try {
     const domiciliario = await domiciliarioModel.crearDomiciliario(req.body);
     return exito(res, domiciliario, 201);
@@ -37,7 +37,7 @@ export const crear = async (req, res) => {
   }
 };
 
-export const actualizar = async (req, res) => {
+const actualizar = async (req, res) => {
   try {
     const domiciliario = await domiciliarioModel.actualizarDomiciliario(req.params.id, req.body);
     return exito(res, domiciliario);
@@ -46,7 +46,7 @@ export const actualizar = async (req, res) => {
   }
 };
 
-export const cambiarDisponibilidad = async (req, res) => {
+const cambiarDisponibilidad = async (req, res) => {
   try {
     const { disponible } = req.body;
     const domiciliario = await domiciliarioModel.cambiarDisponibilidad(req.params.id, disponible);
@@ -56,11 +56,4 @@ export const cambiarDisponibilidad = async (req, res) => {
   }
 };
 
-export default {
-  listar,
-  listarDisponibles,
-  obtenerPorId,
-  crear,
-  actualizar,
-  cambiarDisponibilidad
-};
+module.exports = { listar, listarDisponibles, obtenerPorId, crear, actualizar, cambiarDisponibilidad };

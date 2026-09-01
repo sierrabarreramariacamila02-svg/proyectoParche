@@ -1,7 +1,5 @@
-import nodemailer from 'nodemailer';
-import dotenv from 'dotenv';
-
-dotenv.config();
+const nodemailer = require('nodemailer');
+require('dotenv').config();
 
 // Configura el transportador con las credenciales del .env
 const transporter = nodemailer.createTransport({
@@ -21,7 +19,7 @@ const transporter = nodemailer.createTransport({
  * @param {string} html - contenido HTML del correo
  * @param {string} [text] - contenido en texto plano (opcional, fallback)
  */
-export const sendEmail = async ({ to, subject, html, text }) => {
+const sendEmail = async ({ to, subject, html, text }) => {
   try {
     const info = await transporter.sendMail({
       from: `"${process.env.EMAIL_FROM_NAME || 'Comida Rápida App'}" <${process.env.EMAIL_USER}>`,
@@ -37,10 +35,10 @@ export const sendEmail = async ({ to, subject, html, text }) => {
   }
 };
 
-/* ---------- Plantillas listas para usar en la app ---------- */
+/* ---------- Plantillas listas para usar en tu app ---------- */
 
 // Correo de bienvenida al registrarse
-export const sendWelcomeEmail = async (to, nombre) => {
+const sendWelcomeEmail = async (to, nombre) => {
   return sendEmail({
     to,
     subject: '¡Bienvenido a Comida Rápida App! 🍔',
@@ -55,7 +53,7 @@ export const sendWelcomeEmail = async (to, nombre) => {
 };
 
 // Confirmación de pedido
-export const sendOrderConfirmation = async (to, nombre, pedido) => {
+const sendOrderConfirmation = async (to, nombre, pedido) => {
   const itemsHtml = (pedido.detallePedido || [])
     .map(
       (item) =>
@@ -79,7 +77,7 @@ export const sendOrderConfirmation = async (to, nombre, pedido) => {
 };
 
 // Notificación de cambio de estado del pedido
-export const sendOrderStatusUpdate = async (to, nombre, pedidoId, estado) => {
+const sendOrderStatusUpdate = async (to, nombre, pedidoId, estado) => {
   const mensajesEstado = {
     en_preparacion: 'tu pedido está siendo preparado 👨‍🍳',
     listo: 'tu pedido está listo para salir 📦',
@@ -101,7 +99,7 @@ export const sendOrderStatusUpdate = async (to, nombre, pedidoId, estado) => {
 };
 
 // Recuperación de contraseña
-export const sendPasswordReset = async (to, nombre, resetLink) => {
+const sendPasswordReset = async (to, nombre, resetLink) => {
   return sendEmail({
     to,
     subject: 'Recupera tu contraseña',
@@ -116,7 +114,7 @@ export const sendPasswordReset = async (to, nombre, resetLink) => {
   });
 };
 
-export default {
+module.exports = {
   sendEmail,
   sendWelcomeEmail,
   sendOrderConfirmation,

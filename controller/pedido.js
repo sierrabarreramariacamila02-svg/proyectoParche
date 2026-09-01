@@ -1,7 +1,7 @@
-import pedidoModel from '../models/pedido.js';
-import { exito, error } from '../utils/respuestas.js';
+const pedidoModel = require('../models/pedido');
+const { exito, error } = require('../utils/respuestas');
 
-export const crear = async (req, res) => {
+const crear = async (req, res) => {
   try {
     const { usuario_id, direccion_entrega, items } = req.body;
     if (!items || items.length === 0) {
@@ -14,7 +14,7 @@ export const crear = async (req, res) => {
   }
 };
 
-export const obtenerPorId = async (req, res) => {
+const obtenerPorId = async (req, res) => {
   try {
     const pedido = await pedidoModel.obtenerPedidoPorId(req.params.id);
     return exito(res, pedido);
@@ -23,7 +23,7 @@ export const obtenerPorId = async (req, res) => {
   }
 };
 
-export const listarPorUsuario = async (req, res) => {
+const listarPorUsuario = async (req, res) => {
   try {
     const pedidos = await pedidoModel.listarPedidosPorUsuario(req.params.usuario_id);
     return exito(res, pedidos);
@@ -32,7 +32,7 @@ export const listarPorUsuario = async (req, res) => {
   }
 };
 
-export const listarPorEstado = async (req, res) => {
+const listarPorEstado = async (req, res) => {
   try {
     const pedidos = await pedidoModel.listarPorEstado(req.params.estado);
     return exito(res, pedidos);
@@ -41,7 +41,7 @@ export const listarPorEstado = async (req, res) => {
   }
 };
 
-export const cambiarEstado = async (req, res) => {
+const cambiarEstado = async (req, res) => {
   try {
     const { estado } = req.body;
     const pedido = await pedidoModel.actualizarEstadoPedido(req.params.id, estado);
@@ -51,7 +51,7 @@ export const cambiarEstado = async (req, res) => {
   }
 };
 
-export const asignarDomiciliario = async (req, res) => {
+const asignarDomiciliario = async (req, res) => {
   try {
     const { domiciliario_id } = req.body;
     const pedido = await pedidoModel.asignarDomiciliario(req.params.id, domiciliario_id);
@@ -61,11 +61,4 @@ export const asignarDomiciliario = async (req, res) => {
   }
 };
 
-export default {
-  crear,
-  obtenerPorId,
-  listarPorUsuario,
-  listarPorEstado,
-  cambiarEstado,
-  asignarDomiciliario
-};
+module.exports = { crear, obtenerPorId, listarPorUsuario, listarPorEstado, cambiarEstado, asignarDomiciliario };

@@ -1,7 +1,7 @@
-import meseroModel from '../models/mesero.js';
-import { exito, error } from '../utils/respuestas.js';
+const meseroModel = require('../models/mesero');
+const { exito, error } = require('../utils/respuestas');
 
-export const listar = async (req, res) => {
+const listar = async (req, res) => {
   try {
     const meseros = await meseroModel.listarMeseros();
     return exito(res, meseros);
@@ -10,7 +10,7 @@ export const listar = async (req, res) => {
   }
 };
 
-export const obtenerPorId = async (req, res) => {
+const obtenerPorId = async (req, res) => {
   try {
     const mesero = await meseroModel.obtenerPorId(req.params.id);
     return exito(res, mesero);
@@ -19,7 +19,7 @@ export const obtenerPorId = async (req, res) => {
   }
 };
 
-export const crear = async (req, res) => {
+const crear = async (req, res) => {
   try {
     const mesero = await meseroModel.crearMesero(req.body);
     return exito(res, mesero, 201);
@@ -28,7 +28,7 @@ export const crear = async (req, res) => {
   }
 };
 
-export const actualizar = async (req, res) => {
+const actualizar = async (req, res) => {
   try {
     const mesero = await meseroModel.actualizarMesero(req.params.id, req.body);
     return exito(res, mesero);
@@ -37,7 +37,7 @@ export const actualizar = async (req, res) => {
   }
 };
 
-export const eliminar = async (req, res) => {
+const eliminar = async (req, res) => {
   try {
     await meseroModel.eliminarMesero(req.params.id);
     return exito(res, { mensaje: 'Mesero eliminado' });
@@ -46,7 +46,7 @@ export const eliminar = async (req, res) => {
   }
 };
 
-export const crearPedidoEnMesa = async (req, res) => {
+const crearPedidoEnMesa = async (req, res) => {
   try {
     const { mesero_id, mesa_numero, items } = req.body;
     if (!items || items.length === 0) {
@@ -59,11 +59,4 @@ export const crearPedidoEnMesa = async (req, res) => {
   }
 };
 
-export default {
-  listar,
-  obtenerPorId,
-  crear,
-  actualizar,
-  eliminar,
-  crearPedidoEnMesa
-};
+module.exports = { listar, obtenerPorId, crear, actualizar, eliminar, crearPedidoEnMesa };

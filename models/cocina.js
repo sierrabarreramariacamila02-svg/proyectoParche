@@ -1,7 +1,7 @@
-import supabase from '../config/supabase.js';
+const supabase = require('../config/supabase');
 
 // "Cocina" gestiona la cola de pedidos que debe preparar
-export const listarPedidosPendientes = async () => {
+const listarPedidosPendientes = async () => {
   const { data, error } = await supabase
     .from('pedido')
     .select('*, detallePedido(*, producto(*))')
@@ -11,7 +11,7 @@ export const listarPedidosPendientes = async () => {
   return data;
 };
 
-export const marcarEnPreparacion = async (pedido_id) => {
+const marcarEnPreparacion = async (pedido_id) => {
   const { data, error } = await supabase
     .from('pedido')
     .update({ estado: 'en_preparacion' })
@@ -22,7 +22,7 @@ export const marcarEnPreparacion = async (pedido_id) => {
   return data;
 };
 
-export const marcarListo = async (pedido_id) => {
+const marcarListo = async (pedido_id) => {
   const { data, error } = await supabase
     .from('pedido')
     .update({ estado: 'listo' })
@@ -33,8 +33,4 @@ export const marcarListo = async (pedido_id) => {
   return data;
 };
 
-export default {
-  listarPedidosPendientes,
-  marcarEnPreparacion,
-  marcarListo
-};
+module.exports = { listarPedidosPendientes, marcarEnPreparacion, marcarListo };

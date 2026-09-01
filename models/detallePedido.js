@@ -1,6 +1,6 @@
-import supabase from '../config/supabase.js';
+const supabase = require('../config/supabase');
 
-export const listarPorPedido = async (pedido_id) => {
+const listarPorPedido = async (pedido_id) => {
   const { data, error } = await supabase
     .from('detallePedido')
     .select('*, producto(*)')
@@ -9,17 +9,13 @@ export const listarPorPedido = async (pedido_id) => {
   return data;
 };
 
-export const agregarItem = async (item) => {
-  const { data, error } = await supabase
-    .from('detallePedido')
-    .insert([item])
-    .select()
-    .single();
+const agregarItem = async (item) => {
+  const { data, error } = await supabase.from('detallePedido').insert([item]).select().single();
   if (error) throw error;
   return data;
 };
 
-export const actualizarItem = async (id, cambios) => {
+const actualizarItem = async (id, cambios) => {
   const { data, error } = await supabase
     .from('detallePedido')
     .update(cambios)
@@ -30,18 +26,10 @@ export const actualizarItem = async (id, cambios) => {
   return data;
 };
 
-export const eliminarItem = async (id) => {
-  const { error } = await supabase
-    .from('detallePedido')
-    .delete()
-    .eq('id', id);
+const eliminarItem = async (id) => {
+  const { error } = await supabase.from('detallePedido').delete().eq('id', id);
   if (error) throw error;
   return true;
 };
 
-export default {
-  listarPorPedido,
-  agregarItem,
-  actualizarItem,
-  eliminarItem
-};
+module.exports = { listarPorPedido, agregarItem, actualizarItem, eliminarItem };

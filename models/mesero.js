@@ -1,37 +1,37 @@
-import supabase from '../config/supabase.js';
+const supabase = require('../config/supabase');
 
-export const listarMeseros = async () => {
+const listarMeseros = async () => {
   const { data, error } = await supabase.from('mesero').select('*');
   if (error) throw error;
   return data;
 };
 
-export const obtenerPorId = async (id) => {
+const obtenerPorId = async (id) => {
   const { data, error } = await supabase.from('mesero').select('*').eq('id', id).single();
   if (error) throw error;
   return data;
 };
 
-export const crearMesero = async (mesero) => {
+const crearMesero = async (mesero) => {
   const { data, error } = await supabase.from('mesero').insert([mesero]).select().single();
   if (error) throw error;
   return data;
 };
 
-export const actualizarMesero = async (id, cambios) => {
+const actualizarMesero = async (id, cambios) => {
   const { data, error } = await supabase.from('mesero').update(cambios).eq('id', id).select().single();
   if (error) throw error;
   return data;
 };
 
-export const eliminarMesero = async (id) => {
+const eliminarMesero = async (id) => {
   const { error } = await supabase.from('mesero').delete().eq('id', id);
   if (error) throw error;
   return true;
 };
 
 // Crear un pedido tomado en mesa por el mesero (mismo flujo que pedido, con mesa_numero)
-export const crearPedidoEnMesa = async (mesero_id, mesa_numero, items) => {
+const crearPedidoEnMesa = async (mesero_id, mesa_numero, items) => {
   const total = items.reduce((sum, item) => sum + item.cantidad * item.precio_unitario, 0);
 
   const { data: pedido, error: errorPedido } = await supabase
@@ -48,7 +48,7 @@ export const crearPedidoEnMesa = async (mesero_id, mesa_numero, items) => {
   return pedido;
 };
 
-export default {
+module.exports = {
   listarMeseros,
   obtenerPorId,
   crearMesero,

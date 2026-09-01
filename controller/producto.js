@@ -1,7 +1,7 @@
-import productoModel from '../models/producto.js';
-import { exito, error } from '../utils/respuestas.js';
+const productoModel = require('../models/producto');
+const { exito, error } = require('../utils/respuestas');
 
-export const listar = async (req, res) => {
+const listar = async (req, res) => {
   try {
     const productos = await productoModel.listarProductos();
     return exito(res, productos);
@@ -10,7 +10,7 @@ export const listar = async (req, res) => {
   }
 };
 
-export const listarDisponibles = async (req, res) => {
+const listarDisponibles = async (req, res) => {
   try {
     const productos = await productoModel.listarDisponibles();
     return exito(res, productos);
@@ -19,7 +19,7 @@ export const listarDisponibles = async (req, res) => {
   }
 };
 
-export const obtenerPorId = async (req, res) => {
+const obtenerPorId = async (req, res) => {
   try {
     const producto = await productoModel.obtenerPorId(req.params.id);
     return exito(res, producto);
@@ -28,43 +28,29 @@ export const obtenerPorId = async (req, res) => {
   }
 };
 
-export const crear = async (req, res) => {
+const crear = async (req, res) => {
   try {
-    // Cloudinary devuelve la URL pública en req.file.path
-    const imagen_url = req.file ? req.file.path : null;
     const { nombre, precio, categoria } = req.body;
-
-    if (!nombre || precio === undefined || !categoria || !imagen_url) {
-      return error(res, 'nombre, precio, categoria e imagen son obligatorios', 400);
+    if (!nombre || precio === undefined || !categoria) {
+      return error(res, 'nombre, precio y categoria son obligatorios', 400);
     }
-
-    const producto = await productoModel.crearProducto({
-      ...req.body,
-      imagen_url
-    });
-    
+    const producto = await productoModel.crearProducto(req.body);
     return exito(res, producto, 201);
   } catch (err) {
     return error(res, 'Error al crear producto', 500, err.message);
   }
 };
 
-export const actualizar = async (req, res) => {
+const actualizar = async (req, res) => {
   try {
-    // Si viene un archivo nuevo en la actualización, actualizamos la imagen
-    const datosActualizar = { ...req.body };
-    if (req.file) {
-      datosActualizar.imagen_url = req.file.path;
-    }
-
-    const producto = await productoModel.actualizarProducto(req.params.id, datosActualizar);
+    const producto = await productoModel.actualizarProducto(req.params.id, req.body);
     return exito(res, producto);
   } catch (err) {
     return error(res, 'Error al actualizar producto', 500, err.message);
   }
 };
 
-export const eliminar = async (req, res) => {
+const eliminar = async (req, res) => {
   try {
     await productoModel.eliminarProducto(req.params.id);
     return exito(res, { mensaje: 'Producto eliminado' });
@@ -73,11 +59,4 @@ export const eliminar = async (req, res) => {
   }
 };
 
-export default {
-  listar,
-  listarDisponibles,
-  obtenerPorId,
-  crear,
-  actualizar,
-  eliminar
-};
+module.exports = { listar, listarDisponibles, obtenerPorId, crear, actualizar, eliminar };

@@ -1,9 +1,9 @@
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import usuarioModel from '../models/usuario.js';
-import { exito, error } from '../utils/respuestas.js';
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const usuarioModel = require('../models/usuario');
+const { exito, error } = require('../utils/respuestas');
 
-export const registrar = async (req, res) => {
+const registrar = async (req, res) => {
   try {
     const { nombre, email, password, telefono, direccion, rol } = req.body;
 
@@ -32,7 +32,7 @@ export const registrar = async (req, res) => {
   }
 };
 
-export const login = async (req, res) => {
+const login = async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) return error(res, 'email y password son obligatorios', 400);
@@ -56,7 +56,7 @@ export const login = async (req, res) => {
   }
 };
 
-export const perfil = async (req, res) => {
+const perfil = async (req, res) => {
   try {
     const usuario = await usuarioModel.obtenerPorId(req.usuario.id);
     return exito(res, usuario);
@@ -65,7 +65,7 @@ export const perfil = async (req, res) => {
   }
 };
 
-export const listar = async (req, res) => {
+const listar = async (req, res) => {
   try {
     const usuarios = await usuarioModel.listarUsuarios();
     return exito(res, usuarios);
@@ -74,7 +74,7 @@ export const listar = async (req, res) => {
   }
 };
 
-export const actualizar = async (req, res) => {
+const actualizar = async (req, res) => {
   try {
     const cambios = { ...req.body };
     if (cambios.password) {
@@ -88,7 +88,7 @@ export const actualizar = async (req, res) => {
   }
 };
 
-export const eliminar = async (req, res) => {
+const eliminar = async (req, res) => {
   try {
     await usuarioModel.eliminarUsuario(req.params.id);
     return exito(res, { mensaje: 'Usuario eliminado' });
@@ -97,11 +97,4 @@ export const eliminar = async (req, res) => {
   }
 };
 
-export default {
-  registrar,
-  login,
-  perfil,
-  listar,
-  actualizar,
-  eliminar
-};
+module.exports = { registrar, login, perfil, listar, actualizar, eliminar };

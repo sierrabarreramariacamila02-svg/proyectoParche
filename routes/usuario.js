@@ -1,8 +1,7 @@
-import express from 'express';
-import usuarioController from '../controller/usuario.js';
-import { verificarToken, verificarRol } from '../middlewares/auth.js';
-
+const express = require('express');
 const router = express.Router();
+const usuarioController = require('../controller/usuario');
+const { verificarToken, verificarRol } = require('../middlewares/auth');
 
 router.post('/registro', usuarioController.registrar);
 router.post('/login', usuarioController.login);
@@ -11,4 +10,4 @@ router.get('/', verificarToken, verificarRol('admin'), usuarioController.listar)
 router.put('/:id', verificarToken, usuarioController.actualizar);
 router.delete('/:id', verificarToken, verificarRol('admin'), usuarioController.eliminar);
 
-export default router;
+module.exports = router;

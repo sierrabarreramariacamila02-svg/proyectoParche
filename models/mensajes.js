@@ -1,12 +1,12 @@
-import supabase from '../config/supabase.js';
+const supabase = require('../config/supabase');
 
-export const enviarMensaje = async (mensaje) => {
+const enviarMensaje = async (mensaje) => {
   const { data, error } = await supabase.from('mensajes').insert([mensaje]).select().single();
   if (error) throw error;
   return data;
 };
 
-export const listarPorPedido = async (pedido_id) => {
+const listarPorPedido = async (pedido_id) => {
   const { data, error } = await supabase
     .from('mensajes')
     .select('*')
@@ -16,7 +16,7 @@ export const listarPorPedido = async (pedido_id) => {
   return data;
 };
 
-export const marcarLeido = async (id) => {
+const marcarLeido = async (id) => {
   const { data, error } = await supabase
     .from('mensajes')
     .update({ leido: true })
@@ -27,8 +27,4 @@ export const marcarLeido = async (id) => {
   return data;
 };
 
-export default {
-  enviarMensaje,
-  listarPorPedido,
-  marcarLeido
-};
+module.exports = { enviarMensaje, listarPorPedido, marcarLeido };

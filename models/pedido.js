@@ -1,8 +1,8 @@
-import supabase from '../config/supabase.js';
+const supabase = require('../config/supabase');
 
-export const ESTADOS = ['pendiente', 'en_preparacion', 'listo', 'en_camino', 'entregado', 'cancelado'];
+const ESTADOS = ['pendiente', 'en_preparacion', 'listo', 'en_camino', 'entregado', 'cancelado'];
 
-export const crearPedido = async (usuario_id, direccion_entrega, items) => {
+const crearPedido = async (usuario_id, direccion_entrega, items) => {
   const total = items.reduce((sum, item) => sum + item.cantidad * item.precio_unitario, 0);
 
   const { data: pedido, error: errorPedido } = await supabase
@@ -21,7 +21,7 @@ export const crearPedido = async (usuario_id, direccion_entrega, items) => {
   return pedido;
 };
 
-export const obtenerPedidoPorId = async (id) => {
+const obtenerPedidoPorId = async (id) => {
   const { data, error } = await supabase
     .from('pedido')
     .select('*, detallePedido(*, producto(*))')
@@ -31,7 +31,7 @@ export const obtenerPedidoPorId = async (id) => {
   return data;
 };
 
-export const listarPedidosPorUsuario = async (usuario_id) => {
+const listarPedidosPorUsuario = async (usuario_id) => {
   const { data, error } = await supabase
     .from('pedido')
     .select('*')
@@ -41,7 +41,7 @@ export const listarPedidosPorUsuario = async (usuario_id) => {
   return data;
 };
 
-export const listarPorEstado = async (estado) => {
+const listarPorEstado = async (estado) => {
   const { data, error } = await supabase
     .from('pedido')
     .select('*, detallePedido(*, producto(*))')
@@ -51,7 +51,7 @@ export const listarPorEstado = async (estado) => {
   return data;
 };
 
-export const actualizarEstadoPedido = async (id, estado) => {
+const actualizarEstadoPedido = async (id, estado) => {
   if (!ESTADOS.includes(estado)) {
     throw new Error(`Estado inválido. Debe ser uno de: ${ESTADOS.join(', ')}`);
   }
@@ -65,7 +65,7 @@ export const actualizarEstadoPedido = async (id, estado) => {
   return data;
 };
 
-export const asignarDomiciliario = async (id, domiciliario_id) => {
+const asignarDomiciliario = async (id, domiciliario_id) => {
   const { data, error } = await supabase
     .from('pedido')
     .update({ domiciliario_id, estado: 'en_camino' })
@@ -76,7 +76,7 @@ export const asignarDomiciliario = async (id, domiciliario_id) => {
   return data;
 };
 
-export default {
+module.exports = {
   ESTADOS,
   crearPedido,
   obtenerPedidoPorId,
