@@ -1,4 +1,4 @@
-🍔 El Parche - API REST Backend
+🍔 El Parche 
 
 1. Breve Descripción
 El Parche es una API REST desarrollada para la gestión integral de pedidos en un restaurante de comida rápida. Facilita la administración de roles de usuario, la gestión del menú digital, la recepción de pedidos en cocina, la atención de meseros y el seguimiento de domicilios en tiempo real.
