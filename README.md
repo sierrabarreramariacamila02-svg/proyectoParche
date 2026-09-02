@@ -29,4 +29,5 @@ Antes de comenzar, asegúrate de contar con las siguientes herramientas instalad
    git clone [https://github.com/tu-usuario/proyectoParche.git](https://github.com/tu-usuario/proyectoParche.git)
    cd proyectoParche
 
-   Paola Andrea Diaz.
+   Paola Andrea Diaz
+   maria camila sierra.
