@@ -1,6 +1,28 @@
 import { getUsuarios, obtenerUsuarioPorId, actualizarUsuario as actualizarUsuarioModelo, eliminarUsuario } from '../models/usuario.js';
+// 1. crear usuario
+export const crearUsuariocontroller = async (req, res) => {
+    try {
+        const { nombre, email, password } = req.body;
 
-// 1. Obtener todos los usuarios
+        if (!nombre || !email || !password) {
+            return res.status(400).json({ error: 'nombre, email y password son obligatorios' });
+        }
+
+        const { data, error } = await crearUsuariocontroller(req.body);
+
+        if (error) {
+            return res.status(500).json({ error: 'Error al crear el usuario' });
+        }
+
+        return res.status(201).json({
+            usuario: data
+        });
+    } catch (error) {
+        console.error('Error al crear el usuario:', error);
+        return res.status(500).json({ error: 'Error interno del servidor' });
+    }
+};
+// 2. Obtener todos los usuarios
 export const getUsuariosController = async (req, res) => {
     try {
         const { data, error } = await getUsuarios();
@@ -16,7 +38,7 @@ export const getUsuariosController = async (req, res) => {
     }
 };
 
-// 2. Obtener un usuario por ID
+// 3. Obtener un usuario por ID
 export const getUsuarioPorIdController = async (req, res) => {
     try {
         const { id } = req.params;
@@ -35,7 +57,7 @@ export const getUsuarioPorIdController = async (req, res) => {
     }
 };
 
-// 3. Actualizar un usuario por ID
+// 4. Actualizar un usuario por ID
 export const actualizarUsuarioController = async (req, res) => {
     try {
         const { id } = req.params;
@@ -63,7 +85,7 @@ export const actualizarUsuarioController = async (req, res) => {
     }
 };
 
-// 4. Eliminar un usuario por ID
+// 5. Eliminar un usuario por ID
 export const eliminarUsuarioController = async (req, res) => {
     try {
         const { id } = req.params;

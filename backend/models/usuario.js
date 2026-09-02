@@ -20,15 +20,34 @@ export const obtenerUsuarioPorId = async (id) => {
 };
 
 // 3. Crear un nuevo usuario
-export const crearUsuario = async (nombre, email, password, telefono, direccion, rol = 'cliente') => {
-    const { data, error } = await supabase
-        .from('usuario')
-        .insert([{ nombre, email, password, telefono, direccion, rol }])
-        .select('id, nombre, email, telefono, direccion, rol, creado_en')
-        .single();
-    return { data, error };
-};
+export const crearUsuariocontroller = async (
+  nombre,
+  email,
+  password,
+  telefono,
+  direccion,
+  rol = 'cliente',
+  codigoverificacion,
+  codigoverificacionexpiracion
+) => {
+  const { data, error } = await supabase
+    .from('usuario')
+    .insert({
+      nombre,
+      email,
+      password,
+      telefono,
+      direccion,
+      rol,
+      isverified: false,
+      codigoverificacion: codigoverificacion,
+      codigoverificacionexpiracion: codigoverificacionexpiracion
+    })
+    .select('id, nombre, email, rol')
+    .single();
 
+  return { data, error };
+};
 // 4. Actualizar usuario
 export const actualizarUsuario = async (id, campos) => {
     const { data, error } = await supabase
@@ -58,3 +77,5 @@ export const obtenerUsuarioPorEmail = async (email) => {
         .single();
     return { data, error };
 };
+
+export const crearUsuario = async (nombre, email, password, telefono, direccion, rol ) => {}

@@ -1,6 +1,8 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { crearUsuario, obtenerUsuarioPorEmail } from '../models/usuario.js';
+import { supabase } from '../config/supabase.js';
+import { crearUsuariocontroller, obtenerUsuarioPorEmail } from '../models/usuario.js';
+import { enviarcodigoverificacion } from '../utils/emailService.js';
 
 // Registro de usuario
 export const registro = async (req, res) => {
@@ -23,22 +25,31 @@ export const registro = async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        const codigoverificacion = Math.floor(100000 + Math.random() * 900000).toString();
+        const codigoverificacionexpiracion = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+
         // Si envías 'admin' toma 'admin', de lo contrario asigna 'cliente' por defecto
         const rolFinal = rol ? rol : 'cliente';
 
-        const { data: nuevoUsuario, error } = await crearUsuario(
+        const { data: nuevoUsuario, error } = await crearUsuariocontroller(
             nombre,
             email,
             hashedPassword,
             telefono,
             direccion,
-            rolFinal
+            rolFinal,
+            codigoverificacion,
+            codigoverificacionexpiracion
         );
 
-        if (error) {
-            console.error("Error en el registro:", error);
+        if (error) throw error;
+
+        // Enviar el código de verificación por correo
+        const { exito, error: emailError } = await enviarcodigoverificacion(email, nombre, codigoverificacion);
+        if (!exito) {
+            console.error("Error enviando correo de verificación:", emailError);
             return res.status(500).json({
-                error: "Error al crear el usuario en la base de datos"
+                error: "Error al enviar el código de verificación. Por favor, intenta nuevamente más tarde."
             });
         }
 
@@ -54,6 +65,55 @@ export const registro = async (req, res) => {
         });
     }
 };
+
+// 2. VERIFICAR CODIGO
+export const verificarCuenta = async (req, res) => {
+  try {
+    const { email, codigo } = req.body;
+
+    if (!email || !codigo) {
+      return res.status(400).json({ error: 'Email y codigo son obligatorios' });
+    }
+
+    const { data: usuario } = await obtenerUsuarioPorEmail(email);
+    if (!usuario) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    if (usuario.isVerified) {
+      return res.status(400).json({ mensaje: 'Esta cuenta ya esta verificada' });
+    }
+
+    if (usuario.codigoverificacion !== codigo) {
+      return res.status(400).json({ error: 'Codigo de verificacion incorrecto' });
+    }
+
+    const ahora = new Date();
+    const expiracion = new Date(usuario.codigoverificacionExpiracion);
+    if (ahora > expiracion) {
+      return res.status(400).json({ error: 'El codigo ha expirado. Solicita uno nuevo.' });
+    }
+
+    // Marcar como verificado y limpiar el codigo
+    const { error } = await supabase
+      .from('usuarios')
+      .update({
+        isVerified: true,
+        codigoverificacion: null,
+        codigoverificacionexpiracion: null
+      })
+      .eq('email', email);
+
+    if (error) throw error;
+
+    res.json({ mensaje: 'Cuenta verificada con exito. Ya puedes iniciar sesion.' });
+  } catch (error) {
+    console.error('Error en verificacion:', error);
+    res.status(500).json({ error: 'Error al verificar la cuenta' });
+  }
+};
+
+
 
 // Login
 export const login = async (req, res) => {
@@ -73,6 +133,12 @@ export const login = async (req, res) => {
         if (!passwordValido) {
             return res.status(401).json({ error: "Credenciales incorrectas" });
         }
+
+        if (!usuario.isVerified) {
+      return res.status(403).json({
+        error: 'Cuenta no verificada. Por favor verifica tu correo antes de iniciar sesion.'
+      });
+    }
 
         const token = jwt.sign(
             {

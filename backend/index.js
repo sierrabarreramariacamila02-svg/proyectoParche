@@ -43,8 +43,17 @@ app.use('/recuperar', recuperarRoutes);
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
+const servidor = app.listen(PORT, () => {
     console.log(`🚀 Servidor corriendo en el puerto ${PORT}`);
     console.log(`📍 http://localhost:${PORT}`);
-    console.log(`📍 Registro: http://localhost:${PORT}/auth/registro`);
+    console.log(`📍 Registro: http://localhost:${PORT}`);
+});
+
+servidor.on('error', (error) => {
+    if (error.code === 'EADDRINUSE') {
+        console.error(`❌ El puerto ${PORT} ya está ocupado. Cierra el servidor anterior o usa otro puerto.`);
+        return;
+    }
+
+    console.error('❌ Error al iniciar el servidor:', error);
 });
