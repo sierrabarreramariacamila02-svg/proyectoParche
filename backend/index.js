@@ -14,12 +14,14 @@ import meseroRoutes from './routes/mesero.js';
 import mensajesRoutes from './routes/mensajes.js';
 import calificacionRoutes from './routes/calificacion.js';
 import recuperarRoutes from './routes/recuperar.js';
+import chatRoutes from "./routes/chatBot.js";
 
 connectaDB();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
 
 app.get('/', (req, res) => {
     res.json({
@@ -40,20 +42,13 @@ app.use('/meseros', meseroRoutes);
 app.use('/mensajes', mensajesRoutes);
 app.use('/calificaciones', calificacionRoutes);
 app.use('/recuperar', recuperarRoutes);
+app.use("/api/chat", chatRoutes);
 
-const PORT = process.env.PORT || 3000;
+
+const PORT =  3000;
 
 const servidor = app.listen(PORT, () => {
     console.log(`🚀 Servidor corriendo en el puerto ${PORT}`);
     console.log(`📍 http://localhost:${PORT}`);
     console.log(`📍 Registro: http://localhost:${PORT}`);
-});
-
-servidor.on('error', (error) => {
-    if (error.code === 'EADDRINUSE') {
-        console.error(`❌ El puerto ${PORT} ya está ocupado. Cierra el servidor anterior o usa otro puerto.`);
-        return;
-    }
-
-    console.error('❌ Error al iniciar el servidor:', error);
 });
