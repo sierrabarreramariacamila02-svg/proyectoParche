@@ -16,7 +16,7 @@ export const chatParche = async (req, res) => {
 
     // 1. Obtener la carta desde tu tabla 'productos' en Supabase
     const { data: productos, error: errorProductos } = await supabase
-      .from("helados")
+      .from("producto")
       .select("id,nombre, descripcion, precio, categoria");
 
     if (errorProductos) {
@@ -36,7 +36,7 @@ export const chatParche = async (req, res) => {
     ).join("\n");
 
     const systemPrompt = `
-Eres el asesor virtual y anfitrion de la heladeria "Helados Parche".
+Eres el asesor virtual y anfitrion de el Parche "Restaurante el Parche".
 Eres alegre, amable, refrescante y educado.
 
 CATALOGO ACTUAL EN TIENDA:
