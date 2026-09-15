@@ -77,6 +77,7 @@ export const autenticarConGoogle = async (req, res) => {
                 avatar: usuarioFinal.avatar || avatar
             }
         });
+        
 
     } catch (error) {
         console.error("Error en autenticarConGoogle:", error);
