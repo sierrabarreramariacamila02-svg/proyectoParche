@@ -78,4 +78,25 @@ export const obtenerUsuarioPorEmail = async (email) => {
     return { data, error };
 };
 
+// 2. Función específica para los usuarios autenticados con Google
+export const crearUsuarioGoogle = async ({ nombre, email, googleId, avatar = null, rol = 'cliente' }) => {
+    const { data, error } = await supabase
+        .from('usuario')
+        .insert({
+            nombre,
+            email,
+            password: null,        // No requiere contraseña
+            rol,
+            isverified: true,      // Google ya validó este correo
+            googleId,
+            avatar,
+            codigoverificacion: null,
+            codigoverificacionexpiracion: null
+        })
+        .select('id, nombre, email, rol, avatar')
+        .single();
+
+    return { data, error };
+};
+
 export const crearUsuario = async (nombre, email, password, telefono, direccion, rol ) => {}

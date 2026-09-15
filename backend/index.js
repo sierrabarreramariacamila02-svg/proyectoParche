@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
 import { connectaDB } from './config/supabase.js';
@@ -15,6 +15,8 @@ import mensajesRoutes from './routes/mensajes.js';
 import calificacionRoutes from './routes/calificacion.js';
 import recuperarRoutes from './routes/recuperar.js';
 import chatRoutes from "./routes/chatBot.js";
+
+dotenv.config();
 
 connectaDB();
 
