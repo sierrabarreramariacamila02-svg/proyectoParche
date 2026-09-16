@@ -1,28 +1,6 @@
 import { getUsuarios, obtenerUsuarioPorId, actualizarUsuario as actualizarUsuarioModelo, eliminarUsuario } from '../models/usuario.js';
-// 1. crear usuario
-export const crearUsuariocontroller = async (req, res) => {
-    try {
-        const { nombre, email, password } = req.body;
 
-        if (!nombre || !email || !password) {
-            return res.status(400).json({ error: 'nombre, email y password son obligatorios' });
-        }
-
-        const { data, error } = await crearUsuariocontroller(req.body);
-
-        if (error) {
-            return res.status(500).json({ error: 'Error al crear el usuario' });
-        }
-
-        return res.status(201).json({
-            usuario: data
-        });
-    } catch (error) {
-        console.error('Error al crear el usuario:', error);
-        return res.status(500).json({ error: 'Error interno del servidor' });
-    }
-};
-// 2. Obtener todos los usuarios
+// 1. Obtener todos los usuarios
 export const getUsuariosController = async (req, res) => {
     try {
         const { data, error } = await getUsuarios();
@@ -38,7 +16,7 @@ export const getUsuariosController = async (req, res) => {
     }
 };
 
-// 3. Obtener un usuario por ID
+// 2. Obtener un usuario por ID
 export const getUsuarioPorIdController = async (req, res) => {
     try {
         const { id } = req.params;
@@ -57,16 +35,30 @@ export const getUsuarioPorIdController = async (req, res) => {
     }
 };
 
-// 4. Actualizar un usuario por ID
+// 3. Actualizar un usuario por ID
 export const actualizarUsuarioController = async (req, res) => {
     try {
         const { id } = req.params;
         const datosActualizados = req.body;
 
+        // CORRECCIÓN: antes cualquier usuario logueado podía editar los datos
+        // (incluido el rol) de cualquier otro usuario con solo cambiar el :id
+        // en la URL. Ahora solo puede editar el dueño de la cuenta o un admin.
+        const esDueno = String(req.usuario.id) === String(id);
+        const esAdmin = req.usuario.rol === 'admin';
+        if (!esDueno && !esAdmin) {
+            return res.status(403).json({ error: 'No tienes permiso para editar este usuario' });
+        }
+
         const { data: usuarioExistente, error: errorBusqueda } = await obtenerUsuarioPorId(id);
 
         if (errorBusqueda || !usuarioExistente) {
             return res.status(404).json({ error: 'Usuario no encontrado' });
+        }
+
+        // Si quien edita no es admin, evitamos que se auto-asigne otro rol
+        if (!esAdmin && datosActualizados.rol) {
+            delete datosActualizados.rol;
         }
 
         const { data, error } = await actualizarUsuarioModelo(id, datosActualizados);
@@ -85,7 +77,7 @@ export const actualizarUsuarioController = async (req, res) => {
     }
 };
 
-// 5. Eliminar un usuario por ID
+// 4. Eliminar un usuario por ID
 export const eliminarUsuarioController = async (req, res) => {
     try {
         const { id } = req.params;

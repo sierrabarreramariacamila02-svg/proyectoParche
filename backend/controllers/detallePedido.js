@@ -13,6 +13,15 @@ export const listarPorPedido = async (req, res) => {
     }
 };
 
+// Función auxiliar para no repetir la lógica de recalcular el total del pedido
+const recalcularTotalPedido = async (pedidoId) => {
+    const { data: pedido } = await obtenerPedidoConDetalles(pedidoId);
+    if (pedido) {
+        const total = (pedido.detalle_pedido || []).reduce((suma, d) => suma + Number(d.subtotal), 0);
+        await actualizarPedido(pedidoId, { total });
+    }
+};
+
 export const crear = async (req, res) => {
     try {
         const { pedido_id, producto_id, cantidad } = req.body;
@@ -38,11 +47,7 @@ export const crear = async (req, res) => {
 
         if (error) return res.status(500).json({ error: 'Error al crear el detalle' });
 
-        const { data: pedido } = await obtenerPedidoConDetalles(pedido_id);
-        if (pedido) {
-            const total = (pedido.detalle_pedido || []).reduce((suma, d) => suma + Number(d.subtotal), 0);
-            await actualizarPedido(pedido_id, { total });
-        }
+        await recalcularTotalPedido(pedido_id);
 
         return res.status(201).json({ message: 'Detalle creado', detalle: data[0] });
 
@@ -60,6 +65,12 @@ export const editar = async (req, res) => {
         }
         const { data, error } = await actualizarDetallePedido(id, cambios);
         if (error) return res.status(500).json({ error: 'Error al actualizar el detalle' });
+
+        // CORRECCIÓN: si cambió el subtotal, el total del pedido debe recalcularse también.
+        if (data && data[0] && data[0].pedido_id) {
+            await recalcularTotalPedido(data[0].pedido_id);
+        }
+
         return res.status(200).json({ message: 'Detalle actualizado', detalle: data[0] });
     } catch (error) {
         return res.status(500).json({ error: error.message });
@@ -69,8 +80,15 @@ export const editar = async (req, res) => {
 export const eliminar = async (req, res) => {
     try {
         const { id } = req.params;
-        const { error } = await eliminarDetallePedido(id);
+
+        const { data, error } = await eliminarDetallePedido(id);
         if (error) return res.status(500).json({ error: 'Error al eliminar el detalle' });
+
+        const pedidoId = data && data[0] && data[0].pedido_id;
+        if (pedidoId) {
+            await recalcularTotalPedido(pedidoId);
+        }
+
         return res.status(200).json({ message: 'Detalle eliminado' });
     } catch (error) {
         return res.status(500).json({ error: error.message });

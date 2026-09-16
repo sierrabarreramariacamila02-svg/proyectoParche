@@ -19,7 +19,8 @@ export const actualizarDetallePedido = async (id, cambios) => {
   return { data, error };
 };
 
+ 
 export const eliminarDetallePedido = async (id) => {
-  const { data, error } = await supabase.from('detalle_pedido').delete().eq('id', id);
+  const { data, error } = await supabase.from('detalle_pedido').delete().eq('id', id).select();
   return { data, error };
 };

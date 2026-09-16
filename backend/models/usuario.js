@@ -1,102 +1,133 @@
 import { supabase } from '../config/supabase.js';
 
-// 1. Obtener todos los usuarios
+// Obtener todos los usuarios
 export const getUsuarios = async () => {
-    const { data, error } = await supabase
-        .from('usuario')
-        .select('id, nombre, email, telefono, direccion, rol, creado_en')
-        .order('id');
-    return { data, error };
+    try {
+        const { data, error } = await supabase
+            .from('usuario')
+            .select('*');
+
+        return { data, error };
+    } catch (error) {
+        return { data: null, error };
+    }
 };
 
-// 2. Obtener un usuario por ID
-export const obtenerUsuarioPorId = async (id) => {
-    const { data, error } = await supabase
-        .from('usuario')
-        .select('id, nombre, email, telefono, direccion, rol, creado_en')
-        .eq('id', id)
-        .single();
-    return { data, error };
+// Obtener un usuario por su ID
+export const obtenerUsuarioPorId = async (usuarioId) => {
+    try {
+        const { data, error } = await supabase
+            .from('usuario')
+            .select('*')
+            .eq('id', usuarioId)
+            .single();
+
+        if (error && error.code !== 'PGRST116') {
+            return { data: null, error };
+        }
+
+        return { data, error: null };
+    } catch (error) {
+        return { data: null, error };
+    }
 };
 
-// 3. Crear un nuevo usuario
-export const crearUsuariocontroller = async (
-  nombre,
-  email,
-  password,
-  telefono,
-  direccion,
-  rol = 'cliente',
-  codigoverificacion,
-  codigoverificacionexpiracion
-) => {
-  const { data, error } = await supabase
-    .from('usuario')
-    .insert({
-      nombre,
-      email,
-      password,
-      telefono,
-      direccion,
-      rol,
-      isverified: false,
-      codigoverificacion: codigoverificacion,
-      codigoverificacionexpiracion: codigoverificacionexpiracion
-    })
-    .select('id, nombre, email, rol')
-    .single();
-
-  return { data, error };
-};
-// 4. Actualizar usuario
-export const actualizarUsuario = async (id, campos) => {
-    const { data, error } = await supabase
-        .from('usuario')
-        .update(campos)
-        .eq('id', id)
-        .select('id, nombre, email, telefono, direccion, rol, creado_en')
-        .single();
-    return { data, error };
-};
-
-// 5. Eliminar usuario
-export const eliminarUsuario = async (id) => {
-    const { data, error } = await supabase
-        .from('usuario')
-        .delete()
-        .eq('id', id);
-    return { data, error };
-};
-
-// 6. Obtener usuario por email (para registro/login, incluye password)
+// Obtener un usuario por su correo electrónico
 export const obtenerUsuarioPorEmail = async (email) => {
-    const { data, error } = await supabase
-        .from('usuario')
-        .select('*')
-        .eq('email', email)
-        .single();
-    return { data, error };
+    try {
+        const { data, error } = await supabase
+            .from('usuario')
+            .select('*')
+            .eq('email', email) // Corregido de 'correo' a 'email' y variable correcta
+            .single();
+
+        if (error && error.code !== 'PGRST116') {
+            return { data: null, error };
+        }
+
+        return { data, error: null };
+    } catch (error) {
+        return { data: null, error };
+    }
 };
 
-// 2. Función específica para los usuarios autenticados con Google
-export const crearUsuarioGoogle = async ({ nombre, email, googleId, avatar = null, rol = 'cliente' }) => {
-    const { data, error } = await supabase
-        .from('usuario')
-        .insert({
-            nombre,
-            email,
-            password: null,        // No requiere contraseña
-            rol,
-            isverified: true,      // Google ya validó este correo
-            googleId,
-            avatar,
-            codigoverificacion: null,
-            codigoverificacionexpiracion: null
-        })
-        .select('id, nombre, email, rol, avatar')
-        .single();
+// Crear un usuario mediante Google
+export const crearUsuarioGoogle = async (userData) => {
+    try {
+        const { data, error } = await supabase
+            .from('usuario')
+            .insert([
+                {
+                    nombre: userData.nombre,
+                    email: userData.email, // Corregido de 'correo' a 'email'
+                    googleId: userData.googleId, // Coincide con tu SQL ('googleId')
+                    avatar: userData.avatar,
+                    rol: userData.rol,
+                    isverified: true // Coincide con tu SQL ('isverified')
+                }
+            ])
+            .select()
+            .single();
 
-    return { data, error };
+        return { data, error };
+    } catch (error) {
+        return { data: null, error };
+    }
 };
 
-export const crearUsuario = async (nombre, email, password, telefono, direccion, rol ) => {}
+// Crear un usuario tradicional (Controlador de registro estándar) 
+export const crearUsuariocontroller = async (userData) => {
+    try {
+        const { data, error } = await supabase
+            .from('usuario')
+            .insert([
+                {
+                    nombre: userData.nombre,
+                    email: userData.email, // Corregido de 'correo' a 'email'
+                    password: userData.password,
+                    telefono: userData.telefono,
+                    direccion: userData.direccion,
+                    rol: userData.rol || 'cliente',
+                    codigoverificacion: userData.codigoverificacion,
+                    codigoverificacionexpiracion: userData.codigoverificacionexpiracion,
+                    isverified: false // Coincide con tu SQL ('isverified')
+                }
+            ])
+            .select()
+            .single();
+
+        return { data, error };
+    } catch (error) {
+        return { data: null, error };
+    }
+};
+
+// Actualizar datos del usuario
+export const actualizarUsuario = async (usuarioId, camposActualizar) => {
+    try {
+        const { data, error } = await supabase
+            .from('usuario')
+            .update(camposActualizar)
+            .eq('id', usuarioId) // Corregido a 'id'
+            .select();
+
+        return { data, error };
+    } catch (error) {
+        return { data: null, error };
+    }
+};
+
+// Eliminar un usuario por su ID
+export const eliminarUsuario = async (usuarioId) => {
+    try {
+        const { data, error } = await supabase
+            .from('usuario')
+            .delete()
+            .eq('id', usuarioId) // Corregido a 'id'
+            .select();
+
+        return { data, error };
+    } catch (error) {
+        return { data: null, error };
+    }
+};

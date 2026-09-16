@@ -4,11 +4,11 @@ import { supabase } from '../config/supabase.js';
 import { crearUsuariocontroller, obtenerUsuarioPorEmail } from '../models/usuario.js';
 import { enviarcodigoverificacion } from '../utils/emailService.js';
 
-
 // Registro de usuario
 export const registro = async (req, res) => {
     try {
-        // Extraemos 'rol' además de los otros datos del body
+        console.log("BODY RECIBIDO:", req.body);
+
         const { nombre, email, password, telefono, direccion, rol } = req.body;
 
         if (!nombre || !email || !password) {
@@ -28,20 +28,19 @@ export const registro = async (req, res) => {
 
         const codigoverificacion = Math.floor(100000 + Math.random() * 900000).toString();
         const codigoverificacionexpiracion = new Date(Date.now() + 15 * 60 * 1000).toISOString();
-
-        // Si envías 'admin' toma 'admin', de lo contrario asigna 'cliente' por defecto
         const rolFinal = rol ? rol : 'cliente';
 
-        const { data: nuevoUsuario, error } = await crearUsuariocontroller(
+        // 💡 AQUÍ ESTÁ LA SOLUCIÓN: Enviamos un objeto que coincide con lo que espera `models/usuario.js`
+        const { data: nuevoUsuario, error } = await crearUsuariocontroller({
             nombre,
             email,
-            hashedPassword,
+            password: hashedPassword,
             telefono,
             direccion,
-            rolFinal,
+            rol: rolFinal,
             codigoverificacion,
             codigoverificacionexpiracion
-        );
+        });
 
         if (error) throw error;
 
@@ -55,7 +54,7 @@ export const registro = async (req, res) => {
         }
 
         return res.status(201).json({
-            message: "Usuario creado exitosamente",
+            message: "Usuario creado exitosamente. Revisa tu correo para verificar la cuenta.",
             usuario: nuevoUsuario
         });
 
@@ -81,7 +80,7 @@ export const verificarCuenta = async (req, res) => {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
 
-    if (usuario.isVerified) {
+    if (usuario.isverified) {
       return res.status(400).json({ mensaje: 'Esta cuenta ya esta verificada' });
     }
 
@@ -90,16 +89,16 @@ export const verificarCuenta = async (req, res) => {
     }
 
     const ahora = new Date();
-    const expiracion = new Date(usuario.codigoverificacionExpiracion);
+    const expiracion = new Date(usuario.codigoverificacionexpiracion);
     if (ahora > expiracion) {
       return res.status(400).json({ error: 'El codigo ha expirado. Solicita uno nuevo.' });
     }
 
     // Marcar como verificado y limpiar el codigo
     const { error } = await supabase
-      .from('usuarios')
+      .from('usuario')
       .update({
-        isVerified: true,
+        isverified: true,
         codigoverificacion: null,
         codigoverificacionexpiracion: null
       })
@@ -113,8 +112,6 @@ export const verificarCuenta = async (req, res) => {
     res.status(500).json({ error: 'Error al verificar la cuenta' });
   }
 };
-
-
 
 // Login
 export const login = async (req, res) => {
@@ -135,11 +132,11 @@ export const login = async (req, res) => {
             return res.status(401).json({ error: "Credenciales incorrectas" });
         }
 
-        if (!usuario.isVerified) {
-      return res.status(403).json({
-        error: 'Cuenta no verificada. Por favor verifica tu correo antes de iniciar sesion.'
-      });
-    }
+        if (!usuario.isverified) {
+            return res.status(403).json({
+                error: 'Cuenta no verificada. Por favor verifica tu correo antes de iniciar sesion.'
+            });
+        }
 
         const token = jwt.sign(
             {
