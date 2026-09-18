@@ -10,5 +10,6 @@ router.get('/:id', verificarToken, obtenerPedido);
 router.post('/', verificarToken, crear);
 router.put('/:id', verificarToken, verificarRol('admin', 'cocina', 'mesero'), editar);
 router.delete('/:id', verificarToken, verificarAdmin, eliminar);
+router.put('/:id/estado', verificarToken, verificarRol('admin', 'cocina', 'mesero'), editar);
 
 export default router;

@@ -75,31 +75,35 @@ export const crearUsuarioGoogle = async (userData) => {
     }
 };
 
-// Crear un usuario tradicional (Controlador de registro estándar) 
+// Crear un usuario tradicional (Controlador de registro estándar)
 export const crearUsuariocontroller = async (userData) => {
-    try {
-        const { data, error } = await supabase
-            .from('usuario')
-            .insert([
-                {
-                    nombre: userData.nombre,
-                    email: userData.email, // Corregido de 'correo' a 'email'
-                    password: userData.password,
-                    telefono: userData.telefono,
-                    direccion: userData.direccion,
-                    rol: userData.rol || 'cliente',
-                    codigoverificacion: userData.codigoverificacion,
-                    codigoverificacionexpiracion: userData.codigoverificacionexpiracion,
-                    isverified: false // Coincide con tu SQL ('isverified')
-                }
-            ])
-            .select()
-            .single();
+  try {
+    const { data, error } = await supabase
+      .from('usuario')
+      .insert([
+        {
+          nombre: userData.nombre,
+          email: userData.email,
+          password: userData.password,
+          telefono: userData.telefono,
+          direccion: userData.direccion,
+          rol: userData.rol || 'cliente',
+          codigoverificacion: userData.codigoverificacion,
+          codigoverificacionexpiracion: userData.codigoverificacionexpiracion,
+          isverified: false
+        }
+      ])
+      .select()
+      .single();
 
-        return { data, error };
-    } catch (error) {
-        return { data: null, error };
-    }
+    // Si Supabase devuelve un error, lo retornamos explícitamente
+    if (error) return { data: null, error };
+
+    return { data, error: null };
+  } catch (err) {
+    // Si ocurre una excepción inesperada, la retornamos en el objeto error
+    return { data: null, error: err };
+  }
 };
 
 // Actualizar datos del usuario

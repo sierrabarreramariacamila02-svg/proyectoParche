@@ -9,11 +9,18 @@ export const obtenerAtenciones = async () => {
 };
 
 export const crearAtencion = async (meseroData) => {
-  const { data, error } = await supabase.from('mesero').insert(meseroData).select();
+  const { data, error } = await supabase
+    .from('mesero')
+    .insert(meseroData)
+    .select();
   return { data, error };
 };
 
 export const actualizarAtencion = async (id, cambios) => {
-  const { data, error } = await supabase.from('mesero').update(cambios).eq('id', id).select();
+  const { data, error } = await supabase
+    .from('mesero')
+    .update(cambios)
+    .eq('id', id)
+    .select();
   return { data, error };
 };

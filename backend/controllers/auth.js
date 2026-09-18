@@ -31,6 +31,7 @@ export const registro = async (req, res) => {
         const rolFinal = rol ? rol : 'cliente';
 
         // 💡 AQUÍ ESTÁ LA SOLUCIÓN: Enviamos un objeto que coincide con lo que espera `models/usuario.js`
+        // Reemplaza desde la llamada a crearUsuariocontroller hasta el res.status(201):
         const { data: nuevoUsuario, error } = await crearUsuariocontroller({
             nombre,
             email,
@@ -42,21 +43,24 @@ export const registro = async (req, res) => {
             codigoverificacionexpiracion
         });
 
-        if (error) throw error;
+        if (error) {
+            console.error("Error al insertar usuario:", error);
+            return res.status(500).json({ error: error.message || "Error al crear usuario" });
+        }
 
         // Enviar el código de verificación por correo
         const { exito, error: emailError } = await enviarcodigoverificacion(email, nombre, codigoverificacion);
         if (!exito) {
             console.error("Error enviando correo de verificación:", emailError);
-            return res.status(500).json({
-                error: "Error al enviar el código de verificación. Por favor, intenta nuevamente más tarde."
-            });
         }
 
         return res.status(201).json({
             message: "Usuario creado exitosamente. Revisa tu correo para verificar la cuenta.",
-            usuario: nuevoUsuario
+            usuario: nuevoUsuario,
+            codigoPrueba: codigoverificacion
         });
+
+    
 
     } catch (error) {
         console.error("Error en el registro:", error);

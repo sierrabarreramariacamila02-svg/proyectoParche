@@ -13,8 +13,8 @@ export const listar = async (req, res) => {
 export const crear = async (req, res) => {
     try {
         const { data, error } = await crearRegistroCocina(req.body);
-        if (error) return res.status(500).json({ error: 'Error al crear el registro de cocina' });
-        return res.status(201).json({ message: 'Registro creado', cocina: data[0] });
+        if (error) return res.status(500).json({ error: 'Error al crear el registro de cocina', detalle: error.message});
+        return res.status(201).json({ message: 'Registro creado', cocina: data[0] || data });
     } catch (error) {
         return res.status(500).json({ error: error.message });
     }

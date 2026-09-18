@@ -1,10 +1,14 @@
 import Groq from "groq-sdk";
 import { supabase } from "../config/supabase.js"; // Ruta a tu cliente de Supabase existente
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+//const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 export const chatParche = async (req, res) => {
   try {
+
+    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+
     const { mensaje, sesionId, usuarioId } = req.body;
 
     if (!mensaje || !mensaje.trim()) {
