@@ -50,7 +50,10 @@ controllers/
   cocina.js
   detallePedido.js
   domiciliario.js
+<<<<<<< HEAD
   googleAuth.js
+=======
+>>>>>>> paola
   mensajes.js
   mesero.js
   pedido.js
@@ -85,6 +88,10 @@ routes/
 utils/
   emailService.js
   generarToken.js
+<<<<<<< HEAD
+=======
+  logger.js
+>>>>>>> paola
   respuestas.js
 .gitignore
 index.js
@@ -135,6 +142,7 @@ export const connectaDB = () => {
 </file>
 
 <file path="controllers/auth.js">
+<<<<<<< HEAD
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { supabase } from '../config/supabase.js';
@@ -299,6 +307,86 @@ export const login = async (req, res) => {
         return res.status(500).json({ error: "Error interno del servidor" });
     }
 };
+=======
+import {
+  crearUsuarioModel,
+  buscarUsuarioPorEmailModel,
+  actualizarUsuario
+} from '../models/usuario.js';
+import { enviarcodigoverificacion } from '../utils/emailService.js';
+import { generarToken } from '../utils/generarToken.js';
+import { logError } from '../utils/logger.js';
+import bcrypt from 'bcrypt';
+
+// Genera un código numérico de 6 dígitos
+const generarCodigoVerificacion = () =>
+  Math.floor(100000 + Math.random() * 900000).toString();
+
+// Registro de usuario
+export const registro = async (req, res) => {
+  try {
+    const { nombre, email, password, telefono, rol } = req.body;
+
+    if (!nombre || !email || !password) {
+      return res.status(400).json({ error: 'Nombre, email y password son obligatorios.' });
+    }
+
+    const usuarioExistente = await buscarUsuarioPorEmailModel(email);
+    if (usuarioExistente) {
+      return res.status(400).json({ error: 'El correo electrónico ya está registrado.' });
+    }
+
+    const codigo = generarCodigoVerificacion();
+    const expiracion = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 minutos
+
+    const nuevoUsuario = await crearUsuarioModel(
+      nombre,
+      email,
+      password,
+      telefono,
+      rol,
+      codigo,
+      expiracion
+    );
+
+    try {
+      await enviarcodigoverificacion(email, nombre, codigo);
+    } catch (mailError) {
+      logError('registro -> enviarcodigoverificacion', mailError);
+    }
+
+    res.status(201).json({
+      mensaje: 'Usuario registrado con éxito. Revisa tu correo para verificar tu cuenta.',
+      usuario: {
+        id: nuevoUsuario.id,
+        nombre: nuevoUsuario.nombre,
+        email: nuevoUsuario.email,
+        rol: nuevoUsuario.rol
+      }
+    });
+  } catch (error) {
+    logError('registro', error);
+    res.status(500).json({ error: 'Error al registrar el usuario', detalle: error.message });
+  }
+};
+export const registrarUsuario = registro;
+
+// Login de usuario
+export const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: 'email y password son obligatorios.' });
+    }
+
+    const usuario = await buscarUsuarioPorEmailModel(email);
+    if (!usuario) {
+      return res.status(404).json({ error: 'Credenciales inválidas (usuario no encontrado).' });
+    }
+
+    const passwordValida =
+>>>>>>> paola
 </file>
 
 <file path="controllers/calificacion.js">
@@ -548,6 +636,7 @@ export const listarPorPedido = async (req, res) => {
     }
 };
 
+<<<<<<< HEAD
 // Función auxiliar para no repetir la lógica de recalcular el total del pedido
 const recalcularTotalPedido = async (pedidoId) => {
     const { data: pedido } = await obtenerPedidoConDetalles(pedidoId);
@@ -557,6 +646,8 @@ const recalcularTotalPedido = async (pedidoId) => {
     }
 };
 
+=======
+>>>>>>> paola
 export const crear = async (req, res) => {
     try {
         const { pedido_id, producto_id, cantidad } = req.body;
@@ -582,7 +673,15 @@ export const crear = async (req, res) => {
 
         if (error) return res.status(500).json({ error: 'Error al crear el detalle' });
 
+<<<<<<< HEAD
         await recalcularTotalPedido(pedido_id);
+=======
+        const { data: pedido } = await obtenerPedidoConDetalles(pedido_id);
+        if (pedido) {
+            const total = (pedido.detalle_pedido || []).reduce((suma, d) => suma + Number(d.subtotal), 0);
+            await actualizarPedido(pedido_id, { total });
+        }
+>>>>>>> paola
 
         return res.status(201).json({ message: 'Detalle creado', detalle: data[0] });
 
@@ -600,12 +699,15 @@ export const editar = async (req, res) => {
         }
         const { data, error } = await actualizarDetallePedido(id, cambios);
         if (error) return res.status(500).json({ error: 'Error al actualizar el detalle' });
+<<<<<<< HEAD
 
         // CORRECCIÓN: si cambió el subtotal, el total del pedido debe recalcularse también.
         if (data && data[0] && data[0].pedido_id) {
             await recalcularTotalPedido(data[0].pedido_id);
         }
 
+=======
+>>>>>>> paola
         return res.status(200).json({ message: 'Detalle actualizado', detalle: data[0] });
     } catch (error) {
         return res.status(500).json({ error: error.message });
@@ -615,6 +717,7 @@ export const editar = async (req, res) => {
 export const eliminar = async (req, res) => {
     try {
         const { id } = req.params;
+<<<<<<< HEAD
 
         const { data, error } = await eliminarDetallePedido(id);
         if (error) return res.status(500).json({ error: 'Error al eliminar el detalle' });
@@ -624,6 +727,10 @@ export const eliminar = async (req, res) => {
             await recalcularTotalPedido(pedidoId);
         }
 
+=======
+        const { error } = await eliminarDetallePedido(id);
+        if (error) return res.status(500).json({ error: 'Error al eliminar el detalle' });
+>>>>>>> paola
         return res.status(200).json({ message: 'Detalle eliminado' });
     } catch (error) {
         return res.status(500).json({ error: error.message });
@@ -666,6 +773,7 @@ export const editar = async (req, res) => {
 };
 </file>
 
+<<<<<<< HEAD
 <file path="controllers/googleAuth.js">
 import jwt from "jsonwebtoken";
     import { OAuth2Client } from "google-auth-library";
@@ -756,6 +864,8 @@ import jwt from "jsonwebtoken";
     };
 </file>
 
+=======
+>>>>>>> paola
 <file path="controllers/mensajes.js">
 import { obtenerConversaciones, crearConversacion, obtenerConversacionPorId, obtenerMensajesDeConversacion, crearMensaje } from '../models/mensajes.js';
 
@@ -828,10 +938,14 @@ import { obtenerAtenciones, crearAtencion, actualizarAtencion } from '../models/
 export const listar = async (req, res) => {
     try {
         const { data, error } = await obtenerAtenciones();
+<<<<<<< HEAD
         if (error) {
             console.log("ERROR DETALLADO DE SUPABASE (Listar):", error);
             return res.status(500).json({ error: 'Error al consultar atenciones', detalles: error.message });
         }
+=======
+        if (error) return res.status(500).json({ error: 'Error al consultar atenciones' });
+>>>>>>> paola
         return res.status(200).json(data);
     } catch (error) {
         return res.status(500).json({ error: error.message });
@@ -842,6 +956,7 @@ export const crear = async (req, res) => {
     try {
         const meseroId = req.body.mesero_id || req.usuario.id;
         const { data, error } = await crearAtencion({ ...req.body, mesero_id: meseroId });
+<<<<<<< HEAD
         
         if (error) {
             console.log("ERROR DETALLADO DE SUPABASE (Crear):", error); // <-- Aquí saldrá el motivo exacto en tu terminal
@@ -852,6 +967,9 @@ export const crear = async (req, res) => {
             return res.status(400).json({ error: 'No se pudo registrar la atención' });
         }
 
+=======
+        if (error) return res.status(500).json({ error: 'Error al registrar la atención' });
+>>>>>>> paola
         return res.status(201).json({ message: 'Atención registrada', mesero: data[0] });
     } catch (error) {
         return res.status(500).json({ error: error.message });
@@ -862,6 +980,7 @@ export const editar = async (req, res) => {
     try {
         const { id } = req.params;
         const { data, error } = await actualizarAtencion(id, req.body);
+<<<<<<< HEAD
         
         if (error) {
             console.log("ERROR DETALLADO DE SUPABASE (Editar):", error);
@@ -872,6 +991,9 @@ export const editar = async (req, res) => {
             return res.status(404).json({ error: 'Atención no encontrada para actualizar' });
         }
 
+=======
+        if (error) return res.status(500).json({ error: 'Error al actualizar la atención' });
+>>>>>>> paola
         return res.status(200).json({ message: 'Atención actualizada', mesero: data[0] });
     } catch (error) {
         return res.status(500).json({ error: error.message });
@@ -1057,6 +1179,7 @@ export const cambiarPassword = async (req, res) => {
 </file>
 
 <file path="controllers/usuario.js">
+<<<<<<< HEAD
 import { getUsuarios, obtenerUsuarioPorId, actualizarUsuario as actualizarUsuarioModelo, eliminarUsuario } from '../models/usuario.js';
 
 // 1. Obtener todos los usuarios
@@ -1152,6 +1275,118 @@ export const eliminarUsuarioController = async (req, res) => {
         return res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
+=======
+import { crearUsuarioModel, obtenerUsuariosModel, obtenerUsuarioPorIdModel } from '../models/usuario.js';
+import { supabase } from '../config/supabase.js';
+
+// 1. Crear usuario
+export const crearUsuarioController = async (req, res) => {
+  try {
+    const { nombre, email, password, telefono, rol } = req.body;
+
+    if (!nombre || !email || !password) {
+      return res.status(400).json({ error: 'Nombre, email y password son obligatorios.' });
+    }
+
+    const nuevoUsuario = await crearUsuarioModel(nombre, email, password, telefono, rol);
+
+    res.status(201).json({
+      mensaje: 'Usuario creado exitosamente',
+      usuario: nuevoUsuario
+    });
+  } catch (error) {
+    console.error('Error en controlador crearUsuario:', error);
+    res.status(500).json({ error: error.message || 'Error al crear el usuario.' });
+  }
+};
+// Alias por si se llama con minúscula en la i
+export const crearUsuariocontroller = crearUsuarioController; 
+export const createUsuarioController = crearUsuarioController;
+
+// 2. Obtener todos los usuarios
+export const obtenerUsuariosController = async (req, res) => {
+  try {
+    const usuarios = await obtenerUsuariosModel();
+    res.status(200).json(usuarios);
+  } catch (error) {
+    console.error('Error al obtener usuarios:', error);
+    res.status(500).json({ error: 'Error al obtener los usuarios.' });
+  }
+};
+export const getUsuariosController = obtenerUsuariosController;
+
+// 3. Obtener usuario por ID
+export const obtenerUsuarioPorIdController = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const usuario = await obtenerUsuarioPorIdModel(id);
+
+    if (!usuario) {
+      return res.status(404).json({ error: 'Usuario no encontrado.' });
+    }
+
+    res.status(200).json(usuario);
+  } catch (error) {
+    console.error('Error al obtener usuario por ID:', error);
+    res.status(500).json({ error: 'Error al obtener el usuario.' });
+  }
+};
+export const getUsuarioPorIdController = obtenerUsuarioPorIdController;
+
+// 4. Actualizar usuario
+export const actualizarUsuarioController = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nombre, telefono, rol } = req.body;
+
+    const { data, error } = await supabase
+      .from('usuario')
+      .update({ nombre, telefono, rol })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      return res.status(400).json({ error: error.message });
+    }
+
+    if (!data) {
+      return res.status(404).json({ error: 'Usuario no encontrado para actualizar.' });
+    }
+
+    res.status(200).json({
+      mensaje: 'Usuario actualizado exitosamente',
+      usuario: data
+    });
+  } catch (error) {
+    console.error('Error al actualizar usuario:', error);
+    res.status(500).json({ error: 'Error interno del servidor al actualizar el usuario.' });
+  }
+};
+export const updateUsuarioController = actualizarUsuarioController;
+
+// 5. Eliminar usuario
+export const eliminarUsuarioController = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { error } = await supabase
+      .from('usuario')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      return res.status(400).json({ error: error.message });
+    }
+
+    res.status(200).json({ mensaje: 'Usuario eliminado exitosamente' });
+  } catch (error) {
+    console.error('Error al eliminar usuario:', error);
+    res.status(500).json({ error: 'Error interno del servidor al eliminar el usuario.' });
+  }
+};
+export const deleteUsuarioController = eliminarUsuarioController;
+>>>>>>> paola
 </file>
 
 <file path="middlewares/authmiddleware.js">
@@ -1268,9 +1503,14 @@ export const actualizarDetallePedido = async (id, cambios) => {
   return { data, error };
 };
 
+<<<<<<< HEAD
  
 export const eliminarDetallePedido = async (id) => {
   const { data, error } = await supabase.from('detalle_pedido').delete().eq('id', id).select();
+=======
+export const eliminarDetallePedido = async (id) => {
+  const { data, error } = await supabase.from('detalle_pedido').delete().eq('id', id);
+>>>>>>> paola
   return { data, error };
 };
 </file>
@@ -1349,19 +1589,27 @@ export const obtenerAtenciones = async () => {
 };
 
 export const crearAtencion = async (meseroData) => {
+<<<<<<< HEAD
   const { data, error } = await supabase
     .from('mesero')
     .insert(meseroData)
     .select();
+=======
+  const { data, error } = await supabase.from('mesero').insert(meseroData).select();
+>>>>>>> paola
   return { data, error };
 };
 
 export const actualizarAtencion = async (id, cambios) => {
+<<<<<<< HEAD
   const { data, error } = await supabase
     .from('mesero')
     .update(cambios)
     .eq('id', id)
     .select();
+=======
+  const { data, error } = await supabase.from('mesero').update(cambios).eq('id', id).select();
+>>>>>>> paola
   return { data, error };
 };
 </file>
@@ -1369,6 +1617,7 @@ export const actualizarAtencion = async (id, cambios) => {
 <file path="models/pedido.js">
 import { supabase } from '../config/supabase.js';
 
+<<<<<<< HEAD
 
 
 export const crearPedido = async (pedidoData) => {
@@ -1457,6 +1706,51 @@ export const eliminarPedido = async (id) => {
 
   return { data, error };
 
+=======
+export const crearPedido = async (pedidoData) => {
+  const { data, error } = await supabase.from('pedido').insert(pedidoData).select();
+  return { data, error };
+};
+
+export const obtenerPedidoConDetalles = async (id) => {
+  const { data, error } = await supabase
+    .from('pedido')
+    .select(`
+      *,
+      usuario:usuario_id(id, nombre, email),
+      detalle_pedido(id, cantidad, precio_unitario, subtotal, producto:producto_id(id, nombre, precio))
+    `)
+    .eq('id', id)
+    .single();
+  return { data, error };
+};
+
+export const obtenerPedidos = async () => {
+  const { data, error } = await supabase
+    .from('pedido')
+    .select('*, usuario:usuario_id(id, nombre, email)')
+    .order('id', { ascending: false });
+  return { data, error };
+};
+
+export const obtenerPedidosPorUsuario = async (usuarioId) => {
+  const { data, error } = await supabase
+    .from('pedido')
+    .select('*')
+    .eq('usuario_id', usuarioId)
+    .order('id', { ascending: false });
+  return { data, error };
+};
+
+export const actualizarPedido = async (id, cambios) => {
+  const { data, error } = await supabase.from('pedido').update(cambios).eq('id', id).select();
+  return { data, error };
+};
+
+export const eliminarPedido = async (id) => {
+  const { data, error } = await supabase.from('pedido').delete().eq('id', id);
+  return { data, error };
+>>>>>>> paola
 };
 </file>
 
@@ -1491,6 +1785,7 @@ export const eliminarProducto = async (id) => {
 
 <file path="models/usuario.js">
 import { supabase } from '../config/supabase.js';
+<<<<<<< HEAD
 
 // Obtener todos los usuarios
 export const getUsuarios = async () => {
@@ -1622,17 +1917,121 @@ export const eliminarUsuario = async (usuarioId) => {
     } catch (error) {
         return { data: null, error };
     }
+=======
+import { logError } from '../utils/logger.js';
+import bcrypt from 'bcrypt';
+
+export const crearUsuarioModel = async (
+  nombre,
+  email,
+  password,
+  telefono,
+  rol,
+  codigoverificacion = null,
+  codigoverificacionexpiracion = null
+) => {
+  const salt = await bcrypt.genSalt(10);
+  const passwordHash = await bcrypt.hash(password, salt);
+
+  const { data, error } = await supabase
+    .from('usuario')
+    .insert([
+      {
+        nombre,
+        email,
+        password: passwordHash,
+        telefono,
+        rol: rol || 'cliente',
+        estaverificado: false,
+        codigoverificacion,
+        codigoverificacionexpiracion
+      }
+    ])
+    .select()
+    .single();
+
+  if (error) {
+    logError('crearUsuarioModel', error);
+    throw new Error(error.message);
+  }
+
+  return data;
+};
+
+export const buscarUsuarioPorEmailModel = async (email) => {
+  const { data, error } = await supabase
+    .from('usuario')
+    .select('*')
+    .eq('email', email)
+    .single();
+
+  if (error) {
+    logError('buscarUsuarioPorEmailModel', error);
+    return null;
+  }
+
+  return data;
+};
+
+export const obtenerUsuariosModel = async () => {
+  const { data, error } = await supabase
+    .from('usuario')
+    .select('id, nombre, email, telefono, direccion, rol, creado_en, estaverificado')
+    .order('id', { ascending: false });
+
+  if (error) {
+    logError('obtenerUsuariosModel', error);
+    throw new Error(error.message);
+  }
+
+  return data;
+};
+
+export const obtenerUsuarioPorIdModel = async (id) => {
+  const { data, error } = await supabase
+    .from('usuario')
+    .select('id, nombre, email, telefono, direccion, rol, creado_en, estaverificado')
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    logError('obtenerUsuarioPorIdModel', error);
+    return null;
+  }
+
+  return data;
+};
+
+export const actualizarUsuario = async (id, cambios) => {
+  const { data, error } = await supabase
+    .from('usuario')
+    .update(cambios)
+    .eq('id', id)
+    .select();
+
+  if (error) {
+    logError('actualizarUsuario', error);
+  }
+
+  return { data, error };
+>>>>>>> paola
 };
 </file>
 
 <file path="routes/auth.js">
 import express from 'express';
+<<<<<<< HEAD
 import { login, registro, verificarCuenta,  } from '../controllers/auth.js';
 import { autenticarConGoogle } from '../controllers/googleAuth.js';
+=======
+import { login, registro, verificarCuenta, reenviarCodigo } from '../controllers/auth.js';
+
+>>>>>>> paola
 const router = express.Router();
 
 router.post('/registro', registro);
 router.post('/login', login);
+<<<<<<< HEAD
 router.post('/google', autenticarConGoogle);
 router.post('/verificar', verificarCuenta);
 
@@ -1640,6 +2039,16 @@ router.post('/verificar', verificarCuenta);
 router.post('/verificarCuenta',verificarCuenta);
 router.post('/verify-code',verificarCuenta);
 
+=======
+router.post('/verificar', verificarCuenta);
+
+//olvido de contrseña
+router.post('/verificarCuenta', verificarCuenta);
+router.post('/verify-code', verificarCuenta);
+
+// Reenviar código cuando el anterior expiró
+router.post('/reenviar-codigo', reenviarCodigo);
+>>>>>>> paola
 
 export default router;
 </file>
@@ -1758,7 +2167,10 @@ router.get('/:id', verificarToken, obtenerPedido);
 router.post('/', verificarToken, crear);
 router.put('/:id', verificarToken, verificarRol('admin', 'cocina', 'mesero'), editar);
 router.delete('/:id', verificarToken, verificarAdmin, eliminar);
+<<<<<<< HEAD
 router.put('/:id/estado', verificarToken, verificarRol('admin', 'cocina', 'mesero'), editar);
+=======
+>>>>>>> paola
 
 export default router;
 </file>
@@ -1888,6 +2300,27 @@ export const generarToken = (usuario, expiresIn = '7d') => {
 };
 </file>
 
+<<<<<<< HEAD
+=======
+<file path="utils/logger.js">
+/**
+ * Loguea un error de Supabase (o de cualquier función async) con todo su detalle
+ * en la terminal, para que sea fácil buscar la causa real.
+ * @param {string} contexto - Nombre de la función/operación donde ocurrió (ej. 'verificarCuenta').
+ * @param {Object|Error} error - El error devuelto por Supabase o capturado en un catch.
+ */
+export const logError = (contexto, error) => {
+  console.error(`\n🔴 [ERROR] ${contexto}`);
+  console.error('-------------------------------------------');
+  if (error?.code) console.error('code:', error.code);
+  if (error?.details) console.error('details:', error.details);
+  if (error?.hint) console.error('hint:', error.hint);
+  console.error('message:', error?.message || error);
+  console.error('-------------------------------------------\n');
+};
+</file>
+
+>>>>>>> paola
 <file path="utils/respuestas.js">
 /**
  * Envía una respuesta HTTP estandarizada de éxito.
@@ -1938,11 +2371,20 @@ node_modules/
 </file>
 
 <file path="index.js">
+<<<<<<< HEAD
 import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
 import { connectaDB } from './config/supabase.js';
 
+=======
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { logError } from './utils/logger.js';
+
+// Importación de todas las rutas del backend de El Parche
+>>>>>>> paola
 import authRoutes from './routes/auth.js';
 import usuarioRoutes from './routes/usuario.js';
 import productoRoutes from './routes/producto.js';
@@ -1951,6 +2393,7 @@ import detallePedidoRoutes from './routes/detallePedido.js';
 import cocinaRoutes from './routes/cocina.js';
 import domiciliarioRoutes from './routes/domiciliario.js';
 import meseroRoutes from './routes/mesero.js';
+<<<<<<< HEAD
 import mensajesRoutes from './routes/mensajes.js';
 import calificacionRoutes from './routes/calificacion.js';
 import recuperarRoutes from './routes/recuperar.js';
@@ -1993,6 +2436,70 @@ const servidor = app.listen(PORT, () => {
     console.log(`🚀 Servidor corriendo en el puerto ${PORT}`);
     console.log(`📍 http://localhost:${PORT}`);
     console.log(`📍 Registro: http://localhost:${PORT}`);
+=======
+import calificacionRoutes from './routes/calificacion.js';
+import mensajesRoutes from './routes/mensajes.js';
+import chatBotRoutes from './routes/chatBot.js';
+import recuperarRoutes from './routes/recuperar.js';
+
+dotenv.config();
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Middlewares
+app.use(cors());
+app.use(express.json());
+
+// 🔍 Middleware de diagnóstico (imprime las peticiones en tu terminal)
+app.use((req, res, next) => {
+  console.log(`\n-----------------------------------------`);
+  console.log(`📥 [PETICIÓN] ${req.method} -> ${req.url}`);
+  if (req.body && Object.keys(req.body).length > 0) {
+    console.log('📦 Body:', JSON.stringify(req.body, null, 2));
+  }
+  console.log(`-----------------------------------------`);
+  next();
+});
+
+// Registro de endpoints de la API
+app.use('/api/auth', authRoutes);
+app.use('/api/usuarios', usuarioRoutes);
+app.use('/api/productos', productoRoutes);
+app.use('/api/pedidos', pedidoRoutes);
+app.use('/api/detalles-pedido', detallePedidoRoutes);
+app.use('/api/cocina', cocinaRoutes);
+app.use('/api/domiciliarios', domiciliarioRoutes);
+app.use('/api/meseros', meseroRoutes);
+app.use('/api/calificaciones', calificacionRoutes);
+app.use('/api/mensajes', mensajesRoutes);
+app.use('/api/chatbot', chatBotRoutes);
+app.use('/api/recuperar', recuperarRoutes);
+
+// Ruta base de comprobación
+app.get('/', (req, res) => {
+  res.json({ mensaje: 'API de El Parche funcionando correctamente 🚀' });
+});
+
+// Ruta no encontrada (404) - antes solo mostraba el HTML feo de Express
+app.use((req, res) => {
+  console.warn(`\n⚠️ [404] No existe la ruta: ${req.method} ${req.originalUrl}`);
+  res.status(404).json({ error: `No existe la ruta ${req.method} ${req.originalUrl}` });
+});
+
+// Manejador global de errores, ahora con el detalle completo
+app.use((err, req, res, next) => {
+  logError(`Excepción no controlada en ${req.method} ${req.originalUrl}`, err);
+  res.status(500).json({
+    error: 'Error interno del servidor',
+    detalle: err.message
+  });
+});
+
+// Iniciar servidor
+app.listen(PORT, () => {
+  console.log(`\n🚀 Servidor corriendo en el puerto ${PORT}`);
+>>>>>>> paola
 });
 </file>
 
@@ -2010,14 +2517,24 @@ const servidor = app.listen(PORT, () => {
   "dependencies": {
     "@getbrevo/brevo": "^6.0.3",
     "@supabase/supabase-js": "^2.49.1",
+<<<<<<< HEAD
+=======
+    "bcrypt": "^6.0.0",
+>>>>>>> paola
     "bcryptjs": "^2.4.3",
     "cloudinary": "^2.7.0",
     "cors": "^2.8.6",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+<<<<<<< HEAD
     "google-auth-library": "^11.0.2",
     "groq-sdk": "^1.6.0",
     "jsonwebtoken": "^9.0.2"
+=======
+    "groq-sdk": "^1.6.0",
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^10.0.10"
+>>>>>>> paola
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
