@@ -19,12 +19,8 @@
     "express": "^4.21.2",
     "google-auth-library": "^11.0.2",
     "groq-sdk": "^1.6.0",
-<<<<<<< HEAD
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^10.0.10"
-=======
-    "jsonwebtoken": "^9.0.2"
->>>>>>> b7213382560f7ff0107f347a7eb3b967065c9c35
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

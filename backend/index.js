@@ -1,8 +1,8 @@
 import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import { logError } from './utils/logger.js';
+import { connectaDB } from './config/supabase.js';
 
 // Importación de todas las rutas del backend de El Parche
 import authRoutes from './routes/auth.js';
@@ -20,10 +20,18 @@ import recuperarRoutes from './routes/recuperar.js';
 
 dotenv.config();
 
+<<<<<<< HEAD
 
 connectaDB();
 
 
+=======
+<<<<<<< Updated upstream
+=======
+connectaDB();
+
+>>>>>>> Stashed changes
+>>>>>>> paola
 const app = express();
 const PORT = process.env.PORT || 3000;
 
