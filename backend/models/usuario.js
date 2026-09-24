@@ -2,6 +2,11 @@ import { supabase } from '../config/supabase.js';
 import { logError } from '../utils/logger.js';
 import bcrypt from 'bcrypt';
 
+<<<<<<< Updated upstream
+=======
+// ---------- Usadas por controllers/auth.js (registro / login tradicional) ----------
+
+>>>>>>> Stashed changes
 export const crearUsuarioModel = async (
   nombre,
   email,
@@ -9,7 +14,8 @@ export const crearUsuarioModel = async (
   telefono,
   rol,
   codigoverificacion = null,
-  codigoverificacionexpiracion = null
+  codigoverificacionexpiracion = null,
+  direccion = null
 ) => {
   const salt = await bcrypt.genSalt(10);
   const passwordHash = await bcrypt.hash(password, salt);
@@ -22,6 +28,7 @@ export const crearUsuarioModel = async (
         email,
         password: passwordHash,
         telefono,
+        direccion,
         rol: rol || 'cliente',
         estaverificado: false,
         codigoverificacion,
@@ -54,45 +61,125 @@ export const buscarUsuarioPorEmailModel = async (email) => {
   return data;
 };
 
-export const obtenerUsuariosModel = async () => {
-  const { data, error } = await supabase
-    .from('usuario')
-    .select('id, nombre, email, telefono, direccion, rol, creado_en, estaverificado')
-    .order('id', { ascending: false });
+// ---------- Usadas por controllers/usuario.js (CRUD de usuarios) ----------
 
-  if (error) {
-    logError('obtenerUsuariosModel', error);
-    throw new Error(error.message);
+export const getUsuarios = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('usuario')
+      .select('id, nombre, email, telefono, direccion, rol, creado_en, estaverificado')
+      .order('id', { ascending: false });
+
+    if (error) logError('getUsuarios', error);
+    return { data, error };
+  } catch (error) {
+    logError('getUsuarios', error);
+    return { data: null, error };
   }
-
-  return data;
 };
 
-export const obtenerUsuarioPorIdModel = async (id) => {
-  const { data, error } = await supabase
-    .from('usuario')
-    .select('id, nombre, email, telefono, direccion, rol, creado_en, estaverificado')
-    .eq('id', id)
-    .single();
+export const obtenerUsuarioPorId = async (usuarioId) => {
+  try {
+    const { data, error } = await supabase
+      .from('usuario')
+      .select('id, nombre, email, telefono, direccion, rol, creado_en, estaverificado')
+      .eq('id', usuarioId)
+      .single();
 
-  if (error) {
-    logError('obtenerUsuarioPorIdModel', error);
-    return null;
+    // PGRST116 = "no se encontraron filas", no lo tratamos como error real
+    if (error && error.code !== 'PGRST116') {
+      logError('obtenerUsuarioPorId', error);
+      return { data: null, error };
+    }
+
+    return { data, error: null };
+  } catch (error) {
+    logError('obtenerUsuarioPorId', error);
+    return { data: null, error };
   }
-
-  return data;
 };
 
-export const actualizarUsuario = async (id, cambios) => {
-  const { data, error } = await supabase
-    .from('usuario')
-    .update(cambios)
-    .eq('id', id)
-    .select();
+export const eliminarUsuario = async (usuarioId) => {
+  try {
+    const { data, error } = await supabase
+      .from('usuario')
+      .delete()
+      .eq('id', usuarioId)
+      .select();
 
-  if (error) {
+    if (error) logError('eliminarUsuario', error);
+    return { data, error };
+  } catch (error) {
+    logError('eliminarUsuario', error);
+    return { data: null, error };
+  }
+};
+
+// ---------- Compartida por auth.js, usuario.js, recuperar.js y googleAuth.js ----------
+
+export const actualizarUsuario = async (usuarioId, camposActualizar) => {
+  try {
+    const { data, error } = await supabase
+      .from('usuario')
+      .update(camposActualizar)
+      .eq('id', usuarioId)
+      .select();
+
+    if (error) logError('actualizarUsuario', error);
+    return { data, error };
+  } catch (error) {
     logError('actualizarUsuario', error);
+    return { data: null, error };
   }
+};
 
+<<<<<<< Updated upstream
   return { data, error };
+=======
+// ---------- Usadas por controllers/googleAuth.js ----------
+
+export const obtenerUsuarioPorEmail = async (email) => {
+  try {
+    const { data, error } = await supabase
+      .from('usuario')
+      .select('*')
+      .eq('email', email)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      logError('obtenerUsuarioPorEmail', error);
+      return { data: null, error };
+    }
+
+    return { data, error: null };
+  } catch (error) {
+    logError('obtenerUsuarioPorEmail', error);
+    return { data: null, error };
+  }
+};
+
+export const crearUsuarioGoogle = async (userData) => {
+  try {
+    const { data, error } = await supabase
+      .from('usuario')
+      .insert([
+        {
+          nombre: userData.nombre,
+          email: userData.email,
+          googleId: userData.googleId,
+          avatar: userData.avatar,
+          rol: userData.rol,
+          estaverificado: true // quien entra por Google ya viene con el correo confirmado
+        }
+      ])
+      .select()
+      .single();
+
+    if (error) logError('crearUsuarioGoogle', error);
+    return { data, error };
+  } catch (error) {
+    logError('crearUsuarioGoogle', error);
+    return { data: null, error };
+  }
+>>>>>>> Stashed changes
 };

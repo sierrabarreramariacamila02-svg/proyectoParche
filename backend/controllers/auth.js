@@ -15,7 +15,7 @@ const generarCodigoVerificacion = () =>
 // Registro de usuario
 export const registro = async (req, res) => {
   try {
-    const { nombre, email, password, telefono, rol } = req.body;
+    const { nombre, email, password, telefono, direccion, rol } = req.body;
 
     if (!nombre || !email || !password) {
       return res.status(400).json({ error: 'Nombre, email y password son obligatorios.' });
@@ -36,13 +36,13 @@ export const registro = async (req, res) => {
       telefono,
       rol,
       codigo,
-      expiracion
+      expiracion,
+      direccion
     );
 
-    try {
-      await enviarcodigoverificacion(email, nombre, codigo);
-    } catch (mailError) {
-      logError('registro -> enviarcodigoverificacion', mailError);
+    const { exito, error: emailError } = await enviarcodigoverificacion(email, nombre, codigo);
+    if (!exito) {
+      logError('registro -> enviarcodigoverificacion', emailError);
     }
 
     res.status(201).json({
@@ -179,10 +179,9 @@ export const reenviarCodigo = async (req, res) => {
       return res.status(500).json({ error: 'No se pudo generar un nuevo código.' });
     }
 
-    try {
-      await enviarcodigoverificacion(usuario.email, usuario.nombre, codigo);
-    } catch (mailError) {
-      logError('reenviarCodigo -> enviarcodigoverificacion', mailError);
+    const { exito, error: emailError } = await enviarcodigoverificacion(usuario.email, usuario.nombre, codigo);
+    if (!exito) {
+      logError('reenviarCodigo -> enviarcodigoverificacion', emailError);
     }
 
     return res.status(200).json({ mensaje: 'Se envió un nuevo código a tu correo.' });
