@@ -2,82 +2,6 @@ import { supabase } from '../config/supabase.js';
 import { logError } from '../utils/logger.js';
 import bcrypt from 'bcrypt';
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-// Obtener todos los usuarios
-export const getUsuarios = async () => {
-    try {
-        const { data, error } = await supabase
-            .from('usuario')
-            .select('*');
-
-        return { data, error };
-    } catch (error) {
-        return { data: null, error };
-    }
-};
-
-// Obtener un usuario por su ID
-export const obtenerUsuarioPorId = async (usuarioId) => {
-    try {
-        const { data, error } = await supabase
-            .from('usuario')
-            .select('*')
-            .eq('id', usuarioId)
-            .single();
-
-        if (error && error.code !== 'PGRST116') {
-            return { data: null, error };
-        }
-
-        return { data, error: null };
-    } catch (error) {
-        return { data: null, error };
-    }
-};
-
-// Obtener un usuario por su correo electrónico
-export const obtenerUsuarioPorEmail = async (email) => {
-    try {
-        const { data, error } = await supabase
-            .from('usuario')
-            .select('*')
-            .eq('email', email) // Corregido de 'correo' a 'email' y variable correcta
-            .single();
-
-        if (error && error.code !== 'PGRST116') {
-            return { data: null, error };
-        }
-
-        return { data, error: null };
-    } catch (error) {
-        return { data: null, error };
-    }
-};
-
-// Crear un usuario mediante Google
-export const crearUsuarioGoogle = async (userData) => {
-    try {
-        const { data, error } = await supabase
-            .from('usuario')
-            .insert([
-                {
-                    nombre: userData.nombre,
-                    email: userData.email, // Corregido de 'correo' a 'email'
-                    googleId: userData.googleId, // Coincide con tu SQL ('googleId')
-                    avatar: userData.avatar,
-                    rol: userData.rol,
-                    isverified: true // Coincide con tu SQL ('isverified')
-                }
-            ])
-            .select()
-            .single();
-
-        return { data, error };
-    } catch (error) {
-        return { data: null, error };
-    }
-};
 
 // Crear un usuario tradicional (Controlador de registro estándar)
 export const crearUsuariocontroller = async (userData) => {
@@ -110,42 +34,6 @@ export const crearUsuariocontroller = async (userData) => {
   }
 };
 
-// Actualizar datos del usuario
-export const actualizarUsuario = async (usuarioId, camposActualizar) => {
-    try {
-        const { data, error } = await supabase
-            .from('usuario')
-            .update(camposActualizar)
-            .eq('id', usuarioId) // Corregido a 'id'
-            .select();
-
-        return { data, error };
-    } catch (error) {
-        return { data: null, error };
-    }
-};
-
-// Eliminar un usuario por su ID
-export const eliminarUsuario = async (usuarioId) => {
-    try {
-        const { data, error } = await supabase
-            .from('usuario')
-            .delete()
-            .eq('id', usuarioId) // Corregido a 'id'
-            .select();
-
-        return { data, error };
-    } catch (error) {
-        return { data: null, error };
-    }
-=======
-=======
-<<<<<<< Updated upstream
-=======
-// ---------- Usadas por controllers/auth.js (registro / login tradicional) ----------
-
->>>>>>> Stashed changes
->>>>>>> paola
 export const crearUsuarioModel = async (
   nombre,
   email,
@@ -272,12 +160,7 @@ export const actualizarUsuario = async (usuarioId, camposActualizar) => {
   }
 };
 
-<<<<<<< Updated upstream
-  return { data, error };
-<<<<<<< HEAD
->>>>>>> paola
-=======
-=======
+
 // ---------- Usadas por controllers/googleAuth.js ----------
 
 export const obtenerUsuarioPorEmail = async (email) => {
@@ -323,6 +206,5 @@ export const crearUsuarioGoogle = async (userData) => {
     logError('crearUsuarioGoogle', error);
     return { data: null, error };
   }
->>>>>>> Stashed changes
->>>>>>> paola
 };
+

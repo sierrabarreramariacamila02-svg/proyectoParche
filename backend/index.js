@@ -20,18 +20,15 @@ import recuperarRoutes from './routes/recuperar.js';
 
 dotenv.config();
 
-<<<<<<< HEAD
+ 
 
 connectaDB();
 
 
-=======
-<<<<<<< Updated upstream
-=======
+
 connectaDB();
 
->>>>>>> Stashed changes
->>>>>>> paola
+ 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
