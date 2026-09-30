@@ -80,7 +80,7 @@ class MenuPage extends StatelessWidget {
         elevation: 6,
         icon: const Icon(Icons.support_agent_rounded, size: 26),
         label: const Text(
-          'Asesor Mimos',
+          'Asesor El Parche',
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
         ),
         onPressed: () => _abrirChatMimos(context),

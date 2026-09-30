@@ -18,7 +18,7 @@ class _ChatMimosModalState extends State<ChatElparcheModal> {
   final List<Map<String, String>> _mensajes = [
     {
       'role': 'bot',
-      'text': 'Hola! Bienvenido a Helados Mimos. Que helado, copa o especialidad se te antoja conocer hoy?',
+      'text': '¡Hola! Bienvenido a El Parche 🍔 ¿Qué se te antoja comer o pedir hoy?',
     }
   ];
   bool _cargando = false;

@@ -1,5 +1,5 @@
+import 'package:elparchee/components/chat_elparche_modal.dart';
 import 'package:flutter/material.dart';
-import 'package:elparchee/pantallas/inicio.dart';
  
 void main() {
   runApp(const MainApp());
@@ -13,7 +13,7 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'El parche',
-      home: Inicio(),
+      home: ChatElparcheModal(),
     );
   }
 }
