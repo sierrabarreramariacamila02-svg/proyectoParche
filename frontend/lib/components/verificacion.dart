@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:parche/components/bienvenidos.dart';
 
+
 class Verification extends StatefulWidget {
   const Verification({super.key});
 
