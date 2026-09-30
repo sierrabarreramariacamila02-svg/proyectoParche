@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:frontend/api_config.dart';
+import 'package:elparchee/api_config.dart';
 import 'package:http/http.dart' as http;
 
 class ChatParcheService {

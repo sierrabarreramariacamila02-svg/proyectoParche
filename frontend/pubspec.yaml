@@ -1,4 +1,4 @@
-name: parche
+name: elparchee
 description: "A new Flutter project."
 publish_to: 'none'
 version: 0.1.0+1
@@ -9,11 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-<<<<<<< HEAD
-  http: ^1.2.0  # <-- Añadida esta dependencia
-=======
-  video_player: ^2.8.2  
->>>>>>> 0316c6c (Actualización de código y nuevos assets)
+  http: ^1.2.0
+  video_player: ^2.8.6
 
 dev_dependencies:
   flutter_test:
@@ -21,11 +18,9 @@ dev_dependencies:
   flutter_lints: ^6.0.0
 
 flutter:
-<<<<<<< HEAD
   uses-material-design: true
-=======
-  uses-material-design: true
+
+  # Agrega esta sección para que cargue tus videos e imágenes correctamente
   assets:
-    - assets/images/
     - assets/videos/
->>>>>>> 0316c6c (Actualización de código y nuevos assets)
+    - assets/images/

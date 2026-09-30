@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:parche/components/inicioSesion.dart';
+import 'package:elparchee/pantallas/inicioSesion.dart';
 import 'package:video_player/video_player.dart';
 import 'dart:async';
 

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/components/chat_burbuja.dart';
-import 'package:frontend/components/chat_header.dart';
-import 'package:frontend/components/chat_input_field.dart';
-import 'package:frontend/services/chatelparcheservice.dart';
+import 'package:elparchee/components/chat_burbuja.dart';
+import 'package:elparchee/components/chat_header.dart';
+import 'package:elparchee/components/chat_input_field.dart';
+import 'package:elparchee/services/chatelparcheservice.dart';
  
 
 class ChatElparcheModal extends StatefulWidget {

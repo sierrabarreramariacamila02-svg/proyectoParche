@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/components/chat_elparche_modal.dart';
+import 'package:elparchee/components/chat_elparche_modal.dart';
 import '../components/producto_card.dart';
 
 class MenuPage extends StatelessWidget {
@@ -10,7 +10,7 @@ class MenuPage extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => const ChatElparcheModal(),
+      builder: (_) =>  ChatElparcheModal(),
     );
   }
 
