@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/components/chat_burbuja.dart';
-import 'package:frontend/components/chat_header.dart';
-import 'package:frontend/components/chat_input_field.dart';
-import 'package:frontend/services/chatelparcheservice.dart';
- 
+import 'package:elparchee/components/chat_burbuja.dart';
+import 'package:elparchee/components/chat_header.dart';
+import 'package:elparchee/components/chat_input_field.dart';
+import 'package:elparchee/services/chatelparcheservice.dart';
 
 class ChatElparcheModal extends StatefulWidget {
   const ChatElparcheModal({super.key});
@@ -18,8 +17,9 @@ class _ChatMimosModalState extends State<ChatElparcheModal> {
   final List<Map<String, String>> _mensajes = [
     {
       'role': 'bot',
-      'text': 'Hola! Bienvenido a Helados Mimos. Que helado, copa o especialidad se te antoja conocer hoy?',
-    }
+      'text':
+          'Hola! Bienvenido a Helados Mimos. Que helado, copa o especialidad se te antoja conocer hoy?',
+    },
   ];
   bool _cargando = false;
 
@@ -100,10 +100,16 @@ class _ChatMimosModalState extends State<ChatElparcheModal> {
                   SizedBox(
                     width: 14,
                     height: 14,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFE91E63)),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Color(0xFFE91E63),
+                    ),
                   ),
                   SizedBox(width: 8),
-                  Text('El asesor esta respondiendo...', style: TextStyle(color: Colors.black45, fontSize: 12)),
+                  Text(
+                    'El asesor esta respondiendo...',
+                    style: TextStyle(color: Colors.black45, fontSize: 12),
+                  ),
                 ],
               ),
             ),

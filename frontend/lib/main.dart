@@ -1,11 +1,9 @@
+import 'package:elparchee/components/productos.dart';
 import 'package:flutter/material.dart';
-<<<<<<< HEAD
-import 'pages/menu_page.dart';
-=======
-import 'package:parche/components/inicio.dart';
-import 'package:parche/components/inicioSesion.dart';
-import 'package:parche/components/verificacion.dart';
->>>>>>> 0316c6c (Actualización de código y nuevos assets)
+import 'package:elparchee/components/inicio.dart';
+import 'package:elparchee/components/inicioSesion.dart';
+import 'package:elparchee/components/verificacion.dart';
+import 'package:elparchee/components/productos.dart';
 
 void main() {
   runApp(const MainApp());
@@ -18,14 +16,13 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-<<<<<<< HEAD
       title: 'El parche',
-      home: MenuPage(),
-=======
-      home: Scaffold(body: Inicio()),
-      routes: {'/login': (context) => const Scaffold(body: Iniciosesion()),
-      '/verificacion': (context) => const Verification()},
->>>>>>> 0316c6c (Actualización de código y nuevos assets)
+      home: const Inicio(),
+      routes: {
+        '/login': (context) => const Scaffold(body: Iniciosesion()),
+        '/verificacion': (context) => const Verification(),
+        '/menu': (context) => const Productos(),
+      },
     );
   }
 }

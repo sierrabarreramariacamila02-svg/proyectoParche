@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:parche/components/bienvenidos.dart';
+import 'package:elparchee/components/bienvenidos.dart';
 
 
 class Verification extends StatefulWidget {
