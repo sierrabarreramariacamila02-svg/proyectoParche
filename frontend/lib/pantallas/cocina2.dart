@@ -30,16 +30,21 @@ class _Cocina2State extends State<Cocina2> {
                   onPressed: () => Navigator.of(context).pop(),
                 ),
                 const Expanded(
-                  child: Text("Detalle del pedido #120",
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold)),
+                  child: Text(
+                    "Detalle del pedido #120",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
                 // Logo reemplazado en lugar de la pizza
                 const CircleAvatar(
                   radius: 18,
-                  backgroundImage: AssetImage('assets/images/Logo_el_parche.png'), 
+                  backgroundImage: AssetImage(
+                    'assets/images/Logo_el_parche.png',
+                  ),
                 ),
               ],
             ),
@@ -52,11 +57,14 @@ class _Cocina2State extends State<Cocina2> {
             child: const Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("#120",
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold)),
+                Text(
+                  "#120",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 Text("Prep time 09:12m", style: TextStyle(color: Colors.white)),
               ],
             ),
@@ -67,19 +75,37 @@ class _Cocina2State extends State<Cocina2> {
               padding: const EdgeInsets.all(15),
               children: [
                 _estacion("Estación de parrilla"),
-                _itemCheck("Classic Burger", "Coberta con miöns\nPreparación y in cebolla",
-                    parrilla1, (v) => setState(() => parrilla1 = v!)),
-                _itemCheck("Burger Feet", "Preparación mesa", parrilla2,
-                    (v) => setState(() => parrilla2 = v!)),
+                _itemCheck(
+                  "Classic Burger",
+                  "Coberta con miöns\nPreparación y in cebolla",
+                  parrilla1,
+                  (v) => setState(() => parrilla1 = v!),
+                ),
+                _itemCheck(
+                  "Burger Feet",
+                  "Preparación mesa",
+                  parrilla2,
+                  (v) => setState(() => parrilla2 = v!),
+                ),
                 const SizedBox(height: 15),
                 _estacion("Estación de frituras"),
-                _itemCheck("Classic Burger", "Coburta con miöns\nPrépáración y in cebolla",
-                    fritura1, (v) => setState(() => fritura1 = v!)),
-                _itemCheck("Burger Feet", "Preparación mesa", fritura2,
-                    (v) => setState(() => fritura2 = v!)),
+                _itemCheck(
+                  "Classic Burger",
+                  "Coburta con miöns\nPrépáración y in cebolla",
+                  fritura1,
+                  (v) => setState(() => fritura1 = v!),
+                ),
+                _itemCheck(
+                  "Burger Feet",
+                  "Preparación mesa",
+                  fritura2,
+                  (v) => setState(() => fritura2 = v!),
+                ),
                 const SizedBox(height: 15),
-                const Text("Nota de la comanda",
-                    style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text(
+                  "Nota de la comanda",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 8),
                 Container(
                   padding: const EdgeInsets.all(12),
@@ -100,7 +126,9 @@ class _Cocina2State extends State<Cocina2> {
               child: ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(),
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange, foregroundColor: Colors.white),
+                  backgroundColor: Colors.orange,
+                  foregroundColor: Colors.white,
+                ),
                 child: const Text("Marcar pedido completado"),
               ),
             ),
@@ -113,29 +141,47 @@ class _Cocina2State extends State<Cocina2> {
   Widget _estacion(String titulo) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Text(titulo,
-          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
+      child: Text(
+        titulo,
+        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+      ),
     );
   }
 
   Widget _itemCheck(
-      String nombre, String detalle, bool valor, Function(bool?) onChanged) {
+    String nombre,
+    String detalle,
+    bool valor,
+    Function(bool?) onChanged,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(10),
-      decoration:
-          BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+      ),
       child: Row(
         children: [
-          Checkbox(value: valor, onChanged: onChanged, activeColor: Colors.orange),
+          Checkbox(
+            value: valor,
+            onChanged: onChanged,
+            activeColor: Colors.orange,
+          ),
           const Icon(Icons.fastfood, color: Colors.orange),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(nombre, style: const TextStyle(fontWeight: FontWeight.bold)),
-                Text(detalle, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                Text(
+                  nombre,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  detalle,
+                  style: const TextStyle(fontSize: 11, color: Colors.grey),
+                ),
               ],
             ),
           ),

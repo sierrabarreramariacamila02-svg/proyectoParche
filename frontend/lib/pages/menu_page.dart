@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:elparchee/components/chat_elparche_modal.dart';
-import '../components/producto_card.dart';
+import 'package:elparchee/components/productos.dart';
 
 class MenuPage extends StatelessWidget {
   const MenuPage({super.key});
@@ -56,20 +56,12 @@ class MenuPage extends StatelessWidget {
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 90),
-        child: Column(
-          children: [
-            ProductoCard(
-              onVerMas: () => _mostrarModalDetalle(context),
-              onComprar: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Funcion de compra disponible proximamente'),
-                    backgroundColor: Color(0xFFE91E63),
-                  ),
-                );
-              },
-            ),
+  padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 90),
+  child: Column(
+    children: const [
+      Productos(),
+
+          
           ],
         ),
       ),
