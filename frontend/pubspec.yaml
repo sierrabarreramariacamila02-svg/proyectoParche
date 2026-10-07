@@ -9,8 +9,13 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+<<<<<<< HEAD
   http: ^1.2.0
   video_player: ^2.8.6
+=======
+  video_player: ^2.8.2
+  http: ^1.2.0
+>>>>>>> 7304c93fdbe9dfe78f20d92113e26df571a5c729
 
 dev_dependencies:
   flutter_test:
@@ -23,4 +28,7 @@ flutter:
   # Agrega esta sección para que cargue tus videos e imágenes correctamente
   assets:
     - assets/videos/
+<<<<<<< HEAD
     - assets/images/
+=======
+>>>>>>> 7304c93fdbe9dfe78f20d92113e26df571a5c729

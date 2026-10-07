@@ -100,10 +100,16 @@ class _ChatMimosModalState extends State<ChatElparcheModal> {
                   SizedBox(
                     width: 14,
                     height: 14,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFE91E63)),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Color(0xFFE91E63),
+                    ),
                   ),
                   SizedBox(width: 8),
-                  Text('El asesor esta respondiendo...', style: TextStyle(color: Colors.black45, fontSize: 12)),
+                  Text(
+                    'El asesor esta respondiendo...',
+                    style: TextStyle(color: Colors.black45, fontSize: 12),
+                  ),
                 ],
               ),
             ),

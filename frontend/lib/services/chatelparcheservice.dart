@@ -6,14 +6,19 @@ class ChatParcheService {
   // Concatena directamente con tu baseUrl existente ('.../api/chat-mimos')
   static String get _chatUrl => '${ApiConfig.baseUrl}/chat-elparche';
 
-  static Future<String> enviarMensaje(String mensaje, {String? sesionId}) async {
+  static Future<String> enviarMensaje(
+    String mensaje, {
+    String? sesionId,
+  }) async {
     try {
       final response = await http.post(
         Uri.parse(_chatUrl),
         headers: ApiConfig.headers,
         body: jsonEncode({
           'mensaje': mensaje,
-          'sesionId': sesionId ?? 'mimos_cliente_${DateTime.now().millisecondsSinceEpoch}',
+          'sesionId':
+              sesionId ??
+              'mimos_cliente_${DateTime.now().millisecondsSinceEpoch}',
         }),
       );
 
