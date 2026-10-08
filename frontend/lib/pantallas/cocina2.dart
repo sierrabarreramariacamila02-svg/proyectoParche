@@ -52,7 +52,7 @@ class _Cocina2State extends State<Cocina2> {
           // Barra naranja con tiempo
           Container(
             width: double.infinity,
-            color: Colors.orange,
+            color: const Color.fromARGB(255, 232, 188, 123),
             padding: const EdgeInsets.all(12),
             child: const Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -110,7 +110,7 @@ class _Cocina2State extends State<Cocina2> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.orange),
+                    border: Border.all(color: const Color.fromARGB(255, 228, 171, 86)),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Text("mesa 4: Classic burger sin cebolla"),
@@ -126,7 +126,7 @@ class _Cocina2State extends State<Cocina2> {
               child: ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
+                  backgroundColor: const Color.fromARGB(255, 233, 163, 58),
                   foregroundColor: Colors.white,
                 ),
                 child: const Text("Marcar pedido completado"),

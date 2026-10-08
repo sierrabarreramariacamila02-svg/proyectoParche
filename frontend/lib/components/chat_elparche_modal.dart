@@ -72,53 +72,75 @@ class _ChatMimosModalState extends State<ChatElparcheModal> {
       height: MediaQuery.of(context).size.height * 0.78,
       margin: EdgeInsets.only(bottom: bottomInset),
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: Color(0xFFFBF1DC),
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      child: Column(
-        children: [
-          const ChatHeader(),
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(16),
-              itemCount: _mensajes.length,
-              itemBuilder: (context, index) {
-                final item = _mensajes[index];
-                return ChatBurbuja(
-                  texto: item['text']!,
-                  esUsuario: item['role'] == 'user',
-                );
-              },
-            ),
-          ),
-          if (_cargando)
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 14,
-                    height: 14,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Color(0xFFE91E63),
-                    ),
-                  ),
-                  SizedBox(width: 8),
-                  Text(
-                    'El asesor esta respondiendo...',
-                    style: TextStyle(color: Colors.black45, fontSize: 12),
-                  ),
-                ],
+      child: ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        child: Column(
+          children: [
+            const ChatHeader(),
+            Expanded(
+              child: ListView.builder(
+                controller: _scrollController,
+                padding: const EdgeInsets.fromLTRB(16, 18, 16, 8),
+                itemCount: _mensajes.length,
+                itemBuilder: (context, index) {
+                  final item = _mensajes[index];
+                  return ChatBurbuja(
+                    texto: item['text']!,
+                    esUsuario: item['role'] == 'user',
+                  );
+                },
               ),
             ),
-          ChatInputField(
-            controller: _controller,
-            cargando: _cargando,
-            onEnviar: _enviarMensaje,
-          ),
-        ],
+            if (_cargando)
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF6E3),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: const Color(0xFFE8963F).withOpacity(0.35),
+                      ),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Color(0xFF8E1B10),
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'El asesor esta respondiendo...',
+                          style: TextStyle(
+                            color: Color(0xFF8E5A33),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ChatInputField(
+              controller: _controller,
+              cargando: _cargando,
+              onEnviar: _enviarMensaje,
+            ),
+          ],
+        ),
       ),
     );
   }

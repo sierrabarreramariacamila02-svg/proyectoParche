@@ -1,4 +1,4 @@
-import 'package:elparchee/pantallas/mesero2.dart';
+import 'package:elparchee/pantallas/bienvenidos.dart';
 import 'package:flutter/material.dart';
  
 void main() {
@@ -13,7 +13,7 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'El parche',
-      home: Mesero2(),
+      home: Bienvenidos(),
     );
   }
 }
