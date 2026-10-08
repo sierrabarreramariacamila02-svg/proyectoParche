@@ -1,3 +1,7 @@
+import 'package:elparchee/pantallas/menuHamburguesas.dart';
+import 'package:elparchee/pantallas/menuOtros.dart';
+import 'package:elparchee/pantallas/menuPerro.dart';
+import 'package:elparchee/pantallas/menuSalchipapa.dart';
 import 'package:flutter/material.dart';
 import 'package:elparchee/app_colors.dart';
 
@@ -93,10 +97,10 @@ class _ProductosState extends State<Productos> {
               children: List.generate(
                 imagenes.length,
                 (i) => AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
+                  duration: const Duration(milliseconds: 400),
                   margin: const EdgeInsets.symmetric(horizontal: 3),
                   width: paginaActual == i ? 18 : 8,
-                  height: 8,
+                  height: 10,
                   decoration: BoxDecoration(
                     color: paginaActual == i
                         ? AppColors.barraHome
@@ -108,19 +112,53 @@ class _ProductosState extends State<Productos> {
             ),
 
             // CATEGORÍAS CON IMÁGENES CLICKEABLES
-            _titulo('Categorías populares'),
+            _titulo('Menú.'),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: _categorias
-                  .map(
-                    (c) => _catItem(
-                      c['img']!,
-                      c['lbl']!,
-                      c['color'] as Color,
-                      () => print('Tocó ${c['lbl']}'),
-                    ),
-                  )
-                  .toList(),
+                 .map(
+        (c) => _catItem(
+          c['img']!,
+          c['lbl']!,
+          c['color'] as Color,
+          () {
+            // Evaluamos cuál categoría se presionó
+            if (c['lbl'] == 'Perros calientes') {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const MenuPerro(),
+                ),
+              );
+            } else if (c['lbl'] == 'Hamburguesas') {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const MenuHamburguesas(),
+                ),
+              );
+              // Navigator.push para Hamburguesas
+            } else if (c['lbl'] == 'Salchipapas') {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SalchipapasMenu(),
+                ),
+              );
+              // Navigator.push para Salchipapas
+            } else if (c['lbl'] == 'Otros') {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const MenuOtros(),
+                ),
+              );
+              // Navigator.push para Otros
+            }
+          },
+        ),
+      )
+      .toList(),
             ),
 
             _titulo('Platos destacados.'),

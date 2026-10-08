@@ -9,7 +9,7 @@ class Bienvenidos extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<Bienvenidos> {
-  int _currentPage = 0;
+ 
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +55,7 @@ class _OnboardingScreenState extends State<Bienvenidos> {
               const SizedBox(height: 12),
               // Subtítulo
               const Text(
-                'Descubre los mejores combos,\npromociones y lugares para compartir hoy.',
+                'Descubre los mejores combos y\npromociones para compartir hoy.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 13,
@@ -72,11 +72,7 @@ class _OnboardingScreenState extends State<Bienvenidos> {
                 ),
               ),
               const SizedBox(height: 15),
-              // Indicadores de página (Puntos)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(3, (i) => _buildDot(i)),
-              ),
+            
               const SizedBox(height: 25),
               // Botón "EXPLORAR EL PARCHE."
               SizedBox(
@@ -114,19 +110,6 @@ class _OnboardingScreenState extends State<Bienvenidos> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildDot(int index) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      height: 8,
-      width: _currentPage == index ? 10 : 8,
-      decoration: BoxDecoration(
-        color: _currentPage == index ? const Color(0xFFD35400) : Colors.black26,
-        shape: BoxShape.circle,
       ),
     );
   }
