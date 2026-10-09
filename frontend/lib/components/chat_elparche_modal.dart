@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import 'package:elparchee/components/chat_burbuja.dart';
 import 'package:elparchee/components/chat_header.dart';
 import 'package:elparchee/components/chat_input_field.dart';
@@ -15,6 +16,14 @@ class _ProductoInfo {
   });
 }
 
+=======
+﻿import 'package:flutter/material.dart';
+
+import 'package:elparchee/components/chat_burbuja.dart';
+import 'package:elparchee/components/chat_header.dart';
+import 'package:elparchee/components/chat_input_field.dart';
+
+>>>>>>> 16cdaf6631759378ad4d70b2ced589019b4d0f44
 void mostrarChatElParche(BuildContext context) {
   showModalBottomSheet(
     context: context,
@@ -31,9 +40,22 @@ class ChatElParcheModal extends StatefulWidget {
   State<ChatElParcheModal> createState() => _ChatElParcheModalState();
 }
 
+class _ProductoInfo {
+  final String nombre;
+  final String descripcion;
+  final int precio;
+
+  const _ProductoInfo({
+    required this.nombre,
+    required this.descripcion,
+    required this.precio,
+  });
+}
+
 class _ChatElParcheModalState extends State<ChatElParcheModal> {
-  final _controlador = TextEditingController();
-  final _scroll = ScrollController();
+  final TextEditingController _controlador = TextEditingController();
+  final ScrollController _scroll = ScrollController();
+
   final List<_ProductoInfo> _productos = const [
     _ProductoInfo(
       nombre: 'Hamburguesa',
@@ -56,8 +78,14 @@ class _ChatElParcheModalState extends State<ChatElParcheModal> {
       precio: 5000,
     ),
   ];
+<<<<<<< HEAD
   final List<Mensaje> _mensajes = const [
     Mensaje(
+=======
+
+  final List<Mensaje> _mensajes = [
+    const Mensaje(
+>>>>>>> 16cdaf6631759378ad4d70b2ced589019b4d0f44
       texto: '¡Hola! Soy el asistente de El Parche. Pregúntame por productos, precios u horarios.',
       esUsuario: false,
     ),
@@ -71,26 +99,34 @@ class _ChatElParcheModalState extends State<ChatElParcheModal> {
   }
 
   String _responder(String entrada) {
-    final t = entrada.toLowerCase();
+    final texto = entrada.toLowerCase();
 
-    for (final p in _productos) {
-      if (t.contains(p.nombre.toLowerCase())) {
-        return '${p.nombre}: ${p.descripcion}. Precio: \$${p.precio}.';
+    for (final producto in _productos) {
+      if (texto.contains(producto.nombre.toLowerCase())) {
+        return '${producto.nombre}: ${producto.descripcion}. Precio: \$${producto.precio}.';
       }
     }
-    if (t.contains('hola') || t.contains('buenas')) {
+
+    if (texto.contains('hola') || texto.contains('buenas')) {
       return '¡Hola! ¿En qué te puedo ayudar?';
     }
-    if (t.contains('producto') || t.contains('menu') || t.contains('carta')) {
+
+    if (texto.contains('producto') || texto.contains('menu') || texto.contains('carta')) {
       return 'Tenemos:\n${_productos.map((p) => '• ${p.nombre}').join('\n')}';
     }
-    if (t.contains('precio') || t.contains('cuesta') || t.contains('valor')) {
+
+    if (texto.contains('precio') || texto.contains('cuesta') || texto.contains('valor')) {
       return _productos.map((p) => '${p.nombre}: \$${p.precio}').join('\n');
     }
-    if (t.contains('horario') || t.contains('abierto')) {
+
+    if (texto.contains('horario') || texto.contains('abierto')) {
       return 'Atendemos de lunes a sábado, de 8:00 a.m. a 8:00 p.m.';
     }
-    if (t.contains('gracias')) return '¡Con gusto! 😊';
+
+    if (texto.contains('gracias')) {
+      return '¡Con gusto! 😊';
+    }
+
     return 'No te entendí bien. Prueba con "productos", "precios" u "horario".';
   }
 
@@ -104,8 +140,9 @@ class _ChatElParcheModalState extends State<ChatElParcheModal> {
 
     Future.delayed(const Duration(milliseconds: 600), () {
       if (!mounted) return;
-      setState(() => _mensajes
-          .add(Mensaje(texto: _responder(texto), esUsuario: false)));
+      setState(() {
+        _mensajes.add(Mensaje(texto: _responder(texto), esUsuario: false));
+      });
       _bajar();
     });
   }
@@ -140,10 +177,13 @@ class _ChatElParcheModalState extends State<ChatElParcheModal> {
                 controller: _scroll,
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 itemCount: _mensajes.length,
-                itemBuilder: (_, i) => ChatBurbuja(mensaje: _mensajes[i]),
+                itemBuilder: (_, index) => ChatBurbuja(mensaje: _mensajes[index]),
               ),
             ),
-            ChatInputField(controlador: _controlador, onEnviar: _enviar),
+            ChatInputField(
+              controlador: _controlador,
+              onEnviar: _enviar,
+            ),
           ],
         ),
       ),

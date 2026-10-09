@@ -1,8 +1,13 @@
+<<<<<<< HEAD
 import 'dart:async';
+=======
+﻿import 'dart:async';
 
-import 'package:elparchee/pantallas/inicioSesion.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+>>>>>>> 16cdaf6631759378ad4d70b2ced589019b4d0f44
+
+import 'package:elparchee/pantallas/inicioSesion.dart';
 
 class Inicio extends StatefulWidget {
   const Inicio({super.key});
@@ -12,23 +17,17 @@ class Inicio extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<Inicio> {
-  late VideoPlayerController _videoController;
+  late final VideoPlayerController _videoController;
   Timer? _timer;
+  bool _videoDisponible = false;
 
   @override
   void initState() {
     super.initState();
 
-    // 1. Inicializar el video (desde assets)
-    _videoController = VideoPlayerController.asset('assets/videos/fondo.mp4')
-      ..initialize().then((_) {
-        setState(() {}); // Actualiza la UI cuando el video esté cargado
-      })
-      ..setLooping(true) // Repetir en bucle
-      ..setVolume(0.0) // Silenciar si es un video de fondo
-      ..play(); // Iniciar reproducción
+    _videoController = VideoPlayerController.asset('assets/videos/fondo.mp4');
+    _inicializarVideo();
 
-    // 2. Temporizador de 5 segundos para cambiar de pantalla
     _timer = Timer(const Duration(seconds: 5), () {
       if (mounted) {
         Navigator.of(context).pushReplacement(
@@ -38,9 +37,24 @@ class _SplashScreenState extends State<Inicio> {
     });
   }
 
+  Future<void> _inicializarVideo() async {
+    try {
+      await _videoController.initialize();
+      if (!mounted) return;
+
+      _videoController.setLooping(true);
+      _videoController.setVolume(0.0);
+      _videoController.play();
+      setState(() => _videoDisponible = true);
+    } catch (_) {
+      if (mounted) {
+        setState(() => _videoDisponible = false);
+      }
+    }
+  }
+
   @override
   void dispose() {
-    // Liberar recursos de memoria al salir de la pantalla
     _videoController.dispose();
     _timer?.cancel();
     super.dispose();
@@ -51,8 +65,7 @@ class _SplashScreenState extends State<Inicio> {
     return Scaffold(
       body: Stack(
         children: [
-          // Fondo de Video
-          _videoController.value.isInitialized
+          _videoDisponible && _videoController.value.isInitialized
               ? SizedBox.expand(
                   child: FittedBox(
                     fit: BoxFit.cover,
@@ -63,11 +76,10 @@ class _SplashScreenState extends State<Inicio> {
                     ),
                   ),
                 )
-              : Container(color: Colors.black), // Fondo mientas carga el video
-          // Logo o elementos encima del video
+              : Container(color: Colors.black),
           Center(
             child: Image.asset(
-              'assets/images/logo-parche.png', // Reemplaza por tu logo
+              'assets/images/logo-parche.png',
               width: 200,
             ),
           ),

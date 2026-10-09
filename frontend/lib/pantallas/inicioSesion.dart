@@ -1,6 +1,13 @@
+<<<<<<< HEAD
 import 'package:elparchee/pantallas/recuperacioncuenta.dart';
 import 'package:elparchee/pantallas/registro.dart';
 import 'package:flutter/material.dart';
+=======
+﻿import 'package:flutter/material.dart';
+
+
+import 'package:elparchee/pantallas/registro.dart';
+>>>>>>> 16cdaf6631759378ad4d70b2ced589019b4d0f44
 
 class Iniciosesion extends StatefulWidget {
   const Iniciosesion({super.key});
@@ -16,7 +23,11 @@ class _IniciosesionState extends State<Iniciosesion> {
       body: Container(
         width: double.infinity,
         height: double.infinity,
+<<<<<<< HEAD
         decoration: BoxDecoration(
+=======
+        decoration: const BoxDecoration(
+>>>>>>> 16cdaf6631759378ad4d70b2ced589019b4d0f44
           image: DecorationImage(
             image: AssetImage('assets/images/background-fondo.png'),
             fit: BoxFit.cover,
@@ -41,7 +52,6 @@ class _IniciosesionState extends State<Iniciosesion> {
                         ),
                       ),
                     ),
-
                     Transform.translate(offset: const Offset(0, -25)),
                     const Text(
                       '¡BIENVENIDO!',
@@ -58,6 +68,7 @@ class _IniciosesionState extends State<Iniciosesion> {
                         ],
                       ),
                     ),
+<<<<<<< HEAD
                     const SizedBox(height: 4),
                     
                     // NUEVO: Subtítulo agregado
@@ -72,24 +83,28 @@ class _IniciosesionState extends State<Iniciosesion> {
                     
                     const SizedBox(height: 16),
                     Material(
+=======
+                    const SizedBox(height: 20),
+                    const Material(
+>>>>>>> 16cdaf6631759378ad4d70b2ced589019b4d0f44
                       elevation: 4,
-                      borderRadius: BorderRadius.circular(30),
-                      child: const _Input(
+                      borderRadius: BorderRadius.all(Radius.circular(30)),
+                      child: _Input(
                         hint: 'Email/Usuario',
                         icon: Icons.email_outlined,
                       ),
                     ),
-
-                    SizedBox(height: 14),
-                    Material(
+                    const SizedBox(height: 14),
+                    const Material(
                       elevation: 4,
-                      borderRadius: BorderRadius.circular(30),
-                      child: const _Input(
+                      borderRadius: BorderRadius.all(Radius.circular(30)),
+                      child: _Input(
                         hint: 'Contraseña',
                         icon: Icons.lock_outline,
                         pass: true,
                       ),
                     ),
+<<<<<<< HEAD
 
                     const SizedBox(height: 6),
 
@@ -113,6 +128,9 @@ class _IniciosesionState extends State<Iniciosesion> {
                     ),
 
                     SizedBox(height: 18),
+=======
+                    const SizedBox(height: 22),
+>>>>>>> 16cdaf6631759378ad4d70b2ced589019b4d0f44
                     SizedBox(
                       width: double.infinity,
                       height: 52,
@@ -136,13 +154,13 @@ class _IniciosesionState extends State<Iniciosesion> {
                       ),
                     ),
                     const SizedBox(height: 22),
-                    Row(
+                    const Row(
                       children: [
-                        const Expanded(
+                        Expanded(
                           child: Divider(color: Colors.black38, thickness: 1),
                         ),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          padding: EdgeInsets.symmetric(horizontal: 10),
                           child: Text(
                             'O continuar con',
                             style: TextStyle(
@@ -152,7 +170,7 @@ class _IniciosesionState extends State<Iniciosesion> {
                             ),
                           ),
                         ),
-                        const Expanded(
+                        Expanded(
                           child: Divider(color: Colors.black38, thickness: 1),
                         ),
                       ],
@@ -163,21 +181,12 @@ class _IniciosesionState extends State<Iniciosesion> {
                         _Social(
                           child: Image.asset(
                             'assets/images/google.png',
-                            height: 26,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        const _Social(
-                          child: Icon(
-                            Icons.email,
-                            color: Color(0xFF1877F2),
-                            size: 30,
+                            height: 30,
                           ),
                         ),
                       ],
                     ),
-                    SizedBox(height: 25),
-
+                    const SizedBox(height: 25),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -206,6 +215,7 @@ class _IniciosesionState extends State<Iniciosesion> {
                           ),
                         ),
                       ],
+<<<<<<< HEAD
                     ),
                     
                     const SizedBox(height: 15),
@@ -219,6 +229,8 @@ class _IniciosesionState extends State<Iniciosesion> {
                         color: Colors.black54,
                         fontWeight: FontWeight.w500,
                       ),
+=======
+>>>>>>> 16cdaf6631759378ad4d70b2ced589019b4d0f44
                     ),
                   ],
                 ),
@@ -235,48 +247,67 @@ class _Input extends StatelessWidget {
   final String hint;
   final IconData icon;
   final bool pass;
-  const _Input({required this.hint, required this.icon, this.pass = false});
+
+  const _Input({
+    required this.hint,
+    required this.icon,
+    this.pass = false,
+  });
 
   @override
-  Widget build(BuildContext context) => Container(
-    decoration: BoxDecoration(
-      color: const Color(0xFFF7EBD9),
-      borderRadius: BorderRadius.circular(20),
-      border: Border.all(color: const Color(0xFFE8A35E), width: 1.5),
-    ),
-    child: TextField(
-      obscureText: pass,
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: const TextStyle(
-          color: Colors.black87,
-          fontWeight: FontWeight.bold,
-        ),
-        border: InputBorder.none,
-        prefixIcon: Icon(icon, color: const Color(0xFFB94E0C)),
-        contentPadding: const EdgeInsets.symmetric(vertical: 14),
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7EBD9),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE8A35E), width: 1.5),
       ),
-    ),
-  );
+      child: TextField(
+        obscureText: pass,
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: const TextStyle(
+            color: Colors.black87,
+            fontWeight: FontWeight.bold,
+          ),
+          border: InputBorder.none,
+          prefixIcon: Icon(icon, color: const Color(0xFFB94E0C)),
+        ),
+      ),
+    );
+  }
 }
 
 class _Social extends StatelessWidget {
   final Widget child;
+
   const _Social({required this.child});
 
   @override
-  Widget build(BuildContext context) => Expanded(
-    child: Container(
-      height: 48,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE8A35E), width: 1.5),
-        boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
-        ],
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        height: 52,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 4,
+              offset: Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Center(child: child),
       ),
+<<<<<<< HEAD
       child: Center(child: child),
     ),
   );
 }
+=======
+    );
+  }
+}
+>>>>>>> 16cdaf6631759378ad4d70b2ced589019b4d0f44

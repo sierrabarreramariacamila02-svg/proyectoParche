@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:elparchee/app_colors.dart';
 class Carrito extends StatefulWidget {
   const Carrito({super.key});
 
@@ -8,9 +8,9 @@ class Carrito extends StatefulWidget {
 }
 
 class _CarritoState extends State<Carrito> {
-  static const Color rojo = Color.fromARGB(255, 139, 18, 18);
-  static const Color naranja = Color.fromARGB(255, 229, 160, 90);
-  static const Color crema = Color.fromARGB(255, 250, 243, 230);
+  static const Color rojo = AppColors.barraHome;
+  static const Color naranja = AppColors.buttonOrange;
+  static const Color crema = AppColors.background;
 
   final List<Map<String, dynamic>> items = [
     {"nombre": "Perro Caliente Cargado", "precio": 28000, "cant": 1, "icono": Icons.lunch_dining},
@@ -32,26 +32,24 @@ class _CarritoState extends State<Carrito> {
       body: Column(
         children: [
           Container(
-            padding: const EdgeInsets.fromLTRB(10, 50, 20, 15),
+            padding: const EdgeInsets.fromLTRB(20, 50, 20, 15),
+            decoration: const BoxDecoration(
             color: rojo,
-            child: Row(
+            borderRadius: BorderRadius.only(bottomLeft: Radius.circular(30), bottomRight: Radius.circular(30)),
+            ),
+            child:  Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-                const Expanded(
-                  child: Text(
-                    "Tomar pedido",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
+                  onPressed: () {
+                  Navigator.pop(context);
+                   },
+                      icon: const Icon(
+                     Icons.arrow_back,
                       color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                      ),
                     ),
-                  ),
-                ),
-                const SizedBox(width: 40), // Para equilibrar el espacio del botón izquierdo
+                Icon(Icons.notifications_none, color: Colors.white),
               ],
             ),
           ),

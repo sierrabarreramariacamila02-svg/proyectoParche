@@ -1,15 +1,16 @@
 import 'package:elparchee/pantallas/bienvenidos.dart';
 import 'package:flutter/material.dart';
 
+import 'package:elparchee/pantallas/bienvenidos.dart';
 
-class Verification extends StatefulWidget {
-  const Verification({super.key});
+class Verificacion extends StatefulWidget {
+  const Verificacion({super.key});
 
   @override
-  State<Verification> createState() => _VerificationScreenState();
+  State<Verificacion> createState() => _VerificacionScreenState();
 }
 
-class _VerificationScreenState extends State<Verification> {
+class _VerificacionScreenState extends State<Verificacion> {
   final List<TextEditingController> _ctr = List.generate(
     6,
     (_) => TextEditingController(),
@@ -134,7 +135,7 @@ class _VerificationScreenState extends State<Verification> {
                 onPressed: () {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => Bienvenidos()),
+                    MaterialPageRoute(builder: (context) => const Bienvenidos()),
                   );
                 },
                 style: ElevatedButton.styleFrom(
