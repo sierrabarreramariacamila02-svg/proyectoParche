@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+<<<<<<< HEAD:frontend/lib/pantallas/inicioSesion.dart
 import 'package:elparchee/pantallas/registro.dart';
+=======
+import 'package:elparchee/components/registro.dart';
+>>>>>>> 3da53de1750715ee79dc66c1d9585220dbbfcba7:frontend/lib/components/inicioSesion.dart
 
 class Iniciosesion extends StatefulWidget {
   const Iniciosesion({super.key});

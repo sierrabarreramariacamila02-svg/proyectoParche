@@ -3,7 +3,10 @@ import 'package:elparchee/components/chat_burbuja.dart';
 import 'package:elparchee/components/chat_header.dart';
 import 'package:elparchee/components/chat_input_field.dart';
 import 'package:elparchee/services/chatelparcheservice.dart';
+<<<<<<< HEAD
  
+=======
+>>>>>>> 3da53de1750715ee79dc66c1d9585220dbbfcba7
 
 class ChatElparcheModal extends StatefulWidget {
   const ChatElparcheModal({super.key});
@@ -18,8 +21,14 @@ class _ChatMimosModalState extends State<ChatElparcheModal> {
   final List<Map<String, String>> _mensajes = [
     {
       'role': 'bot',
+<<<<<<< HEAD
       'text': '¡Hola! Bienvenido a El Parche 🍔 ¿Qué se te antoja comer o pedir hoy?',
     }
+=======
+      'text':
+          'Hola! Bienvenido a Helados Mimos. Que helado, copa o especialidad se te antoja conocer hoy?',
+    },
+>>>>>>> 3da53de1750715ee79dc66c1d9585220dbbfcba7
   ];
   bool _cargando = false;
 
@@ -100,10 +109,16 @@ class _ChatMimosModalState extends State<ChatElparcheModal> {
                   SizedBox(
                     width: 14,
                     height: 14,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFE91E63)),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Color(0xFFE91E63),
+                    ),
                   ),
                   SizedBox(width: 8),
-                  Text('El asesor esta respondiendo...', style: TextStyle(color: Colors.black45, fontSize: 12)),
+                  Text(
+                    'El asesor esta respondiendo...',
+                    style: TextStyle(color: Colors.black45, fontSize: 12),
+                  ),
                 ],
               ),
             ),
