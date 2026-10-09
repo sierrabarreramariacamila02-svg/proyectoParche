@@ -1,13 +1,5 @@
+import 'package:elparchee/pantallas/bienvenidos.dart';
 import 'package:flutter/material.dart';
-<<<<<<< HEAD
-<<<<<<< HEAD:frontend/lib/pantallas/verificacion.dart
-import 'package:elparchee/pantallas/bienvenidos.dart';
-=======
-import 'package:elparchee/components/bienvenidos.dart';
->>>>>>> 3da53de1750715ee79dc66c1d9585220dbbfcba7:frontend/lib/components/verificacion.dart
-=======
-import 'package:elparchee/pantallas/bienvenidos.dart';
->>>>>>> paola
 
 
 class Verification extends StatefulWidget {

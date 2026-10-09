@@ -1,7 +1,5 @@
-<<<<<<< HEAD
-import 'package:flutter/material.dart';
 import 'package:elparchee/components/chat_elparche_modal.dart';
-import '../components/producto_card.dart';
+import 'package:flutter/material.dart';
 
 class MenuPage extends StatelessWidget {
   const MenuPage({super.key});
@@ -11,7 +9,7 @@ class MenuPage extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) =>  ChatElparcheModal(),
+      builder: (_) => const ChatElParcheModal(),
     );
   }
 
@@ -60,9 +58,14 @@ class MenuPage extends StatelessWidget {
         padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 90),
         child: Column(
           children: [
-            ProductoCard(
-              onVerMas: () => _mostrarModalDetalle(context),
-              onComprar: () {
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed: () => _mostrarModalDetalle(context),
+              child: const Text('Ver más'),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Funcion de compra disponible proximamente'),
@@ -70,6 +73,7 @@ class MenuPage extends StatelessWidget {
                   ),
                 );
               },
+              child: const Text('Comprar'),
             ),
           ],
         ),
@@ -89,5 +93,3 @@ class MenuPage extends StatelessWidget {
     );
   }
 }
-=======
->>>>>>> paola

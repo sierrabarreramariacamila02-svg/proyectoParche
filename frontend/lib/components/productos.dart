@@ -1,50 +1,43 @@
-<<<<<<< HEAD
-import 'package:elparchee/pantallas/menuHamburguesas.dart';
-import 'package:elparchee/pantallas/menuOtros.dart';
-import 'package:elparchee/pantallas/menuPerro.dart';
-import 'package:elparchee/pantallas/menuSalchipapa.dart';
-=======
-import 'package:elparchee/pantallas/carrito.dart';
-<<<<<<< HEAD
->>>>>>> paola
-=======
-<<<<<<< Updated upstream
-=======
-import 'package:elparchee/pantallas/menuHamburguesas.dart';
-import 'package:elparchee/pantallas/menuOtros.dart';
-import 'package:elparchee/pantallas/menuPerro.dart';
-import 'package:elparchee/pantallas/menuSalchipapa.dart';
->>>>>>> Stashed changes
->>>>>>> paola
-import 'package:flutter/material.dart';
 import 'package:elparchee/app_colors.dart';
+import 'package:elparchee/pantallas/carrito.dart';
+import 'package:elparchee/pantallas/menuHamburguesas.dart';
+import 'package:elparchee/pantallas/menuOtros.dart';
+import 'package:elparchee/pantallas/menuPerro.dart';
+import 'package:elparchee/pantallas/menuSalchipapa.dart';
+import 'package:flutter/material.dart';
 
 class Productos extends StatefulWidget {
   const Productos({super.key});
+
   @override
   State<Productos> createState() => _ProductosState();
 }
 
 class _ProductosState extends State<Productos> {
   final PageController _controller = PageController();
-  int paginaActual = 0, _indiceIcono = 0, _indiceFiltro = 0;
+  int paginaActual = 0;
+  int _indiceIcono = 0;
+  int _indiceFiltro = 0;
 
   final List<String> imagenes = [
     'assets/images/promo1.png',
     'assets/images/promo2.png',
-    'assets/images/promo3.png', 
+    'assets/images/promo3.png',
   ];
+
   final List<String> platos = [
     'assets/images/plato1.png',
     'assets/images/plato2.png',
     'assets/images/plato3.png',
     'assets/images/plato4.png',
   ];
+
   final List<String> _filtros = [
     'Productos destacados',
     'Perros calientes y mas',
     'Bebidas',
   ];
+
   final List<Map<String, dynamic>> _categorias = [
     {
       'img': 'assets/images/hamburguesa.png',
@@ -124,57 +117,49 @@ class _ProductosState extends State<Productos> {
                 ),
               ),
             ),
-
-            // CATEGORÍAS CON IMÁGENES CLICKEABLES
             _titulo('Menú.'),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: _categorias
-                 .map(
-        (c) => _catItem(
-          c['img']!,
-          c['lbl']!,
-          c['color'] as Color,
-          () {
-            // Evaluamos cuál categoría se presionó
-            if (c['lbl'] == 'Perros calientes') {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const MenuPerro(),
-                ),
-              );
-            } else if (c['lbl'] == 'Hamburguesas') {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const MenuHamburguesas(),
-                ),
-              );
-              // Navigator.push para Hamburguesas
-            } else if (c['lbl'] == 'Salchipapas') {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SalchipapasMenu(),
-                ),
-              );
-              // Navigator.push para Salchipapas
-            } else if (c['lbl'] == 'Otros') {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const MenuOtros(),
-                ),
-              );
-              // Navigator.push para Otros
-            }
-          },
-        ),
-      )
-      .toList(),
+              children: _categorias.map((c) {
+                final lbl = c['lbl'] as String;
+                return _catItem(
+                  c['img'] as String,
+                  lbl,
+                  c['color'] as Color,
+                  () {
+                    if (lbl == 'Perros calientes') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const MenuPerro(),
+                        ),
+                      );
+                    } else if (lbl == 'Hamburguesas') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const MenuHamburguesas(),
+                        ),
+                      );
+                    } else if (lbl == 'Salchipapas') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SalchipapasMenu(),
+                        ),
+                      );
+                    } else if (lbl == 'Otros') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const MenuOtros(),
+                        ),
+                      );
+                    }
+                  },
+                );
+              }).toList(),
             ),
-
             _titulo('Platos destacados.'),
             GridView.builder(
               shrinkWrap: true,
@@ -233,8 +218,6 @@ class _ProductosState extends State<Productos> {
           ],
         ),
       ),
-
-      // BOTTOM NAVIGATION BAR CON SAFEAREA Y CARRITO SOBRESALIDO
       bottomNavigationBar: Container(
         color: AppColors.barraInferior,
         child: SafeArea(
@@ -251,7 +234,7 @@ class _ProductosState extends State<Productos> {
                 SizedBox(
                   height: 30,
                   child: Stack(
-                    clipBehavior: Clip.none, // Permite sobresalir al carrito
+                    clipBehavior: Clip.none,
                     alignment: Alignment.center,
                     children: [
                       Row(
@@ -265,7 +248,7 @@ class _ProductosState extends State<Productos> {
                         ],
                       ),
                       Positioned(
-                        top: -24, // Eleva el botón del carrito
+                        top: -24,
                         child: CircleAvatar(
                           radius: 28,
                           backgroundColor: AppColors.buttonOrange,
@@ -278,10 +261,11 @@ class _ProductosState extends State<Productos> {
                             onPressed: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (_) => const Carrito()),
+                                MaterialPageRoute(
+                                  builder: (_) => const Carrito(),
+                                ),
                               );
                             },
-                            
                           ),
                         ),
                       ),
@@ -289,7 +273,6 @@ class _ProductosState extends State<Productos> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                // BARRA DE FILTROS
                 Container(
                   decoration: BoxDecoration(
                     color: AppColors.barraInferior,
@@ -335,60 +318,59 @@ class _ProductosState extends State<Productos> {
     );
   }
 
-  // WIDGETS AUXILIARES
   Widget _titulo(String t) => Padding(
-    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-    child: Text(
-      t,
-      style: const TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-        color: AppColors.barraHome,
-      ),
-    ),
-  );
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+        child: Text(
+          t,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: AppColors.barraHome,
+          ),
+        ),
+      );
 
   Widget _catItem(
     String img,
     String lbl,
     Color colorFondo,
     VoidCallback onTap,
-  ) => GestureDetector(
-    onTap: onTap,
-    child: Column(
-      children: [
-        Container(
-          width: 50,
-          height: 50,
-          decoration: BoxDecoration(
-            color: colorFondo,
-
-            shape: BoxShape.circle,
-            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
-          ),
-          child: ClipOval(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Image.asset(img, fit: BoxFit.contain),
+  ) =>
+      GestureDetector(
+        onTap: onTap,
+        child: Column(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: colorFondo,
+                shape: BoxShape.circle,
+                boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
+              ),
+              child: ClipOval(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Image.asset(img, fit: BoxFit.contain),
+                ),
+              ),
             ),
-          ),
+            const SizedBox(height: 4),
+            Text(
+              lbl,
+              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500),
+            ),
+          ],
         ),
-        const SizedBox(height: 4),
-        Text(
-          lbl,
-          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500),
-        ),
-      ],
-    ),
-  );
+      );
 
   Widget _navIcon(IconData icon, int index) => IconButton(
-    icon: Icon(
-      icon,
-      color: _indiceIcono == index ? AppColors.barraHome : Colors.brown,
-    ),
-    onPressed: () => setState(() => _indiceIcono = index),
-  );
+        icon: Icon(
+          icon,
+          color: _indiceIcono == index ? AppColors.barraHome : Colors.brown,
+        ),
+        onPressed: () => setState(() => _indiceIcono = index),
+      );
 
   @override
   void dispose() {

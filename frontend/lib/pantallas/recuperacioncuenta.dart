@@ -39,19 +39,20 @@ class _RecuperacionCuentaState extends State<RecuperacionCuenta> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _crema,
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/fondo_hamburguesas.png',
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-            ),
+      resizeToAvoidBottomInset: false, // Evita que el teclado deforme o corte el fondo
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/background-fondo.png'),
+            fit: BoxFit.cover, // Cubre toda la pantalla por completo
           ),
-          SafeArea(
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 28),
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 28),
               child: Column(
                 children: [
                   Align(
@@ -61,12 +62,30 @@ class _RecuperacionCuentaState extends State<RecuperacionCuenta> {
                       onPressed: () => Navigator.pop(context),
                     ),
                   ),
-                  Image.asset(
-                    'assets/images/logo_elparche.png',
-                    height: 150,
-                    errorBuilder: (_, __, ___) =>
-                        const Icon(Icons.fastfood, size: 100, color: _naranja),
+                  const SizedBox(height: 10),
+                  
+                  // Logo con resplandor
+                  Center(
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Color(0xFFD35400),
+                            blurRadius: 15,
+                            spreadRadius: 1,
+                          ),
+                        ],
+                      ),
+                      child: Image.asset(
+                        'assets/images/Logo_el_parche.png',
+                        height: 110,
+                        errorBuilder: (_, __, ___) =>
+                            const Icon(Icons.fastfood, size: 100, color: _naranja),
+                      ),
+                    ),
                   ),
+
                   const SizedBox(height: 16),
                   const Text(
                     'RECUPERA TU\nCUENTA',
@@ -121,19 +140,52 @@ class _RecuperacionCuentaState extends State<RecuperacionCuenta> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 40),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text(
-                      'Volver al inicio de sesión',
-                      style: TextStyle(color: Colors.black, fontSize: 12),
+                  const SizedBox(height: 25),
+
+                  // Divisor y opción para regresar al inicio de sesión
+                  Row(
+                    children: [
+                      const Expanded(
+                        child: Divider(color: Colors.black38, thickness: 1),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: const Text(
+                            '¿Recuerdas tu contraseña? Inicia sesión',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const Expanded(
+                        child: Divider(color: Colors.black38, thickness: 1),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 25),
+
+                  // Texto de Términos y condiciones inferior
+                  const Text(
+                    'Al continuar, aceptas nuestros Terminos y condiciones y Politicas de privacidad.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.black54,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
+                  const SizedBox(height: 20),
                 ],
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }

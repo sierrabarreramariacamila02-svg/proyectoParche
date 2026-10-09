@@ -1,22 +1,6 @@
-<<<<<<< HEAD
-import 'package:flutter/material.dart';
-<<<<<<< HEAD
-<<<<<<< HEAD:frontend/lib/pantallas/inicioSesion.dart
-import 'package:elparchee/pantallas/registro.dart';
-=======
-import 'package:elparchee/components/registro.dart';
->>>>>>> 3da53de1750715ee79dc66c1d9585220dbbfcba7:frontend/lib/components/inicioSesion.dart
-=======
-import 'package:elparchee/pantallas/registro.dart';
->>>>>>> paola
-=======
+import 'package:elparchee/pantallas/recuperacioncuenta.dart';
 import 'package:elparchee/pantallas/registro.dart';
 import 'package:flutter/material.dart';
-<<<<<<< Updated upstream
-import 'package:elparchee/pantallas/registro.dart';
-=======
->>>>>>> Stashed changes
->>>>>>> paola
 
 class Iniciosesion extends StatefulWidget {
   const Iniciosesion({super.key});
@@ -32,14 +16,12 @@ class _IniciosesionState extends State<Iniciosesion> {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-
         decoration: BoxDecoration(
           image: DecorationImage(
             image: AssetImage('assets/images/background-fondo.png'),
             fit: BoxFit.cover,
           ),
         ),
-
         child: Padding(
           padding: const EdgeInsets.all(25.0),
           child: SafeArea(
@@ -61,7 +43,7 @@ class _IniciosesionState extends State<Iniciosesion> {
                     ),
 
                     Transform.translate(offset: const Offset(0, -25)),
-                    Text(
+                    const Text(
                       '¡BIENVENIDO!',
                       style: TextStyle(
                         fontSize: 34,
@@ -76,7 +58,19 @@ class _IniciosesionState extends State<Iniciosesion> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 4),
+                    
+                    // NUEVO: Subtítulo agregado
+                    const Text(
+                      'Inicia sesion para continuar',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.black87,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 16),
                     Material(
                       elevation: 4,
                       borderRadius: BorderRadius.circular(30),
@@ -97,7 +91,28 @@ class _IniciosesionState extends State<Iniciosesion> {
                       ),
                     ),
 
-                    SizedBox(height: 22),
+                    const SizedBox(height: 6),
+
+                    // NUEVO "¿Olvidaste tu Contraseña?" navegable alineado a la derecha
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: GestureDetector(
+                        onTap: () {
+                                Navigator.push(context, 
+                                MaterialPageRoute(builder: (context) => const RecuperacionCuenta()));
+                          },
+                        child: const Text(
+                          '¿Olvidaste tu Contraseña?',
+                          style: TextStyle(
+                            color: Colors.black87,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: 18),
                     SizedBox(
                       width: double.infinity,
                       height: 52,
@@ -191,7 +206,19 @@ class _IniciosesionState extends State<Iniciosesion> {
                           ),
                         ),
                       ],
-                      
+                    ),
+                    
+                    const SizedBox(height: 15),
+
+                    // NUEVO: Texto de Términos y condiciones inferior
+                    const Text(
+                      'Al continuar, aceptas nuestros Terminos y condiciones y Politicas de privacidad.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.black54,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ),

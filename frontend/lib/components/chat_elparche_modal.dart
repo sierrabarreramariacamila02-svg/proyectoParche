@@ -1,24 +1,7 @@
-import 'package:flutter/material.dart';
-<<<<<<< Updated upstream
 import 'package:elparchee/components/chat_burbuja.dart';
 import 'package:elparchee/components/chat_header.dart';
 import 'package:elparchee/components/chat_input_field.dart';
-import 'package:elparchee/services/chatelparcheservice.dart';
-<<<<<<< HEAD
-<<<<<<< HEAD
- 
-=======
-<<<<<<< HEAD
->>>>>>> 3da53de1750715ee79dc66c1d9585220dbbfcba7
-=======
- 
->>>>>>> paola
-=======
-import 'chat_burbuja.dart';
-import 'chat_header.dart';
-import 'chat_input_field.dart';
->>>>>>> Stashed changes
->>>>>>> paola
+import 'package:flutter/material.dart';
 
 class _ProductoInfo {
   final String nombre;
@@ -32,30 +15,6 @@ class _ProductoInfo {
   });
 }
 
-<<<<<<< Updated upstream
-class _ChatMimosModalState extends State<ChatElparcheModal> {
-  final TextEditingController _controller = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
-  final List<Map<String, String>> _mensajes = [
-    {
-      'role': 'bot',
-<<<<<<< HEAD
-<<<<<<< HEAD
-      'text': '¡Hola! Bienvenido a El Parche 🍔 ¿Qué se te antoja comer o pedir hoy?',
-    }
-=======
-<<<<<<< HEAD
-      'text':
-          'Hola! Bienvenido a Helados Mimos. Que helado, copa o especialidad se te antoja conocer hoy?',
-    },
->>>>>>> 3da53de1750715ee79dc66c1d9585220dbbfcba7
-=======
-      'text': '¡Hola! Bienvenido a El Parche 🍔 ¿Qué se te antoja comer o pedir hoy?',
-    }
->>>>>>> paola
-=======
-/// Abre el chat desde cualquier pantalla:
-/// onPressed: () => mostrarChatElParche(context)
 void mostrarChatElParche(BuildContext context) {
   showModalBottomSheet(
     context: context,
@@ -97,14 +56,11 @@ class _ChatElParcheModalState extends State<ChatElParcheModal> {
       precio: 5000,
     ),
   ];
-  final List<Mensaje> _mensajes = [
-    const Mensaje(
-      texto: '¡Hola! Soy el asistente de El Parche. '
-          'Pregúntame por productos, precios u horarios.',
+  final List<Mensaje> _mensajes = const [
+    Mensaje(
+      texto: '¡Hola! Soy el asistente de El Parche. Pregúntame por productos, precios u horarios.',
       esUsuario: false,
     ),
->>>>>>> Stashed changes
->>>>>>> paola
   ];
 
   @override

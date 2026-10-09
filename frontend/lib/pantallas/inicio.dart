@@ -1,17 +1,3 @@
-<<<<<<< Updated upstream
-import 'package:flutter/material.dart';
-<<<<<<< HEAD
-<<<<<<< HEAD:frontend/lib/pantallas/inicio.dart
-import 'package:elparchee/pantallas/inicioSesion.dart';
-=======
-import 'package:elparchee/components/inicioSesion.dart';
->>>>>>> 3da53de1750715ee79dc66c1d9585220dbbfcba7:frontend/lib/components/inicio.dart
-=======
-import 'package:elparchee/pantallas/inicioSesion.dart';
->>>>>>> paola
-import 'package:video_player/video_player.dart';
-=======
->>>>>>> Stashed changes
 import 'dart:async';
 
 import 'package:elparchee/pantallas/inicioSesion.dart';
