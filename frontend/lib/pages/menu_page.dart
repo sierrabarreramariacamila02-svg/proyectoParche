@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import 'package:flutter/material.dart';
 import 'package:elparchee/components/chat_elparche_modal.dart';
 import '../components/producto_card.dart';
@@ -88,3 +89,5 @@ class MenuPage extends StatelessWidget {
     );
   }
 }
+=======
+>>>>>>> paola

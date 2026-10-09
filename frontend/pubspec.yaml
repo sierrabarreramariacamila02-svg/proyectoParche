@@ -10,12 +10,17 @@ dependencies:
   flutter:
     sdk: flutter
 <<<<<<< HEAD
+<<<<<<< HEAD
   http: ^1.2.0
   video_player: ^2.8.6
 =======
   video_player: ^2.8.2
   http: ^1.2.0
 >>>>>>> 3da53de1750715ee79dc66c1d9585220dbbfcba7
+=======
+  http: ^1.2.0
+  video_player: ^2.8.6
+>>>>>>> paola
 
 dev_dependencies:
   flutter_test:
@@ -29,6 +34,10 @@ flutter:
   assets:
     - assets/videos/
 <<<<<<< HEAD
+<<<<<<< HEAD
     - assets/images/
 =======
 >>>>>>> 3da53de1750715ee79dc66c1d9585220dbbfcba7
+=======
+    - assets/images/
+>>>>>>> paola

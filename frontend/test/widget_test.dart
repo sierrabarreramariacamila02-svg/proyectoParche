@@ -8,9 +8,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
 >>>>>>> 3da53de1750715ee79dc66c1d9585220dbbfcba7
+=======
+>>>>>>> paola
 import 'package:elparchee/main.dart';
 
 void main() {

@@ -1,7 +1,11 @@
+<<<<<<< HEAD
 import 'package:elparchee/pantallas/menuHamburguesas.dart';
 import 'package:elparchee/pantallas/menuOtros.dart';
 import 'package:elparchee/pantallas/menuPerro.dart';
 import 'package:elparchee/pantallas/menuSalchipapa.dart';
+=======
+import 'package:elparchee/pantallas/carrito.dart';
+>>>>>>> paola
 import 'package:flutter/material.dart';
 import 'package:elparchee/app_colors.dart';
 
@@ -18,7 +22,7 @@ class _ProductosState extends State<Productos> {
   final List<String> imagenes = [
     'assets/images/promo1.png',
     'assets/images/promo2.png',
-    'assets/images/promo3.png',
+    'assets/images/promo3.png', 
   ];
   final List<String> platos = [
     'assets/images/plato1.png',
@@ -261,7 +265,13 @@ class _ProductosState extends State<Productos> {
                               color: Colors.white,
                               size: 28,
                             ),
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const Carrito()),
+                              );
+                            },
+                            
                           ),
                         ),
                       ),

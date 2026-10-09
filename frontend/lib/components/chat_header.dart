@@ -5,45 +5,78 @@ class ChatHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const SizedBox(height: 12),
-        Container(
-          width: 42,
-          height: 4.5,
-          decoration: BoxDecoration(
-            color: Colors.black12,
-            borderRadius: BorderRadius.circular(3),
+    return Container(
+      decoration: const BoxDecoration(
+        color: Color(0xFF8E1B10),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 12),
+          Container(
+            width: 42,
+            height: 4.5,
+            decoration: BoxDecoration(
+              color: Colors.white38,
+              borderRadius: BorderRadius.circular(3),
+            ),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          child: Row(
-            children: const [
-              CircleAvatar(
-                backgroundColor: Color(0xFFFFCE4EC),
-                child: Icon(Icons.icecream_rounded, color: Color(0xFFE91E63)),
-              ),
-              SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Asesor Helados Mimos',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFE8963F),
+                    shape: BoxShape.circle,
                   ),
-                  Text(
-                    'En línea - Respuestas al instante',
-                    style: TextStyle(color: Colors.green, fontSize: 12),
+                  child: const CircleAvatar(
+                    radius: 22,
+                    backgroundColor: Color(0xFFFFF6E3),
+                    child: Icon(
+                      Icons.lunch_dining_rounded,
+                      color: Color(0xFF8E1B10),
+                      size: 26,
+                    ),
                   ),
-                ],
-              ),
-            ],
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Asesor El Parche',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 17,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Icon(Icons.circle, color: Color(0xFF7CE08A), size: 9),
+                          SizedBox(width: 5),
+                          Text(
+                            'En línea - Respuestas al instante',
+                            style: TextStyle(
+                              color: Color(0xFFFFE9C7),
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        const Divider(height: 1),
-      ],
+        ],
+      ),
     );
   }
 }
