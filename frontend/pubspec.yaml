@@ -11,6 +11,15 @@ dependencies:
     sdk: flutter
   http: ^1.2.0
   video_player: ^2.8.6
+  shared_preferences: ^2.5.5
+  google_sign_in: ^6.2.2
+  cupertino_icons: ^1.0.8
+  image_picker: ^1.2.4
+  image_picker_android: ^0.8.13+25
+  image_picker_platform_interface: ^2.11.2
+  desktop_drop: ^0.7.1
+  photo_manager: ^3.12.0
+  http_parser: ^4.1.2
 
 dev_dependencies:
   flutter_test:

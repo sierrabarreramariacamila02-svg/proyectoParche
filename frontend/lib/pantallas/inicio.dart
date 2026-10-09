@@ -15,20 +15,14 @@ class Inicio extends StatefulWidget {
 class _SplashScreenState extends State<Inicio> {
   late final VideoPlayerController _videoController;
   Timer? _timer;
+  bool _videoDisponible = false;
 
   @override
   void initState() {
     super.initState();
 
-    _videoController = VideoPlayerController.asset('assets/videos/fondo.mp4')
-      ..initialize().then((_) {
-        if (mounted) {
-          setState(() {});
-        }
-      })
-      ..setLooping(true)
-      ..setVolume(0.0)
-      ..play();
+    _videoController = VideoPlayerController.asset('assets/videos/fondo.mp4');
+    _inicializarVideo();
 
     _timer = Timer(const Duration(seconds: 5), () {
       if (mounted) {
@@ -37,6 +31,22 @@ class _SplashScreenState extends State<Inicio> {
         );
       }
     });
+  }
+
+  Future<void> _inicializarVideo() async {
+    try {
+      await _videoController.initialize();
+      if (!mounted) return;
+
+      _videoController.setLooping(true);
+      _videoController.setVolume(0.0);
+      _videoController.play();
+      setState(() => _videoDisponible = true);
+    } catch (_) {
+      if (mounted) {
+        setState(() => _videoDisponible = false);
+      }
+    }
   }
 
   @override
@@ -51,7 +61,7 @@ class _SplashScreenState extends State<Inicio> {
     return Scaffold(
       body: Stack(
         children: [
-          _videoController.value.isInitialized
+          _videoDisponible && _videoController.value.isInitialized
               ? SizedBox.expand(
                   child: FittedBox(
                     fit: BoxFit.cover,
