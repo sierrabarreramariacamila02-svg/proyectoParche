@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import 'package:flutter/material.dart';
 <<<<<<< HEAD
 <<<<<<< HEAD:frontend/lib/pantallas/inicio.dart
@@ -9,7 +10,13 @@ import 'package:elparchee/components/inicioSesion.dart';
 import 'package:elparchee/pantallas/inicioSesion.dart';
 >>>>>>> paola
 import 'package:video_player/video_player.dart';
+=======
+>>>>>>> Stashed changes
 import 'dart:async';
+
+import 'package:elparchee/pantallas/inicioSesion.dart';
+import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 
 class Inicio extends StatefulWidget {
   const Inicio({super.key});

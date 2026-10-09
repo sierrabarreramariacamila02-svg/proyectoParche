@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import 'package:flutter/material.dart';
 <<<<<<< HEAD
 <<<<<<< HEAD:frontend/lib/pantallas/inicioSesion.dart
@@ -7,6 +8,14 @@ import 'package:elparchee/components/registro.dart';
 >>>>>>> 3da53de1750715ee79dc66c1d9585220dbbfcba7:frontend/lib/components/inicioSesion.dart
 =======
 import 'package:elparchee/pantallas/registro.dart';
+>>>>>>> paola
+=======
+import 'package:elparchee/pantallas/registro.dart';
+import 'package:flutter/material.dart';
+<<<<<<< Updated upstream
+import 'package:elparchee/pantallas/registro.dart';
+=======
+>>>>>>> Stashed changes
 >>>>>>> paola
 
 class Iniciosesion extends StatefulWidget {

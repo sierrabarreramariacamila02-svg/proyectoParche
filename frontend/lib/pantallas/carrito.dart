@@ -32,14 +32,26 @@ class _CarritoState extends State<Carrito> {
       body: Column(
         children: [
           Container(
-            padding: const EdgeInsets.fromLTRB(20, 50, 20, 15),
+            padding: const EdgeInsets.fromLTRB(10, 50, 20, 15),
             color: rojo,
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Row(
               children: [
-                Text("Hola username!",
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                Icon(Icons.notifications_none, color: Colors.white),
+                IconButton(
+                  icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+                const Expanded(
+                  child: Text(
+                    "Tomar pedido",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 40), // Para equilibrar el espacio del botón izquierdo
               ],
             ),
           ),
