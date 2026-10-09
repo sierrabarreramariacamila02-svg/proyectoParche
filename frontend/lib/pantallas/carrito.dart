@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:elparchee/app_colors.dart';
 class Carrito extends StatefulWidget {
   const Carrito({super.key});
 
@@ -8,9 +8,9 @@ class Carrito extends StatefulWidget {
 }
 
 class _CarritoState extends State<Carrito> {
-  static const Color rojo = Color.fromARGB(255, 139, 18, 18);
-  static const Color naranja = Color.fromARGB(255, 229, 160, 90);
-  static const Color crema = Color.fromARGB(255, 250, 243, 230);
+  static const Color rojo = AppColors.barraHome;
+  static const Color naranja = AppColors.buttonOrange;
+  static const Color crema = AppColors.background;
 
   final List<Map<String, dynamic>> items = [
     {"nombre": "Perro Caliente Cargado", "precio": 28000, "cant": 1, "icono": Icons.lunch_dining},
@@ -33,12 +33,22 @@ class _CarritoState extends State<Carrito> {
         children: [
           Container(
             padding: const EdgeInsets.fromLTRB(20, 50, 20, 15),
+            decoration: const BoxDecoration(
             color: rojo,
-            child: const Row(
+            borderRadius: BorderRadius.only(bottomLeft: Radius.circular(30), bottomRight: Radius.circular(30)),
+            ),
+            child:  Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Hola username!",
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                IconButton(
+                  onPressed: () {
+                  Navigator.pop(context);
+                   },
+                      icon: const Icon(
+                     Icons.arrow_back,
+                      color: Colors.white,
+                      ),
+                    ),
                 Icon(Icons.notifications_none, color: Colors.white),
               ],
             ),

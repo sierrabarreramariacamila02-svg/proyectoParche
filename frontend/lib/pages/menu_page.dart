@@ -1,7 +1,6 @@
-<<<<<<< HEAD
 import 'package:flutter/material.dart';
+
 import 'package:elparchee/components/chat_elparche_modal.dart';
-import '../components/producto_card.dart';
 
 class MenuPage extends StatelessWidget {
   const MenuPage({super.key});
@@ -11,7 +10,7 @@ class MenuPage extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) =>  ChatElparcheModal(),
+      builder: (_) => const ChatElparcheModal(),
     );
   }
 
@@ -89,5 +88,88 @@ class MenuPage extends StatelessWidget {
     );
   }
 }
-=======
->>>>>>> paola
+
+class ProductoCard extends StatelessWidget {
+  final VoidCallback onVerMas;
+  final VoidCallback onComprar;
+
+  const ProductoCard({
+    super.key,
+    required this.onVerMas,
+    required this.onComprar,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            height: 180,
+            width: double.infinity,
+            color: const Color(0xFFF9D9C7),
+            child: const Center(
+              child: Icon(
+                Icons.fastfood_rounded,
+                size: 84,
+                color: Color(0xFFB12A1A),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Combo El Parche',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Hamburguesa, papas + bebida personalizable.',
+                  style: TextStyle(color: Colors.black54),
+                ),
+                const SizedBox(height: 14),
+                const Text(
+                  '32.000 COP',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF8E1B10),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: onVerMas,
+                        child: const Text('Ver más'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: onComprar,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFB12A1A),
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('Comprar'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

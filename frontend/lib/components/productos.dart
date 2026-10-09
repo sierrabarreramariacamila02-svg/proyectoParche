@@ -1,13 +1,11 @@
-<<<<<<< HEAD
+import 'package:elparchee/pantallas/carrito.dart';
+import 'package:flutter/material.dart';
+
+import 'package:elparchee/app_colors.dart';
 import 'package:elparchee/pantallas/menuHamburguesas.dart';
 import 'package:elparchee/pantallas/menuOtros.dart';
 import 'package:elparchee/pantallas/menuPerro.dart';
 import 'package:elparchee/pantallas/menuSalchipapa.dart';
-=======
-import 'package:elparchee/pantallas/carrito.dart';
->>>>>>> paola
-import 'package:flutter/material.dart';
-import 'package:elparchee/app_colors.dart';
 
 class Productos extends StatefulWidget {
   const Productos({super.key});
@@ -64,6 +62,7 @@ class _ProductosState extends State<Productos> {
       backgroundColor: const Color(0xFFFAF3E0),
       appBar: AppBar(
         backgroundColor: AppColors.barraHome,
+        
         title: const Text(
           'Hola username!',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),

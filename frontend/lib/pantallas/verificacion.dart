@@ -1,23 +1,15 @@
 import 'package:flutter/material.dart';
-<<<<<<< HEAD
-<<<<<<< HEAD:frontend/lib/pantallas/verificacion.dart
-import 'package:elparchee/pantallas/bienvenidos.dart';
-=======
-import 'package:elparchee/components/bienvenidos.dart';
->>>>>>> 3da53de1750715ee79dc66c1d9585220dbbfcba7:frontend/lib/components/verificacion.dart
-=======
-import 'package:elparchee/pantallas/bienvenidos.dart';
->>>>>>> paola
 
+import 'package:elparchee/pantallas/bienvenidos.dart';
 
-class Verification extends StatefulWidget {
-  const Verification({super.key});
+class Verificacion extends StatefulWidget {
+  const Verificacion({super.key});
 
   @override
-  State<Verification> createState() => _VerificationScreenState();
+  State<Verificacion> createState() => _VerificacionScreenState();
 }
 
-class _VerificationScreenState extends State<Verification> {
+class _VerificacionScreenState extends State<Verificacion> {
   final List<TextEditingController> _ctr = List.generate(
     6,
     (_) => TextEditingController(),
@@ -142,7 +134,7 @@ class _VerificationScreenState extends State<Verification> {
                 onPressed: () {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => Bienvenidos()),
+                    MaterialPageRoute(builder: (context) => const Bienvenidos()),
                   );
                 },
                 style: ElevatedButton.styleFrom(

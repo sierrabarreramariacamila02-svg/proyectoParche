@@ -1,13 +1,8 @@
 import 'package:flutter/material.dart';
-<<<<<<< HEAD
-<<<<<<< HEAD:frontend/lib/pantallas/inicioSesion.dart
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
 import 'package:elparchee/pantallas/registro.dart';
-=======
-import 'package:elparchee/components/registro.dart';
->>>>>>> 3da53de1750715ee79dc66c1d9585220dbbfcba7:frontend/lib/components/inicioSesion.dart
-=======
-import 'package:elparchee/pantallas/registro.dart';
->>>>>>> paola
 
 class Iniciosesion extends StatefulWidget {
   const Iniciosesion({super.key});
@@ -17,20 +12,19 @@ class Iniciosesion extends StatefulWidget {
 }
 
 class _IniciosesionState extends State<Iniciosesion> {
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
         width: double.infinity,
         height: double.infinity,
-
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           image: DecorationImage(
             image: AssetImage('assets/images/background-fondo.png'),
             fit: BoxFit.cover,
           ),
         ),
-
         child: Padding(
           padding: const EdgeInsets.all(25.0),
           child: SafeArea(
@@ -50,9 +44,8 @@ class _IniciosesionState extends State<Iniciosesion> {
                         ),
                       ),
                     ),
-
                     Transform.translate(offset: const Offset(0, -25)),
-                    Text(
+                    const Text(
                       '¡BIENVENIDO!',
                       style: TextStyle(
                         fontSize: 34,
@@ -68,27 +61,25 @@ class _IniciosesionState extends State<Iniciosesion> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    Material(
+                    const Material(
                       elevation: 4,
-                      borderRadius: BorderRadius.circular(30),
-                      child: const _Input(
+                      borderRadius: BorderRadius.all(Radius.circular(30)),
+                      child: _Input(
                         hint: 'Email/Usuario',
                         icon: Icons.email_outlined,
                       ),
                     ),
-
-                    SizedBox(height: 14),
-                    Material(
+                    const SizedBox(height: 14),
+                    const Material(
                       elevation: 4,
-                      borderRadius: BorderRadius.circular(30),
-                      child: const _Input(
+                      borderRadius: BorderRadius.all(Radius.circular(30)),
+                      child: _Input(
                         hint: 'Contraseña',
                         icon: Icons.lock_outline,
                         pass: true,
                       ),
                     ),
-
-                    SizedBox(height: 22),
+                    const SizedBox(height: 22),
                     SizedBox(
                       width: double.infinity,
                       height: 52,
@@ -112,13 +103,13 @@ class _IniciosesionState extends State<Iniciosesion> {
                       ),
                     ),
                     const SizedBox(height: 22),
-                    Row(
+                    const Row(
                       children: [
-                        const Expanded(
+                        Expanded(
                           child: Divider(color: Colors.black38, thickness: 1),
                         ),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          padding: EdgeInsets.symmetric(horizontal: 10),
                           child: Text(
                             'O continuar con',
                             style: TextStyle(
@@ -128,32 +119,25 @@ class _IniciosesionState extends State<Iniciosesion> {
                             ),
                           ),
                         ),
-                        const Expanded(
+                        Expanded(
                           child: Divider(color: Colors.black38, thickness: 1),
                         ),
                       ],
                     ),
                     const SizedBox(height: 20),
                     Row(
+                      
                       children: [
                         _Social(
                           child: Image.asset(
                             'assets/images/google.png',
-                            height: 26,
+                            height: 30,
                           ),
                         ),
-                        const SizedBox(width: 16),
-                        const _Social(
-                          child: Icon(
-                            Icons.email,
-                            color: Color(0xFF1877F2),
-                            size: 30,
-                          ),
-                        ),
+                       
                       ],
                     ),
-                    SizedBox(height: 25),
-
+                    const SizedBox(height: 25),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -182,7 +166,6 @@ class _IniciosesionState extends State<Iniciosesion> {
                           ),
                         ),
                       ],
-                      
                     ),
                   ],
                 ),
@@ -199,48 +182,54 @@ class _Input extends StatelessWidget {
   final String hint;
   final IconData icon;
   final bool pass;
+
   const _Input({required this.hint, required this.icon, this.pass = false});
 
   @override
   Widget build(BuildContext context) => Container(
-    decoration: BoxDecoration(
-      color: const Color(0xFFF7EBD9),
-      borderRadius: BorderRadius.circular(20),
-      border: Border.all(color: const Color(0xFFE8A35E), width: 1.5),
-    ),
-    child: TextField(
-      obscureText: pass,
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: const TextStyle(
-          color: Colors.black87,
-          fontWeight: FontWeight.bold,
+        decoration: BoxDecoration(
+          color: const Color(0xFFF7EBD9),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFE8A35E), width: 1.5),
         ),
-        border: InputBorder.none,
-        prefixIcon: Icon(icon, color: const Color(0xFFB94E0C)),
-        contentPadding: const EdgeInsets.symmetric(vertical: 14),
-      ),
-    ),
-  );
+        child: TextField(
+          obscureText: pass,
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: const TextStyle(
+              color: Colors.black87,
+              fontWeight: FontWeight.bold,
+            ),
+            border: InputBorder.none,
+            prefixIcon: Icon(icon, color: const Color(0xFFB94E0C)),
+          ),
+        ),
+      );
 }
 
 class _Social extends StatelessWidget {
   final Widget child;
+
   const _Social({required this.child});
 
   @override
-  Widget build(BuildContext context) => Expanded(
-    child: Container(
-      height: 48,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE8A35E), width: 1.5),
-        boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
-        ],
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        height: 52,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 4,
+              offset: Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Center(child: child),
       ),
-      child: Center(child: child),
-    ),
-  );
+    );
+  }
 }

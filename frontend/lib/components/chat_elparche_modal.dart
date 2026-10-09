@@ -1,16 +1,9 @@
 import 'package:flutter/material.dart';
+
 import 'package:elparchee/components/chat_burbuja.dart';
 import 'package:elparchee/components/chat_header.dart';
 import 'package:elparchee/components/chat_input_field.dart';
 import 'package:elparchee/services/chatelparcheservice.dart';
-<<<<<<< HEAD
-<<<<<<< HEAD
- 
-=======
->>>>>>> 3da53de1750715ee79dc66c1d9585220dbbfcba7
-=======
- 
->>>>>>> paola
 
 class ChatElparcheModal extends StatefulWidget {
   const ChatElparcheModal({super.key});
@@ -25,19 +18,8 @@ class _ChatMimosModalState extends State<ChatElparcheModal> {
   final List<Map<String, String>> _mensajes = [
     {
       'role': 'bot',
-<<<<<<< HEAD
-<<<<<<< HEAD
       'text': '¡Hola! Bienvenido a El Parche 🍔 ¿Qué se te antoja comer o pedir hoy?',
-    }
-=======
-      'text':
-          'Hola! Bienvenido a Helados Mimos. Que helado, copa o especialidad se te antoja conocer hoy?',
     },
->>>>>>> 3da53de1750715ee79dc66c1d9585220dbbfcba7
-=======
-      'text': '¡Hola! Bienvenido a El Parche 🍔 ¿Qué se te antoja comer o pedir hoy?',
-    }
->>>>>>> paola
   ];
   bool _cargando = false;
 
@@ -114,13 +96,11 @@ class _ChatMimosModalState extends State<ChatElparcheModal> {
             ),
             if (_cargando)
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFFF6E3),
                       borderRadius: BorderRadius.circular(18),
