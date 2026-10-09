@@ -1,4 +1,11 @@
 import 'package:elparchee/pantallas/carrito.dart';
+<<<<<<< Updated upstream
+=======
+import 'package:elparchee/pantallas/menuHamburguesas.dart';
+import 'package:elparchee/pantallas/menuOtros.dart';
+import 'package:elparchee/pantallas/menuPerro.dart';
+import 'package:elparchee/pantallas/menuSalchipapa.dart';
+>>>>>>> Stashed changes
 import 'package:flutter/material.dart';
 import 'package:elparchee/app_colors.dart';
 

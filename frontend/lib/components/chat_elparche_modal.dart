@@ -1,17 +1,29 @@
 import 'package:flutter/material.dart';
+<<<<<<< Updated upstream
 import 'package:elparchee/components/chat_burbuja.dart';
 import 'package:elparchee/components/chat_header.dart';
 import 'package:elparchee/components/chat_input_field.dart';
 import 'package:elparchee/services/chatelparcheservice.dart';
  
+=======
+import 'chat_burbuja.dart';
+import 'chat_header.dart';
+import 'chat_input_field.dart';
+>>>>>>> Stashed changes
 
-class ChatElparcheModal extends StatefulWidget {
-  const ChatElparcheModal({super.key});
+class _ProductoInfo {
+  final String nombre;
+  final String descripcion;
+  final int precio;
 
-  @override
-  State<ChatElparcheModal> createState() => _ChatMimosModalState();
+  const _ProductoInfo({
+    required this.nombre,
+    required this.descripcion,
+    required this.precio,
+  });
 }
 
+<<<<<<< Updated upstream
 class _ChatMimosModalState extends State<ChatElparcheModal> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
@@ -20,37 +32,112 @@ class _ChatMimosModalState extends State<ChatElparcheModal> {
       'role': 'bot',
       'text': '¡Hola! Bienvenido a El Parche 🍔 ¿Qué se te antoja comer o pedir hoy?',
     }
+=======
+/// Abre el chat desde cualquier pantalla:
+/// onPressed: () => mostrarChatElParche(context)
+void mostrarChatElParche(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => const ChatElParcheModal(),
+  );
+}
+
+class ChatElParcheModal extends StatefulWidget {
+  const ChatElParcheModal({super.key});
+
+  @override
+  State<ChatElParcheModal> createState() => _ChatElParcheModalState();
+}
+
+class _ChatElParcheModalState extends State<ChatElParcheModal> {
+  final _controlador = TextEditingController();
+  final _scroll = ScrollController();
+  final List<_ProductoInfo> _productos = const [
+    _ProductoInfo(
+      nombre: 'Hamburguesa',
+      descripcion: 'Hamburguesa artesanal con queso y salsa especial.',
+      precio: 18000,
+    ),
+    _ProductoInfo(
+      nombre: 'Perro caliente',
+      descripcion: 'Perro caliente con papa, salsa y queso.',
+      precio: 14000,
+    ),
+    _ProductoInfo(
+      nombre: 'Salchipapa',
+      descripcion: 'Salchipapa con queso, salsas y tocineta.',
+      precio: 16000,
+    ),
+    _ProductoInfo(
+      nombre: 'Bebida',
+      descripcion: 'Bebida fría de sabores para acompañar.',
+      precio: 5000,
+    ),
   ];
-  bool _cargando = false;
+  final List<Mensaje> _mensajes = [
+    const Mensaje(
+      texto: '¡Hola! Soy el asistente de El Parche. '
+          'Pregúntame por productos, precios u horarios.',
+      esUsuario: false,
+    ),
+>>>>>>> Stashed changes
+  ];
 
-  void _enviarMensaje() async {
-    final texto = _controller.text.trim();
-    if (texto.isEmpty || _cargando) return;
-
-    _controller.clear();
-    setState(() {
-      _mensajes.add({'role': 'user', 'text': texto});
-      _cargando = true;
-    });
-    _scrollHaciaAbajo();
-
-    final respuesta = await ChatParcheService.enviarMensaje(texto);
-
-    if (mounted) {
-      setState(() {
-        _mensajes.add({'role': 'bot', 'text': respuesta});
-        _cargando = false;
-      });
-      _scrollHaciaAbajo();
-    }
+  @override
+  void dispose() {
+    _controlador.dispose();
+    _scroll.dispose();
+    super.dispose();
   }
 
-  void _scrollHaciaAbajo() {
+  String _responder(String entrada) {
+    final t = entrada.toLowerCase();
+
+    for (final p in _productos) {
+      if (t.contains(p.nombre.toLowerCase())) {
+        return '${p.nombre}: ${p.descripcion}. Precio: \$${p.precio}.';
+      }
+    }
+    if (t.contains('hola') || t.contains('buenas')) {
+      return '¡Hola! ¿En qué te puedo ayudar?';
+    }
+    if (t.contains('producto') || t.contains('menu') || t.contains('carta')) {
+      return 'Tenemos:\n${_productos.map((p) => '• ${p.nombre}').join('\n')}';
+    }
+    if (t.contains('precio') || t.contains('cuesta') || t.contains('valor')) {
+      return _productos.map((p) => '${p.nombre}: \$${p.precio}').join('\n');
+    }
+    if (t.contains('horario') || t.contains('abierto')) {
+      return 'Atendemos de lunes a sábado, de 8:00 a.m. a 8:00 p.m.';
+    }
+    if (t.contains('gracias')) return '¡Con gusto! 😊';
+    return 'No te entendí bien. Prueba con "productos", "precios" u "horario".';
+  }
+
+  void _enviar() {
+    final texto = _controlador.text.trim();
+    if (texto.isEmpty) return;
+
+    setState(() => _mensajes.add(Mensaje(texto: texto, esUsuario: true)));
+    _controlador.clear();
+    _bajar();
+
+    Future.delayed(const Duration(milliseconds: 600), () {
+      if (!mounted) return;
+      setState(() => _mensajes
+          .add(Mensaje(texto: _responder(texto), esUsuario: false)));
+      _bajar();
+    });
+  }
+
+  void _bajar() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
+      if (_scroll.hasClients) {
+        _scroll.animateTo(
+          _scroll.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 250),
           curve: Curves.easeOut,
         );
       }
@@ -58,87 +145,27 @@ class _ChatMimosModalState extends State<ChatElparcheModal> {
   }
 
   @override
-  void dispose() {
-    _controller.dispose();
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.78,
-      margin: EdgeInsets.only(bottom: bottomInset),
-      decoration: const BoxDecoration(
-        color: Color(0xFFFBF1DC),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      child: ClipRRect(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: Container(
+        height: MediaQuery.of(context).size.height * 0.75,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
         child: Column(
           children: [
-            const ChatHeader(),
+            ChatHeader(onCerrar: () => Navigator.pop(context)),
             Expanded(
               child: ListView.builder(
-                controller: _scrollController,
-                padding: const EdgeInsets.fromLTRB(16, 18, 16, 8),
+                controller: _scroll,
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 itemCount: _mensajes.length,
-                itemBuilder: (context, index) {
-                  final item = _mensajes[index];
-                  return ChatBurbuja(
-                    texto: item['text']!,
-                    esUsuario: item['role'] == 'user',
-                  );
-                },
+                itemBuilder: (_, i) => ChatBurbuja(mensaje: _mensajes[i]),
               ),
             ),
-            if (_cargando)
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFF6E3),
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(
-                        color: const Color(0xFFE8963F).withOpacity(0.35),
-                      ),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(
-                          width: 14,
-                          height: 14,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Color(0xFF8E1B10),
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          'El asesor esta respondiendo...',
-                          style: TextStyle(
-                            color: Color(0xFF8E5A33),
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ChatInputField(
-              controller: _controller,
-              cargando: _cargando,
-              onEnviar: _enviarMensaje,
-            ),
+            ChatInputField(controlador: _controlador, onEnviar: _enviar),
           ],
         ),
       ),

@@ -5,9 +5,13 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
+import 'package:elparchee/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+<<<<<<< Updated upstream
 import 'package:elparchee/main.dart';
+=======
+>>>>>>> Stashed changes
 
 void main() {
   testWidgets('Main app builds', (WidgetTester tester) async {

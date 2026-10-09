@@ -1,79 +1,52 @@
 import 'package:flutter/material.dart';
 
-class ChatHeader extends StatelessWidget {
-  const ChatHeader({super.key});
+class ChatHeader extends StatefulWidget {
+  final VoidCallback onCerrar;
 
+  const ChatHeader({super.key, required this.onCerrar});
+
+  @override
+  State<ChatHeader> createState() => _ChatHeaderState();
+}
+
+class _ChatHeaderState extends State<ChatHeader> {
   @override
   Widget build(BuildContext context) {
     return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: const BoxDecoration(
-        color: Color(0xFF8E1B10),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        color: Colors.orange,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      child: Row(
         children: [
-          const SizedBox(height: 12),
-          Container(
-            width: 42,
-            height: 4.5,
-            decoration: BoxDecoration(
-              color: Colors.white38,
-              borderRadius: BorderRadius.circular(3),
-            ),
+          const CircleAvatar(
+            backgroundColor: Colors.white,
+            child: Icon(Icons.smart_toy, color: Colors.orange),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-            child: Row(
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(2),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFE8963F),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const CircleAvatar(
-                    radius: 22,
-                    backgroundColor: Color(0xFFFFF6E3),
-                    child: Icon(
-                      Icons.lunch_dining_rounded,
-                      color: Color(0xFF8E1B10),
-                      size: 26,
-                    ),
+                Text(
+                  'Asistente El Parche',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
                   ),
                 ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Asesor El Parche',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 17,
-                          color: Colors.white,
-                        ),
-                      ),
-                      SizedBox(height: 2),
-                      Row(
-                        children: [
-                          Icon(Icons.circle, color: Color(0xFF7CE08A), size: 9),
-                          SizedBox(width: 5),
-                          Text(
-                            'En línea - Respuestas al instante',
-                            style: TextStyle(
-                              color: Color(0xFFFFE9C7),
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                Text(
+                  'En línea',
+                  style: TextStyle(color: Colors.white70, fontSize: 12),
                 ),
               ],
             ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, color: Colors.white),
+            onPressed: widget.onCerrar,
           ),
         ],
       ),

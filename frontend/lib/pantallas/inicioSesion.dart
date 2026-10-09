@@ -1,5 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:elparchee/pantallas/registro.dart';
+import 'package:flutter/material.dart';
+<<<<<<< Updated upstream
+import 'package:elparchee/pantallas/registro.dart';
+=======
+>>>>>>> Stashed changes
 
 class Iniciosesion extends StatefulWidget {
   const Iniciosesion({super.key});

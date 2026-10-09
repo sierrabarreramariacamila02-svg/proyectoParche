@@ -1,7 +1,14 @@
+<<<<<<< Updated upstream
 import 'package:flutter/material.dart';
 import 'package:elparchee/pantallas/inicioSesion.dart';
 import 'package:video_player/video_player.dart';
+=======
+>>>>>>> Stashed changes
 import 'dart:async';
+
+import 'package:elparchee/pantallas/inicioSesion.dart';
+import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 
 class Inicio extends StatefulWidget {
   const Inicio({super.key});
