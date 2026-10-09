@@ -1,4 +1,8 @@
+<<<<<<< Updated upstream
 import 'package:elparchee/pantallas/bienvenidos.dart';
+=======
+import 'package:elparchee/components/chat_elparche_modal.dart';
+>>>>>>> Stashed changes
 import 'package:flutter/material.dart';
  
 void main() {
@@ -13,7 +17,11 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'El parche',
+<<<<<<< Updated upstream
       home: Bienvenidos(),
+=======
+      home: ChatElparcheModal(),
+>>>>>>> Stashed changes
     );
   }
 }
