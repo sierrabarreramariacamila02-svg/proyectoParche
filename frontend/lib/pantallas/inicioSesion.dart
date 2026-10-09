@@ -1,6 +1,4 @@
-import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+﻿import 'package:flutter/material.dart';
 
 import 'package:elparchee/pantallas/registro.dart';
 
@@ -12,7 +10,6 @@ class Iniciosesion extends StatefulWidget {
 }
 
 class _IniciosesionState extends State<Iniciosesion> {
-  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -126,7 +123,6 @@ class _IniciosesionState extends State<Iniciosesion> {
                     ),
                     const SizedBox(height: 20),
                     Row(
-                      
                       children: [
                         _Social(
                           child: Image.asset(
@@ -134,7 +130,6 @@ class _IniciosesionState extends State<Iniciosesion> {
                             height: 30,
                           ),
                         ),
-                       
                       ],
                     ),
                     const SizedBox(height: 25),
@@ -183,28 +178,34 @@ class _Input extends StatelessWidget {
   final IconData icon;
   final bool pass;
 
-  const _Input({required this.hint, required this.icon, this.pass = false});
+  const _Input({
+    required this.hint,
+    required this.icon,
+    this.pass = false,
+  });
 
   @override
-  Widget build(BuildContext context) => Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFFF7EBD9),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFFE8A35E), width: 1.5),
-        ),
-        child: TextField(
-          obscureText: pass,
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: const TextStyle(
-              color: Colors.black87,
-              fontWeight: FontWeight.bold,
-            ),
-            border: InputBorder.none,
-            prefixIcon: Icon(icon, color: const Color(0xFFB94E0C)),
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7EBD9),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE8A35E), width: 1.5),
+      ),
+      child: TextField(
+        obscureText: pass,
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: const TextStyle(
+            color: Colors.black87,
+            fontWeight: FontWeight.bold,
           ),
+          border: InputBorder.none,
+          prefixIcon: Icon(icon, color: const Color(0xFFB94E0C)),
         ),
-      );
+      ),
+    );
+  }
 }
 
 class _Social extends StatelessWidget {

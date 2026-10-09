@@ -10,7 +10,7 @@ class MenuPage extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => const ChatElparcheModal(),
+      builder: (_) => const ChatElParcheModal(),
     );
   }
 

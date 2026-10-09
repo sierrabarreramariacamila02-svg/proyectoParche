@@ -1,4 +1,5 @@
-import 'dart:async';
+﻿import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
@@ -12,7 +13,7 @@ class Inicio extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<Inicio> {
-  late VideoPlayerController _videoController;
+  late final VideoPlayerController _videoController;
   Timer? _timer;
 
   @override
