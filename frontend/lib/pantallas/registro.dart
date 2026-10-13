@@ -1,23 +1,100 @@
 import 'package:flutter/material.dart';
+import 'package:elparchee/models/user_model.dart';
+import 'package:elparchee/services/user_service.dart';
 
-class RegisterScreen extends StatelessWidget {
+class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
+
+  @override
+  State<RegisterScreen> createState() => _RegisterScreenState();
+}
+
+class _RegisterScreenState extends State<RegisterScreen> {
+  final TextEditingController _nombreController = TextEditingController();
+  final TextEditingController _telefonoController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+
+  bool _isLoading = false;
+
+  Future<void> _registrar() async {
+    final nombre = _nombreController.text.trim();
+    final telefono = _telefonoController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    final confirmPassword = _confirmPasswordController.text;
+
+    if (nombre.isEmpty || telefono.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor llena todos los campos')),
+      );
+      return;
+    }
+
+    if (password != confirmPassword) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Las contraseñas no coinciden')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final usuario = UserModel(
+        nombre: nombre,
+        email: email,
+        password: password,
+        telefono: telefono,
+        direccion: '',
+        rol: 'usuario',
+      );
+
+      await UserService().registrarUsuario(usuario);
+
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('¡Registro exitoso! Verifica tu cuenta para continuar')),
+      );
+
+      Navigator.pushNamed(
+        context,
+        '/verificacion',
+        arguments: email,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F6EE), // Fondo crema de respaldo
+      backgroundColor: const Color(0xFFF9F6EE),
       body: Stack(
         children: [
-          // 1. Imagen de fondo que ocupa absolutamente TODA la pantalla de extremo a extremo
           Positioned.fill(
             child: Image.asset(
               'assets/images/background-fondo.png',
               fit: BoxFit.cover,
             ),
           ),
-
-          // 2. Contenido con scroll que llena la pantalla verticalmente
           SafeArea(
             child: LayoutBuilder(
               builder: (context, constraints) {
@@ -35,7 +112,6 @@ class RegisterScreen extends StatelessWidget {
                         ),
                         child: Column(
                           children: [
-                            // Encabezado
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -53,8 +129,6 @@ class RegisterScreen extends StatelessWidget {
                                 ),
                               ],
                             ),
-
-                            // Título REGISTRO
                             const Text(
                               'REGISTRO',
                               style: TextStyle(
@@ -70,9 +144,7 @@ class RegisterScreen extends StatelessWidget {
                                 ],
                               ),
                             ),
-                            SizedBox(height: 30),
-
-                            // Avatar de foto de perfil
+                            const SizedBox(height: 30),
                             Stack(
                               children: [
                                 Container(
@@ -110,24 +182,15 @@ class RegisterScreen extends StatelessWidget {
                                 ),
                               ],
                             ),
-                            SizedBox(height: 30),
-
-                            // Campos de texto
-                            _buildInputField('Nombre completo'),
-                            _buildInputField('Telefono'),
-                            _buildInputField('Correo'),
-                            _buildInputField('Contraseña', isPassword: true),
-                            _buildInputField(
-                              'Confirmar contraseña',
-                              isPassword: true,
-                            ),
+                            const SizedBox(height: 30),
+                            _buildInputField('Nombre completo', controller: _nombreController),
+                            _buildInputField('Telefono', controller: _telefonoController),
+                            _buildInputField('Correo', controller: _emailController),
+                            _buildInputField('Contraseña', controller: _passwordController, isPassword: true),
+                            _buildInputField('Confirmar contraseña', controller: _confirmPasswordController, isPassword: true),
                             const SizedBox(height: 20),
-
-                            // Botón Verificar
                             ElevatedButton(
-                              onPressed: () {
-                                Navigator.pushNamed(context, '/verificacion');
-                              },
+                              onPressed: _isLoading ? null : _registrar,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFFE59866),
                                 padding: const EdgeInsets.symmetric(
@@ -139,9 +202,9 @@ class RegisterScreen extends StatelessWidget {
                                 ),
                                 elevation: 6,
                               ),
-                              child: const Text(
-                                'Verificar',
-                                style: TextStyle(
+                              child: Text(
+                                _isLoading ? 'Registrando...' : 'Verificar',
+                                style: const TextStyle(
                                   color: Colors.black87,
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -163,14 +226,17 @@ class RegisterScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInputField(String hint, {bool isPassword = false}) {
+  Widget _buildInputField(
+    String hint, {
+    required TextEditingController controller,
+    bool isPassword = false,
+  }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 25),
       decoration: BoxDecoration(
         color: const Color(0xFFF9F6EE),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: const Color(0xFFE59866)),
-
         boxShadow: const [
           BoxShadow(
             color: Colors.black12,
@@ -180,7 +246,11 @@ class RegisterScreen extends StatelessWidget {
         ],
       ),
       child: TextField(
+        controller: controller,
         obscureText: isPassword,
+        keyboardType: hint == 'Telefono' || hint == 'Correo'
+            ? (hint == 'Telefono' ? TextInputType.phone : TextInputType.emailAddress)
+            : TextInputType.text,
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: const TextStyle(

@@ -4,10 +4,16 @@ import 'package:elparchee/pantallas/registro.dart';
 import 'package:flutter/material.dart';
 =======
 ﻿import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-
+import 'package:elparchee/models/user_model.dart';
 import 'package:elparchee/pantallas/registro.dart';
+<<<<<<< HEAD
 >>>>>>> 16cdaf6631759378ad4d70b2ced589019b4d0f44
+=======
+import 'package:elparchee/components/productos.dart';
+import 'package:elparchee/services/user_service.dart';
+>>>>>>> 0706fdb (Corrección de schema en registro y conexion con backend)
 
 class Iniciosesion extends StatefulWidget {
   const Iniciosesion({super.key});
@@ -17,6 +23,65 @@ class Iniciosesion extends StatefulWidget {
 }
 
 class _IniciosesionState extends State<Iniciosesion> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  Future<void> _guardarSesionYNavegar(Map<String, dynamic> respuesta) async {
+    final String token = (respuesta['token'] ?? '').toString();
+    final Map<String, dynamic> usuarioJson =
+        Map<String, dynamic>.from(respuesta['usuario'] ?? <String, dynamic>{});
+    final UserModel usuario = UserModel.fromJson(usuarioJson);
+
+    final String rol = (usuarioJson['rol'] ?? 'usuario').toString().toLowerCase();
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('jwt_token', token);
+    await prefs.setString('user_name', usuario.nombre);
+    await prefs.setString('user_email', usuario.email);
+    await prefs.setString('user_role', rol);
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('¡Bienvenido, ${usuario.nombre}!')),
+    );
+
+    if (rol == 'admin') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const Productos()),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const Productos()),
+      );
+    }
+  }
+
+  Future<void> _login() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ingresa tu email y contraseña')),
+      );
+      return;
+    }
+
+    try {
+      final respuesta = await UserService().loginUsuario(email, password);
+      await _guardarSesionYNavegar(respuesta);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -135,7 +200,9 @@ class _IniciosesionState extends State<Iniciosesion> {
                       width: double.infinity,
                       height: 52,
                       child: ElevatedButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          _login();
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFE8A35E),
                           elevation: 4,

@@ -2,6 +2,7 @@ import 'package:elparchee/pantallas/bienvenidos.dart';
 import 'package:flutter/material.dart';
 
 import 'package:elparchee/pantallas/bienvenidos.dart';
+import 'package:elparchee/services/user_service.dart';
 
 class Verificacion extends StatefulWidget {
   const Verificacion({super.key});
@@ -17,6 +18,7 @@ class _VerificacionScreenState extends State<Verificacion> {
   );
   final List<FocusNode> _fn = List.generate(6, (_) => FocusNode());
   bool _acceptTerms = false;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -32,6 +34,57 @@ class _VerificacionScreenState extends State<Verificacion> {
   void _onChanged(String val, int i) {
     if (val.isNotEmpty && i < 5) _fn[i + 1].requestFocus();
     if (val.isEmpty && i > 0) _fn[i - 1].requestFocus();
+  }
+
+  Future<void> _verificarCodigo() async {
+    if (!_acceptTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Debes aceptar los términos y condiciones')),
+      );
+      return;
+    }
+
+    final codigo = _ctr.map((controller) => controller.text.trim()).join();
+    if (codigo.length != 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ingresa los 6 dígitos del código')),
+      );
+      return;
+    }
+
+    final email = ModalRoute.of(context)?.settings.arguments as String? ?? '';
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se encontró el correo del usuario')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await UserService().verificarCuenta(email, codigo);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cuenta verificada correctamente')),
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const Bienvenidos()),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
@@ -132,12 +185,7 @@ class _VerificacionScreenState extends State<Verificacion> {
               ),
               const SizedBox(height: 80),
               ElevatedButton(
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const Bienvenidos()),
-                  );
-                },
+                onPressed: _isLoading ? null : _verificarCodigo,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFE59866),
                   padding: const EdgeInsets.symmetric(
@@ -149,9 +197,9 @@ class _VerificacionScreenState extends State<Verificacion> {
                   ),
                   elevation: 4,
                 ),
-                child: const Text(
-                  'Crear cuenta.',
-                  style: TextStyle(
+                child: Text(
+                  _isLoading ? 'Verificando...' : 'Crear cuenta.',
+                  style: const TextStyle(
                     color: Colors.black,
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
