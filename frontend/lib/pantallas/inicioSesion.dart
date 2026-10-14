@@ -1,19 +1,11 @@
-<<<<<<< HEAD
+import 'package:elparchee/components/productos.dart';
+import 'package:elparchee/models/user_model.dart';
 import 'package:elparchee/pantallas/recuperacioncuenta.dart';
 import 'package:elparchee/pantallas/registro.dart';
-import 'package:flutter/material.dart';
-=======
-﻿import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import 'package:elparchee/models/user_model.dart';
-import 'package:elparchee/pantallas/registro.dart';
-<<<<<<< HEAD
->>>>>>> 16cdaf6631759378ad4d70b2ced589019b4d0f44
-=======
-import 'package:elparchee/components/productos.dart';
 import 'package:elparchee/services/user_service.dart';
->>>>>>> 0706fdb (Corrección de schema en registro y conexion con backend)
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+ bool _cargando = false;
 
 class Iniciosesion extends StatefulWidget {
   const Iniciosesion({super.key});
@@ -28,11 +20,14 @@ class _IniciosesionState extends State<Iniciosesion> {
 
   Future<void> _guardarSesionYNavegar(Map<String, dynamic> respuesta) async {
     final String token = (respuesta['token'] ?? '').toString();
-    final Map<String, dynamic> usuarioJson =
-        Map<String, dynamic>.from(respuesta['usuario'] ?? <String, dynamic>{});
+    final Map<String, dynamic> usuarioJson = Map<String, dynamic>.from(
+      respuesta['usuario'] ?? <String, dynamic>{},
+    );
     final UserModel usuario = UserModel.fromJson(usuarioJson);
 
-    final String rol = (usuarioJson['rol'] ?? 'usuario').toString().toLowerCase();
+    final String rol = (usuarioJson['rol'] ?? 'usuario')
+        .toString()
+        .toLowerCase();
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('jwt_token', token);
@@ -42,21 +37,14 @@ class _IniciosesionState extends State<Iniciosesion> {
 
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('¡Bienvenido, ${usuario.nombre}!')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('¡Bienvenido, ${usuario.nombre}!')));
 
-    if (rol == 'admin') {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const Productos()),
-      );
-    } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const Productos()),
-      );
-    }
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const Productos()),
+    );
   }
 
   Future<void> _login() async {
@@ -70,6 +58,19 @@ class _IniciosesionState extends State<Iniciosesion> {
       );
       return;
     }
+     setState(() => _cargando = true);
+  try {
+    final respuesta = await UserService().loginUsuario(email, password);
+    await _guardarSesionYNavegar(respuesta);
+  } catch (e) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+    );
+  } finally {
+    if (mounted) setState(() => _cargando = false);
+  }
+
 
     try {
       final respuesta = await UserService().loginUsuario(email, password);
@@ -88,11 +89,7 @@ class _IniciosesionState extends State<Iniciosesion> {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-<<<<<<< HEAD
-        decoration: BoxDecoration(
-=======
         decoration: const BoxDecoration(
->>>>>>> 16cdaf6631759378ad4d70b2ced589019b4d0f44
           image: DecorationImage(
             image: AssetImage('assets/images/background-fondo.png'),
             fit: BoxFit.cover,
@@ -133,10 +130,7 @@ class _IniciosesionState extends State<Iniciosesion> {
                         ],
                       ),
                     ),
-<<<<<<< HEAD
                     const SizedBox(height: 4),
-                    
-                    // NUEVO: Subtítulo agregado
                     const Text(
                       'Inicia sesion para continuar',
                       style: TextStyle(
@@ -145,42 +139,39 @@ class _IniciosesionState extends State<Iniciosesion> {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    
                     const SizedBox(height: 16),
                     Material(
-=======
-                    const SizedBox(height: 20),
-                    const Material(
->>>>>>> 16cdaf6631759378ad4d70b2ced589019b4d0f44
                       elevation: 4,
-                      borderRadius: BorderRadius.all(Radius.circular(30)),
+                      borderRadius: const BorderRadius.all(Radius.circular(30)),
                       child: _Input(
                         hint: 'Email/Usuario',
                         icon: Icons.email_outlined,
+                        controller: _emailController,
                       ),
                     ),
                     const SizedBox(height: 14),
-                    const Material(
+                    Material(
                       elevation: 4,
-                      borderRadius: BorderRadius.all(Radius.circular(30)),
+                      borderRadius: const BorderRadius.all(Radius.circular(30)),
                       child: _Input(
                         hint: 'Contraseña',
                         icon: Icons.lock_outline,
                         pass: true,
+                        controller: _passwordController,
                       ),
                     ),
-<<<<<<< HEAD
-
                     const SizedBox(height: 6),
-
-                    // NUEVO "¿Olvidaste tu Contraseña?" navegable alineado a la derecha
                     Align(
                       alignment: Alignment.centerRight,
                       child: GestureDetector(
                         onTap: () {
-                                Navigator.push(context, 
-                                MaterialPageRoute(builder: (context) => const RecuperacionCuenta()));
-                          },
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const RecuperacionCuenta(),
+                            ),
+                          );
+                        },
                         child: const Text(
                           '¿Olvidaste tu Contraseña?',
                           style: TextStyle(
@@ -191,18 +182,12 @@ class _IniciosesionState extends State<Iniciosesion> {
                         ),
                       ),
                     ),
-
-                    SizedBox(height: 18),
-=======
-                    const SizedBox(height: 22),
->>>>>>> 16cdaf6631759378ad4d70b2ced589019b4d0f44
+                    const SizedBox(height: 18),
                     SizedBox(
                       width: double.infinity,
                       height: 52,
                       child: ElevatedButton(
-                        onPressed: () {
-                          _login();
-                        },
+                        onPressed: _cargando ? null : _login,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFE8A35E),
                           elevation: 4,
@@ -282,12 +267,8 @@ class _IniciosesionState extends State<Iniciosesion> {
                           ),
                         ),
                       ],
-<<<<<<< HEAD
                     ),
-                    
                     const SizedBox(height: 15),
-
-                    // NUEVO: Texto de Términos y condiciones inferior
                     const Text(
                       'Al continuar, aceptas nuestros Terminos y condiciones y Politicas de privacidad.',
                       textAlign: TextAlign.center,
@@ -296,8 +277,6 @@ class _IniciosesionState extends State<Iniciosesion> {
                         color: Colors.black54,
                         fontWeight: FontWeight.w500,
                       ),
-=======
->>>>>>> 16cdaf6631759378ad4d70b2ced589019b4d0f44
                     ),
                   ],
                 ),
@@ -314,10 +293,12 @@ class _Input extends StatelessWidget {
   final String hint;
   final IconData icon;
   final bool pass;
+  final TextEditingController controller;
 
   const _Input({
     required this.hint,
     required this.icon,
+    required this.controller,
     this.pass = false,
   });
 
@@ -330,6 +311,7 @@ class _Input extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE8A35E), width: 1.5),
       ),
       child: TextField(
+        controller: controller,
         obscureText: pass,
         decoration: InputDecoration(
           hintText: hint,
@@ -368,13 +350,6 @@ class _Social extends StatelessWidget {
         ),
         child: Center(child: child),
       ),
-<<<<<<< HEAD
-      child: Center(child: child),
-    ),
-  );
-}
-=======
     );
   }
 }
->>>>>>> 16cdaf6631759378ad4d70b2ced589019b4d0f44

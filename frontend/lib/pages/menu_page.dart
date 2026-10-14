@@ -1,11 +1,5 @@
-<<<<<<< HEAD
 import 'package:elparchee/components/chat_elparche_modal.dart';
 import 'package:flutter/material.dart';
-=======
-import 'package:flutter/material.dart';
-
-import 'package:elparchee/components/chat_elparche_modal.dart';
->>>>>>> 16cdaf6631759378ad4d70b2ced589019b4d0f44
 
 class MenuPage extends StatelessWidget {
   const MenuPage({super.key});
@@ -61,7 +55,12 @@ class MenuPage extends StatelessWidget {
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 90),
+        padding: const EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 16,
+          bottom: 90,
+        ),
         child: Column(
           children: [
             const SizedBox(height: 16),
@@ -99,8 +98,6 @@ class MenuPage extends StatelessWidget {
     );
   }
 }
-<<<<<<< HEAD
-=======
 
 class ProductoCard extends StatelessWidget {
   final VoidCallback onVerMas;
@@ -186,4 +183,3 @@ class ProductoCard extends StatelessWidget {
     );
   }
 }
->>>>>>> 16cdaf6631759378ad4d70b2ced589019b4d0f44

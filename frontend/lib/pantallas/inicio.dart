@@ -1,11 +1,7 @@
-<<<<<<< HEAD
 import 'dart:async';
-=======
-﻿import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
->>>>>>> 16cdaf6631759378ad4d70b2ced589019b4d0f44
 
 import 'package:elparchee/pantallas/inicioSesion.dart';
 
@@ -78,10 +74,7 @@ class _SplashScreenState extends State<Inicio> {
                 )
               : Container(color: Colors.black),
           Center(
-            child: Image.asset(
-              'assets/images/logo-parche.png',
-              width: 200,
-            ),
+            child: Image.asset('assets/images/logo-parche.png', width: 200),
           ),
         ],
       ),

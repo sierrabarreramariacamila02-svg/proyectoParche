@@ -81,7 +81,7 @@ export const verificarCuenta = async (req, res) => {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
 
-    if (usuario.isVerified) {
+    if (usuario.isverified) {
       return res.status(400).json({ mensaje: 'Esta cuenta ya esta verificada' });
     }
 
@@ -97,9 +97,9 @@ export const verificarCuenta = async (req, res) => {
 
     // Marcar como verificado y limpiar el codigo
     const { error } = await supabase
-      .from('usuarios')
+      .from('usuario')
       .update({
-        isVerified: true,
+        isverified: true,
         codigoverificacion: null,
         codigoverificacionexpiracion: null
       })

@@ -1,5 +1,4 @@
-<<<<<<< HEAD
-import 'package:elparchee/components/chat_burbuja.dart';
+﻿import 'package:elparchee/components/chat_burbuja.dart';
 import 'package:elparchee/components/chat_header.dart';
 import 'package:elparchee/components/chat_input_field.dart';
 import 'package:flutter/material.dart';
@@ -16,14 +15,6 @@ class _ProductoInfo {
   });
 }
 
-=======
-﻿import 'package:flutter/material.dart';
-
-import 'package:elparchee/components/chat_burbuja.dart';
-import 'package:elparchee/components/chat_header.dart';
-import 'package:elparchee/components/chat_input_field.dart';
-
->>>>>>> 16cdaf6631759378ad4d70b2ced589019b4d0f44
 void mostrarChatElParche(BuildContext context) {
   showModalBottomSheet(
     context: context,
@@ -38,18 +29,6 @@ class ChatElParcheModal extends StatefulWidget {
 
   @override
   State<ChatElParcheModal> createState() => _ChatElParcheModalState();
-}
-
-class _ProductoInfo {
-  final String nombre;
-  final String descripcion;
-  final int precio;
-
-  const _ProductoInfo({
-    required this.nombre,
-    required this.descripcion,
-    required this.precio,
-  });
 }
 
 class _ChatElParcheModalState extends State<ChatElParcheModal> {
@@ -78,14 +57,9 @@ class _ChatElParcheModalState extends State<ChatElParcheModal> {
       precio: 5000,
     ),
   ];
-<<<<<<< HEAD
-  final List<Mensaje> _mensajes = const [
-    Mensaje(
-=======
 
   final List<Mensaje> _mensajes = [
     const Mensaje(
->>>>>>> 16cdaf6631759378ad4d70b2ced589019b4d0f44
       texto: '¡Hola! Soy el asistente de El Parche. Pregúntame por productos, precios u horarios.',
       esUsuario: false,
     ),

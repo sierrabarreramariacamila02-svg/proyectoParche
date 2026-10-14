@@ -4,20 +4,20 @@ import bcrypt from 'bcrypt';
 
 
 // Crear un usuario tradicional (Controlador de registro estándar)
-export const crearUsuariocontroller = async (userData) => {
+export const crearUsuariocontroller = async (nombre, email, password, telefono, direccion, rol, codigoverificacion, codigoverificacionexpiracion) => {
   try {
     const { data, error } = await supabase
       .from('usuario')
       .insert([
         {
-          nombre: userData.nombre,
-          email: userData.email,
-          password: userData.password,
-          telefono: userData.telefono,
-          direccion: userData.direccion,
-          rol: userData.rol || 'cliente',
-          codigoverificacion: userData.codigoverificacion,
-          codigoverificacionexpiracion: userData.codigoverificacionexpiracion,
+          nombre: nombre,
+          email: email,
+          password: password,
+          telefono: telefono,
+          direccion: direccion,
+          rol: rol || 'cliente',
+          codigoverificacion: codigoverificacion,
+          codigoverificacionexpiracion:codigoverificacionexpiracion,
           isverified: false
         }
       ])

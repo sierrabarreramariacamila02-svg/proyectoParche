@@ -1,4 +1,6 @@
+
 import dotenv from 'dotenv';
+dotenv.config();
 import express from 'express';
 import cors from 'cors';
 import { logError } from './utils/logger.js';
@@ -18,7 +20,7 @@ import mensajesRoutes from './routes/mensajes.js';
 import chatBotRoutes from './routes/chatBot.js';
 import recuperarRoutes from './routes/recuperar.js';
 
-dotenv.config();
+
 
  
 

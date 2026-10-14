@@ -45,7 +45,7 @@ class UserService {
     String email,
     String password,
   ) async {
-    final url = Uri.parse('${ApiConfig.baseUrl}/login');
+    final url = Uri.parse('${ApiConfig.baseUrl}/auth/login');
 
     try {
       final response = await http.post(
@@ -84,7 +84,7 @@ class UserService {
     String email,
     String codigo,
   ) async {
-    final url = Uri.parse('${ApiConfig.baseUrl}/verificar');
+    final url = Uri.parse('${ApiConfig.baseUrl}/auth/verificar');
 
     try {
       final response = await http.post(

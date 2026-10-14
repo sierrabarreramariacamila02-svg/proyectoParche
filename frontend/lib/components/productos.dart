@@ -1,20 +1,10 @@
-<<<<<<< HEAD
 import 'package:elparchee/app_colors.dart';
 import 'package:elparchee/pantallas/carrito.dart';
-=======
-import 'package:elparchee/pantallas/carrito.dart';
-import 'package:flutter/material.dart';
-
-import 'package:elparchee/app_colors.dart';
->>>>>>> 16cdaf6631759378ad4d70b2ced589019b4d0f44
 import 'package:elparchee/pantallas/menuHamburguesas.dart';
 import 'package:elparchee/pantallas/menuOtros.dart';
 import 'package:elparchee/pantallas/menuPerro.dart';
 import 'package:elparchee/pantallas/menuSalchipapa.dart';
-<<<<<<< HEAD
 import 'package:flutter/material.dart';
-=======
->>>>>>> 16cdaf6631759378ad4d70b2ced589019b4d0f44
 
 class Productos extends StatefulWidget {
   const Productos({super.key});
@@ -77,7 +67,6 @@ class _ProductosState extends State<Productos> {
       backgroundColor: const Color(0xFFFAF3E0),
       appBar: AppBar(
         backgroundColor: AppColors.barraHome,
-        
         title: const Text(
           'Hola username!',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
@@ -330,58 +319,57 @@ class _ProductosState extends State<Productos> {
   }
 
   Widget _titulo(String t) => Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-        child: Text(
-          t,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: AppColors.barraHome,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+    child: Text(
+      t,
+      style: const TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+        color: AppColors.barraHome,
+      ),
+    ),
+  );
 
   Widget _catItem(
     String img,
     String lbl,
     Color colorFondo,
     VoidCallback onTap,
-  ) =>
-      GestureDetector(
-        onTap: onTap,
-        child: Column(
-          children: [
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                color: colorFondo,
-                shape: BoxShape.circle,
-                boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
-              ),
-              child: ClipOval(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Image.asset(img, fit: BoxFit.contain),
-                ),
-              ),
+  ) => GestureDetector(
+    onTap: onTap,
+    child: Column(
+      children: [
+        Container(
+          width: 50,
+          height: 50,
+          decoration: BoxDecoration(
+            color: colorFondo,
+            shape: BoxShape.circle,
+            boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
+          ),
+          child: ClipOval(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Image.asset(img, fit: BoxFit.contain),
             ),
-            const SizedBox(height: 4),
-            Text(
-              lbl,
-              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500),
-            ),
-          ],
+          ),
         ),
-      );
+        const SizedBox(height: 4),
+        Text(
+          lbl,
+          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500),
+        ),
+      ],
+    ),
+  );
 
   Widget _navIcon(IconData icon, int index) => IconButton(
-        icon: Icon(
-          icon,
-          color: _indiceIcono == index ? AppColors.barraHome : Colors.brown,
-        ),
-        onPressed: () => setState(() => _indiceIcono = index),
-      );
+    icon: Icon(
+      icon,
+      color: _indiceIcono == index ? AppColors.barraHome : Colors.brown,
+    ),
+    onPressed: () => setState(() => _indiceIcono = index),
+  );
 
   @override
   void dispose() {
