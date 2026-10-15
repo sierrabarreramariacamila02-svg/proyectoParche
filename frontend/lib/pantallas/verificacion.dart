@@ -1,7 +1,5 @@
 import 'package:elparchee/pantallas/bienvenidos.dart';
 import 'package:flutter/material.dart';
-
-import 'package:elparchee/pantallas/bienvenidos.dart';
 import 'package:elparchee/services/user_service.dart';
 
 class Verificacion extends StatefulWidget {

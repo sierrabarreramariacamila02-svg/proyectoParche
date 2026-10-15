@@ -24,8 +24,19 @@ class MainApp extends StatelessWidget {
       routes: {
         '/login': (context) => const Iniciosesion(),
         '/verificacion': (context) => const Verificacion(),
-        '/menu': (context) => const Productos(),
+        '/menu': (context) => const Productos(), 
         '/bienvenidos': (context) => const Bienvenidos(),
+        // Rutas añadidas para que coincidan con las opciones de tu DrawerContent:
+        '/inicio': (context) => const Inicio(),
+        '/platos': (context) => const Productos(), // O cámbialo por su pantalla respectiva cuando la crees
+        '/carrito': (context) => const Productos(),
+        '/pedidos': (context) => const Productos(),
+        '/domicilios': (context) => const Productos(),
+        '/favoritos': (context) => const Productos(),
+        '/promociones': (context) => const Productos(),
+        '/perfil': (context) => const Productos(),
+        '/administracion': (context) => const Productos(),
+ 
       },
     );
   }
