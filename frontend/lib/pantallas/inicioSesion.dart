@@ -71,16 +71,6 @@ class _IniciosesionState extends State<Iniciosesion> {
     if (mounted) setState(() => _cargando = false);
   }
 
-
-    try {
-      final respuesta = await UserService().loginUsuario(email, password);
-      await _guardarSesionYNavegar(respuesta);
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
-      );
-    }
   }
 
   @override

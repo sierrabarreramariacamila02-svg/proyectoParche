@@ -154,4 +154,32 @@ class UserService {
       throw Exception(e.toString().replaceAll('Exception: ', ''));
     }
   }
+  // Petición POST para solicitar recuperación de contraseña
+  Future<Map<String, dynamic>> solicitarRecuperacion(String email) async {
+  final url = Uri.parse('${ApiConfig.baseUrl}/auth/password'); 
+
+  try {
+    final response = await http.post(
+      url,
+      headers: ApiConfig.headers,
+      body: jsonEncode({'email': email.trim()}),
+    );
+
+    final contentType = response.headers['content-type'] ?? '';
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      if (contentType.contains('application/json')) {
+        final errorData = jsonDecode(response.body);
+        throw Exception(errorData['error'] ?? 'Error al solicitar recuperación');
+      } else {
+        throw Exception('Servidor no disponible (Código ${response.statusCode})');
+      }
+    }
+  } catch (e) {
+    throw Exception(e.toString().replaceAll('Exception: ', ''));
+  }
+}
+
 }
