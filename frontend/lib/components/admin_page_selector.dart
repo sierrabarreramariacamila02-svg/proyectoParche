@@ -3,13 +3,15 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:elparchee/app_colors.dart';
+
 
 /// Recuadro de la foto del producto.
 /// - Tocar: elegir de galería o cámara.
 /// - Arrastrar la foto y pellizcar: acomodar el encuadre.
 /// - Al guardar, el formulario sube el recorte con [capturarEncuadre].
 class AdminImageSelector extends StatelessWidget {
-  static const Color _brand = Color(0xFFBF285D);
+  static const Color _brand = AppColors.buttonOrange;
 
   final File? imagen; // foto recién elegida (tiene prioridad)
   final String? imagenUrl; // foto actual del servidor (modo edición)

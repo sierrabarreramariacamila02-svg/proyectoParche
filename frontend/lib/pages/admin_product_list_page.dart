@@ -95,7 +95,7 @@ class _AdminProductListPageState extends State<AdminProductListPage> {
     if (url == null || url.isEmpty) {
       return Container(
         color: Colors.pink.shade50,
-        child: const Icon(Icons.icecream_rounded, color: brand),
+        child: const Icon(Icons.production_quantity_limits, color: brand),
       );
     }
     return Image.network(

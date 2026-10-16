@@ -1,9 +1,11 @@
+import 'package:elparchee/services/adminUserListPage.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../pages/menu_page.dart';
 import '../pantallas/inicioSesion.dart';
 import 'package:elparchee/app_colors.dart';
- // AJUSTA: el nombre de la clase de login (LoginScreen) abajo
+import '../pages/admin_product_list_page.dart';
+ 
 
 class AdminDrawer extends StatelessWidget {
   static const Color _colorPrincipal = AppColors.buttonOrange;
@@ -59,10 +61,23 @@ class AdminDrawer extends StatelessWidget {
                   accountName: Text(adminName.isNotEmpty ? adminName : 'Administrador'),
                   accountEmail: Text(adminEmail.isNotEmpty ? adminEmail : 'Sin correo registrado'),
                 ),
-                _item(Icons.icecream_outlined, 'Productos',
-                    () => Navigator.pop(context)),
-                _item(Icons.people_alt_outlined, 'Usuarios',
-                    () => _soon(context, 'Usuarios')),
+                _item(Icons.icecream_outlined, 'Productos', () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AdminProductListPage()),
+                  );
+                }),
+                
+                // --- OPCIÓN DE USUARIOS CORREGIDA Y CONECTADA ---
+                _item(Icons.people_alt_outlined, 'Usuarios', () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AdminUserListPage()),
+                  );
+                }),
+
                 _item(Icons.receipt_long_outlined, 'Pedidos',
                     () => _soon(context, 'Pedidos')),
                 const Divider(),

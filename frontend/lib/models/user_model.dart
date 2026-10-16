@@ -14,11 +14,12 @@ class UserModel {
     required this.password,
     required this.telefono,
     required this.direccion,
-    this.rol = 'usuario', //usuario por 
+    this.rol = 'pendiente', //pendiente el rol
+
   });
 
   //getter util para verificar si el usuario es admin
-  bool get esAdmin => rol.toLowerCase() == 'admin';
+  bool get esAdmin => rol.toLowerCase() == 'admin' || rol.toLowerCase() == 'admin';
 
 //mapea la respuestade la base de datos
     factory UserModel.fromJson(Map<String, dynamic> json) {

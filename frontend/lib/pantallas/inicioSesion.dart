@@ -6,7 +6,6 @@ import 'package:elparchee/pantallas/registro.dart';
 import 'package:elparchee/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
- bool _cargando = false;
 
 class Iniciosesion extends StatefulWidget {
   const Iniciosesion({super.key});
@@ -18,6 +17,7 @@ class Iniciosesion extends StatefulWidget {
 class _IniciosesionState extends State<Iniciosesion> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _cargando = false; // Declarada por si acaso faltaba en tu clase
 
   Future<void> _guardarSesionYNavegar(Map<String, dynamic> respuesta) async {
     final String token = (respuesta['token'] ?? '').toString();
@@ -30,32 +30,49 @@ class _IniciosesionState extends State<Iniciosesion> {
         .toString()
         .toLowerCase();
 
+    // Guardar la sesión correctamente usando la variable 'respuesta' y el objeto 'usuario'
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('jwt_token', token);
+    await prefs.setString('user_role', rol);
     await prefs.setString('user_name', usuario.nombre);
     await prefs.setString('user_email', usuario.email);
-    await prefs.setString('user_role', rol);
 
     if (!mounted) return;
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('¡Bienvenido, ${usuario.nombre}!')));
+    // Validación si la cuenta se encuentra pendiente de aprobación
+    if (rol == 'pendiente') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Tu cuenta está pendiente de aprobación por el administrador.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return; // Detiene la navegación si no está aprobado
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('¡Bienvenido, ${usuario.nombre}!')),
+    );
 
     Widget pantallaDestino;
 
     switch (rol) {
       case 'admin':
-        pantallaDestino = const AdminProductListPage(); // Tu panel de administración
+      case 'administrador':
+        pantallaDestino = const AdminProductListPage(); // Panel de administración
         break;
       case 'cocina':
         // pantallaDestino = const CocinaPage();
+        pantallaDestino = const Productos(); // Reemplazar cuando crees la vista
         break;
       case 'mesero':
         // pantallaDestino = const MeseroPage();
+        pantallaDestino = const Productos(); // Reemplazar cuando crees la vista
         break;
       case 'domicilio':
+      case 'domiciliario':
         // pantallaDestino = const DomicilioPage();
+        pantallaDestino = const Productos(); // Reemplazar cuando crees la vista
         break;
       case 'usuario':
       default:
@@ -63,9 +80,12 @@ class _IniciosesionState extends State<Iniciosesion> {
         break;
     }
 
+    if (!mounted) return;
+
+    // Redirección dinámica según la pantallaDestino calculada
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => const Productos()),
+      MaterialPageRoute(builder: (context) => pantallaDestino),
     );
   }
 
@@ -80,21 +100,21 @@ class _IniciosesionState extends State<Iniciosesion> {
       );
       return;
     }
-     setState(() => _cargando = true);
-  try {
-    final respuesta = await UserService().loginUsuario(email, password);
-    await _guardarSesionYNavegar(respuesta);
-  } catch (e) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
-    );
-  } finally {
-    if (mounted) setState(() => _cargando = false);
+    
+    setState(() => _cargando = true);
+    
+    try {
+      final respuesta = await UserService().loginUsuario(email, password);
+      await _guardarSesionYNavegar(respuesta);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+      );
+    } finally {
+      if (mounted) setState(() => _cargando = false);
+    }
   }
-
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

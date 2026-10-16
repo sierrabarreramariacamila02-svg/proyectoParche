@@ -49,7 +49,7 @@ class AdminProductService {
       throw Exception('No hay sesión activa. Inicia sesión nuevamente.');
     }
 
-    final request = http.MultipartRequest('POST', Uri.parse('${ApiConfig.baseUrl}/helados'));
+    final request = http.MultipartRequest('POST', Uri.parse('${ApiConfig.baseUrl}/productos'));
     request.headers['Authorization'] = 'Bearer $token';
     request.fields['nombre'] = nombre;
     request.fields['descripcion'] = descripcion;
@@ -96,7 +96,7 @@ class AdminProductService {
     }
 
     final response = await http.delete(
-      Uri.parse('${ApiConfig.baseUrl}/helados/$id'),
+      Uri.parse('${ApiConfig.baseUrl}/productos/$id'),
       headers: {'Authorization': 'Bearer $token'},
     );
     if (response.statusCode != 200) {
