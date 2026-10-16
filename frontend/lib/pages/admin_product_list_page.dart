@@ -16,8 +16,9 @@ Future<bool> confirmarEliminacion(BuildContext context, String name) async {
       content: Text('¿Eliminar "$name"? Esta acción no se puede deshacer.'),
       actions: [
         TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelar')),
+          onPressed: () => Navigator.pop(ctx, false),
+          child: const Text('Cancelar'),
+        ),
         TextButton(
           onPressed: () => Navigator.pop(ctx, true),
           style: TextButton.styleFrom(foregroundColor: Colors.red),
@@ -61,11 +62,13 @@ class _AdminProductListPageState extends State<AdminProductListPage> {
     });
   }
 
-  void _reload() => setState(() => _future = _productoService.obtenerProductos());
+  void _reload() =>
+      setState(() => _future = _productoService.obtenerProductos());
 
   void _snack(String msg, {Color color = Colors.green}) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(msg), backgroundColor: color));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(msg), backgroundColor: color));
   }
 
   Future<void> _openForm({ProductoModel? producto}) async {
@@ -83,7 +86,8 @@ class _AdminProductListPageState extends State<AdminProductListPage> {
       _reload();
       _snack('"${p.nombre}" eliminado');
     } catch (e) {
-      if (mounted) _snack(e.toString().replaceAll('Exception: ', ''), color: Colors.red);
+      if (mounted)
+        _snack(e.toString().replaceAll('Exception: ', ''), color: Colors.red);
     }
   }
 
@@ -107,15 +111,15 @@ class _AdminProductListPageState extends State<AdminProductListPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF6F4F0),
       appBar: AppBar(
-        title: const Text('Panel de administración',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Panel de administración',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         backgroundColor: brand,
         iconTheme: const IconThemeData(color: Colors.white),
+          
       ),
-      drawer: AdminDrawer(
-        adminName: _adminName,
-        adminEmail: _adminEmail,
-      ),
+      drawer: AdminDrawer(adminName: _adminName, adminEmail: _adminEmail),
       floatingActionButton: FloatingActionButton(
         backgroundColor: brand,
         foregroundColor: Colors.white,
@@ -130,24 +134,28 @@ class _AdminProductListPageState extends State<AdminProductListPage> {
           future: _future,
           builder: (context, snap) {
             if (snap.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator(color: brand));
+              return const Center(
+                child: CircularProgressIndicator(color: brand),
+              );
             }
 
             final items = snap.data ?? [];
             if (snap.hasError || items.isEmpty) {
               // ListView para que el "deslizar para recargar" funcione también aquí
-              return ListView(children: [
-                const SizedBox(height: 160),
-                Center(
-                  child: Text(
-                    snap.hasError
-                        ? 'Error: ${snap.error}'.replaceAll('Exception: ', '')
-                        : 'No hay productos registrados.',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.black54),
+              return ListView(
+                children: [
+                  const SizedBox(height: 160),
+                  Center(
+                    child: Text(
+                      snap.hasError
+                          ? 'Error: ${snap.error}'.replaceAll('Exception: ', '')
+                          : 'No hay productos registrados.',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.black54),
+                    ),
                   ),
-                ),
-              ]);
+                ],
+              );
             }
 
             return ListView.builder(
@@ -161,12 +169,20 @@ class _AdminProductListPageState extends State<AdminProductListPage> {
                   child: ListTile(
                     leading: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: SizedBox(width: 50, height: 50, child: _thumb(p.imagenUrl)),
+                      child: SizedBox(
+                        width: 50,
+                        height: 50,
+                        child: _thumb(p.imagenUrl),
+                      ),
                     ),
-                    title: Text(p.nombre.isEmpty ? 'Sin nombre' : p.nombre,
-                        style: const TextStyle(fontWeight: FontWeight.w600)),
-                    subtitle: Text('\$${p.precio.toStringAsFixed(2)}',
-                        style: const TextStyle(color: brand)),
+                    title: Text(
+                      p.nombre.isEmpty ? 'Sin nombre' : p.nombre,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    subtitle: Text(
+                      '\$${p.precio.toStringAsFixed(2)}',
+                      style: const TextStyle(color: brand),
+                    ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -177,7 +193,10 @@ class _AdminProductListPageState extends State<AdminProductListPage> {
                         ),
                         IconButton(
                           tooltip: 'Eliminar',
-                          icon: const Icon(Icons.delete_outline, color: Colors.red),
+                          icon: const Icon(
+                            Icons.delete_outline,
+                            color: Colors.red,
+                          ),
                           onPressed: () => _delete(p),
                         ),
                       ],

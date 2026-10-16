@@ -1,5 +1,6 @@
 import 'package:elparchee/components/productos.dart';
 import 'package:elparchee/models/user_model.dart';
+import 'package:elparchee/pages/admin_product_list_page.dart';
 import 'package:elparchee/pantallas/recuperacioncuenta.dart';
 import 'package:elparchee/pantallas/registro.dart';
 import 'package:elparchee/services/user_service.dart';
@@ -40,6 +41,27 @@ class _IniciosesionState extends State<Iniciosesion> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text('¡Bienvenido, ${usuario.nombre}!')));
+
+    Widget pantallaDestino;
+
+    switch (rol) {
+      case 'admin':
+        pantallaDestino = const AdminProductListPage(); // Tu panel de administración
+        break;
+      case 'cocina':
+        // pantallaDestino = const CocinaPage();
+        break;
+      case 'mesero':
+        // pantallaDestino = const MeseroPage();
+        break;
+      case 'domicilio':
+        // pantallaDestino = const DomicilioPage();
+        break;
+      case 'usuario':
+      default:
+        pantallaDestino = const Productos(); // Vista normal para el cliente
+        break;
+    }
 
     Navigator.pushReplacement(
       context,
