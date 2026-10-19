@@ -3,8 +3,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../components/admin_drawer.dart';
 import '../components/product_form_sheet.dart';
 import '../models/producto_model.dart';
-import '../services/producto_service.dart';
 import '../services/admin_producto_service.dart';
+import '../services/producto_service.dart';
+
 // import 'menu_page.dart'; // AJUSTA: tu carta del cliente, si quieres enlazarla
 
 /// Diálogo de confirmación reutilizable (también sirve en la carta del cliente)
@@ -81,7 +82,7 @@ class _AdminProductListPageState extends State<AdminProductListPage> {
   Future<void> _delete(ProductoModel p) async {
     if (!await confirmarEliminacion(context, p.nombre) || !mounted) return;
     try {
-      await AdminProductService.eliminarProducto(p.id);
+      await AdminProductService.eliminarProductos(p.id);
       if (!mounted) return;
       _reload();
       _snack('"${p.nombre}" eliminado');
@@ -117,7 +118,6 @@ class _AdminProductListPageState extends State<AdminProductListPage> {
         ),
         backgroundColor: brand,
         iconTheme: const IconThemeData(color: Colors.white),
-          
       ),
       drawer: AdminDrawer(adminName: _adminName, adminEmail: _adminEmail),
       floatingActionButton: FloatingActionButton(

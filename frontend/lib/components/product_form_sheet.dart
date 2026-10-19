@@ -80,7 +80,7 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
       final imagen = await _imagenParaSubir();
 
       if (_esEdicion) {
-        await AdminProductService.actualizarProducto(
+        await AdminProductService.actualizarProductos(
           id: widget.producto!.id,
           nombre: nombre,
           descripcion: descripcion,
@@ -88,7 +88,7 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
           imagen: imagen,
         );
       } else {
-        await AdminProductService.crearProducto(
+        await AdminProductService.crearProductos(
           nombre: nombre,
           descripcion: descripcion,
           precio: precio,

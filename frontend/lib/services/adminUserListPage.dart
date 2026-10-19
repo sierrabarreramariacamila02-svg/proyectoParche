@@ -7,33 +7,28 @@ import 'package:elparchee/app_colors.dart';
 
 class AdminUserListPage extends StatefulWidget {
   const AdminUserListPage({super.key});
-
   @override
   State<AdminUserListPage> createState() => _AdminUserListPageState();
 }
 
 class _AdminUserListPageState extends State<AdminUserListPage> {
   static const Color brand = AppColors.barraHome;
-
-  final AdminUserService _userService = AdminUserService();
+  final _userService = AdminUserService();
   late Future<List<UserModel>> _futureUsuarios;
-  String _adminName = '';
-  String _adminEmail = '';
+  String _adminName = '', _adminEmail = '';
+  final _roles = [
+    'pendiente',
+    'mesero',
+    'cocinero',
+    'domiciliario',
+    'administrador',
+  ];
 
   @override
   void initState() {
     super.initState();
-    _futureUsuarios = _userService.obtenerUsuarios();
+    _reload();
     _loadAdminInfo();
-  }
-
-  Future<void> _loadAdminInfo() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    setState(() {
-      _adminName = prefs.getString('user_name') ?? 'Administrador';
-      _adminEmail = prefs.getString('user_email') ?? '';
-    });
   }
 
   void _reload() {
@@ -42,32 +37,92 @@ class _AdminUserListPageState extends State<AdminUserListPage> {
     });
   }
 
-  void _snack(
-    String msg, {
-    Color backgroundColor = AppColors.buttonOrange,
-  }) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: backgroundColor),
-    );
+  Future<void> _loadAdminInfo() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _adminName = prefs.getString('user_name') ?? 'Administrador';
+        _adminEmail = prefs.getString('user_email') ?? '';
+      });
+    }
   }
 
-  Future<void> _actualizarRol(UserModel usuario, String nuevoRol) async {
+  void _snack(String msg, [Color bg = AppColors.buttonOrange]) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(msg), backgroundColor: bg));
+  }
+
+  Future<void> _actualizarRol(UserModel user, String nuevoRol) async {
+    final userId = user.id;
+    if (userId == null || userId.isEmpty) {
+      _snack(
+        'No se encontró el identificador del usuario.',
+        AppColors.barraHome,
+      );
+      return;
+    }
     try {
-      await _userService.cambiarRol(int.parse(usuario.id.toString()), nuevoRol);
+      await _userService.cambiarRol(userId, nuevoRol);
       if (!mounted) return;
       _reload();
-      _snack('Rol de ${usuario.nombre} actualizado a $nuevoRol');
+      _snack('Rol de ${user.nombre} actualizado a $nuevoRol');
     } catch (e) {
       if (mounted) {
-        _snack(
-          e.toString().replaceAll('Exception: ', ''),
-          backgroundColor: AppColors.barraHome,
-        );
+        _snack(e.toString().replaceAll('Exception: ', ''), AppColors.barraHome);
       }
     }
   }
 
-  @override
+  void _mostrarEditorRol(UserModel user) {
+    String rolSeleccionado = _roles.contains(user.rol) ? user.rol : 'pendiente';
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSt) => AlertDialog(
+          title: const Text('Editar rol de usuario'),
+          content: DropdownButtonFormField<String>(
+            initialValue: rolSeleccionado,
+            decoration: const InputDecoration(
+              labelText: 'Rol',
+              border: OutlineInputBorder(),
+            ),
+            items: _roles
+                .map(
+                  (rol) => DropdownMenuItem(
+                    value: rol,
+                    child: Text(rol.toUpperCase()),
+                  ),
+                )
+                .toList(),
+            onChanged: (rol) {
+              if (rol != null) setSt(() => rolSeleccionado = rol);
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: brand),
+              onPressed: () {
+                Navigator.pop(ctx);
+                if (rolSeleccionado != user.rol) {
+                  _actualizarRol(user, rolSeleccionado);
+                }
+              },
+              child: const Text(
+                'Guardar',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF6F4F0),
@@ -80,95 +135,81 @@ class _AdminUserListPageState extends State<AdminUserListPage> {
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       drawer: AdminDrawer(adminName: _adminName, adminEmail: _adminEmail),
+      // Botón flotante agregado en la parte inferior derecha
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: brand,
+        onPressed: () => _mostrarEditorRol,
+        tooltip: 'Editar rol de usuario',
+
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text(
+          'Agregar',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+      ),
       body: RefreshIndicator(
         color: brand,
         onRefresh: () async => _reload(),
         child: FutureBuilder<List<UserModel>>(
           future: _futureUsuarios,
           builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
+           if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator(color: brand));
             }
-
             if (snapshot.hasError) {
-              return ListView(
-                children: [
-                  const SizedBox(height: 160),
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Text(
-                        'Error: ${snapshot.error}'.replaceAll('Exception: ', ''),
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.red),
-                      ),
-                    ),
-                  ),
-                ],
+              return Center(
+                child: Text(
+                  'Error: ${snapshot.error}'.replaceAll('Exception: ', ''),
+                  style: const TextStyle(color: Colors.red),
+                ),
               );
             }
 
             final usuarios = snapshot.data ?? [];
             if (usuarios.isEmpty) {
-              return ListView(
-                children: const [
-                  SizedBox(height: 160),
-                  Center(
-                    child: Text('No hay usuarios registrados.',
-                        style: TextStyle(color: Colors.black54)),
-                  ),
-                ],
-              );
+              return const Center(child: Text('No hay usuarios registrados.'));
             }
 
             return ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: usuarios.length,
-              itemBuilder: (context, index) {
-                final user = usuarios[index];
-                const rolesDisponibles = [
-                  'pendiente',
-                  'mesero',
-                  'cocinero',
-                  'domiciliario',
-                  'administrador'
-                ];
-
-                String rolActual = rolesDisponibles.contains(user.rol)
+              itemBuilder: (context, i) {
+                final user = usuarios[i];
+                final rolActual = _roles.contains(user.rol)
                     ? user.rol
                     : 'pendiente';
 
                 return Card(
                   color: Colors.white,
                   margin: const EdgeInsets.only(bottom: 12),
-                  child: ListTile(
-                    title: Text(
-                      user.nombre.isEmpty ? 'Sin nombre' : user.nombre,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    subtitle: Text(
-                      'Correo: ${user.email}\nTel: ${user.telefono}\nRol actual: $rolActual',
-                    ),
-                    isThreeLine: true,
-                    trailing: DropdownButton<String>(
-                      value: rolActual,
-                      underline: const SizedBox(),
-                      items: rolesDisponibles.map((String rol) {
-                        return DropdownMenuItem<String>(
-                          value: rol,
-                          child: Text(
-                            rol.toUpperCase(),
-                            style: const TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.bold),
+                  child: Stack(
+                    children: [
+                      ListTile(
+                        title: Text(
+                          user.nombre.isEmpty ? 'Sin nombre' : user.nombre,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        subtitle: Text(
+                          'Correo: ${user.email}\nTel: ${user.telefono}\nRol actual: $rolActual',
+                        ),
+                        isThreeLine: true,
+                      ),
+                      Positioned(
+                        bottom: 8,
+                        right: 8,
+                        child: TextButton.icon(
+                          style: TextButton.styleFrom(foregroundColor: brand),
+                          icon: const Icon(Icons.edit_outlined, size: 14),
+                          label: const Text(
+                            'Editar',
+                            style: TextStyle(fontSize: 11),
                           ),
-                        );
-                      }).toList(),
-                      onChanged: (nuevoRol) {
-                        if (nuevoRol != null && nuevoRol != rolActual) {
-                          _actualizarRol(user, nuevoRol);
-                        }
-                      },
-                    ),
+                          onPressed: () => _mostrarEditorRol(
+                            user,
+                          ), // o _mostrarFormularioUsuario(user: user) si usas el unificado
+                        ),
+                      ),
+                    ],
                   ),
                 );
               },

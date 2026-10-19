@@ -4,7 +4,6 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../api_config.dart';
 
-// Operaciones del panel administrativo sobre /helados (requieren token de admin)
 class AdminProductService {
   static Future<String?> _obtenerToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -14,7 +13,9 @@ class AdminProductService {
   static String _mensajeError(http.Response response) {
     try {
       final data = jsonDecode(response.body);
-      return (data['message'] ?? data['error'] ?? 'Error del servidor (código ${response.statusCode})')
+      return (data['message'] ??
+              data['error'] ??
+              'Error del servidor (código ${response.statusCode})')
           .toString();
     } catch (_) {
       return 'El servidor no respondió con JSON válido (código ${response.statusCode}). '
@@ -34,11 +35,12 @@ class AdminProductService {
     return http.MultipartFile.fromBytes(
       'imagen',
       bytes,
-      filename: 'producto_${DateTime.now().millisecondsSinceEpoch}.${subtipo == 'jpeg' ? 'jpg' : subtipo}',
+      filename:
+          'productos_${DateTime.now().millisecondsSinceEpoch}.${subtipo == 'jpeg' ? 'jpg' : subtipo}',
     );
   }
 
-  static Future<void> crearProducto({
+  static Future<void> crearProductos({
     required String nombre,
     required String descripcion,
     required double precio,
@@ -49,7 +51,10 @@ class AdminProductService {
       throw Exception('No hay sesión activa. Inicia sesión nuevamente.');
     }
 
-    final request = http.MultipartRequest('POST', Uri.parse('${ApiConfig.baseUrl}/productos'));
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('${ApiConfig.baseUrl}/productos'),
+    );
     request.headers['Authorization'] = 'Bearer $token';
     request.fields['nombre'] = nombre;
     request.fields['descripcion'] = descripcion;
@@ -62,7 +67,7 @@ class AdminProductService {
     }
   }
 
-  static Future<void> actualizarProducto({
+  static Future<void> actualizarProductos({
     required String id,
     required String nombre,
     required String descripcion,
@@ -74,7 +79,10 @@ class AdminProductService {
       throw Exception('No hay sesión activa. Inicia sesión nuevamente.');
     }
 
-    final request = http.MultipartRequest('PUT', Uri.parse('${ApiConfig.baseUrl}/helados/$id'));
+    final request = http.MultipartRequest(
+      'PUT',
+      Uri.parse('${ApiConfig.baseUrl}/productos/$id'),
+    );
     request.headers['Authorization'] = 'Bearer $token';
     request.fields['nombre'] = nombre;
     request.fields['descripcion'] = descripcion;
@@ -89,7 +97,7 @@ class AdminProductService {
     }
   }
 
-  static Future<void> eliminarProducto(String id) async {
+  static Future<void> eliminarProductos(String id) async {
     final token = await _obtenerToken();
     if (token == null || token.isEmpty) {
       throw Exception('No hay sesión activa. Inicia sesión nuevamente.');
