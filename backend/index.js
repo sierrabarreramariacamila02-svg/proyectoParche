@@ -36,7 +36,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// 🔍 Middleware de diagnóstico (imprime las peticiones en tu terminal)
+//  Middleware de diagnóstico (imprime las peticiones en la terminal)
 app.use((req, res, next) => {
   console.log(`\n-----------------------------------------`);
   console.log(`📥 [PETICIÓN] ${req.method} -> ${req.url}`);

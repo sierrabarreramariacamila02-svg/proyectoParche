@@ -1,13 +1,11 @@
-<<<<<<< HEAD
+import 'package:elparchee/components/productos.dart';
+import 'package:elparchee/models/user_model.dart';
+import 'package:elparchee/pages/admin_product_list_page.dart';
 import 'package:elparchee/pantallas/recuperacioncuenta.dart';
 import 'package:elparchee/pantallas/registro.dart';
+import 'package:elparchee/services/user_service.dart';
 import 'package:flutter/material.dart';
-=======
-﻿import 'package:flutter/material.dart';
-
-
-import 'package:elparchee/pantallas/registro.dart';
->>>>>>> 16cdaf6631759378ad4d70b2ced589019b4d0f44
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Iniciosesion extends StatefulWidget {
   const Iniciosesion({super.key});
@@ -17,17 +15,117 @@ class Iniciosesion extends StatefulWidget {
 }
 
 class _IniciosesionState extends State<Iniciosesion> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _cargando = false; // Declarada por si acaso faltaba en tu clase
+
+  Future<void> _guardarSesionYNavegar(Map<String, dynamic> respuesta) async {
+    final String token = (respuesta['token'] ?? '').toString();
+    final Map<String, dynamic> usuarioJson = Map<String, dynamic>.from(
+      respuesta['usuario'] ?? <String, dynamic>{},
+    );
+    final UserModel usuario = UserModel.fromJson(usuarioJson);
+
+    final String rol = (usuarioJson['rol'] ?? 'usuario')
+        .toString()
+        .toLowerCase();
+
+    // Guardar la sesión correctamente usando la variable 'respuesta' y el objeto 'usuario'
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('jwt_token', token);
+    await prefs.setString('user_role', rol);
+    await prefs.setString('user_name', usuario.nombre);
+    await prefs.setString('user_email', usuario.email);
+
+    if (!mounted) return;
+
+    // Validación si la cuenta se encuentra pendiente de aprobación
+    if (rol == 'pendiente') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Tu cuenta está pendiente de aprobación por el administrador.',
+          ),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return; // Detiene la navegación si no está aprobado
+    }
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('¡Bienvenido, ${usuario.nombre}!')));
+
+    Widget pantallaDestino;
+
+    switch (rol) {
+      case 'admin':
+      case 'administrador':
+        pantallaDestino =
+            const AdminProductListPage(); // Panel de administración
+        break;
+      case 'cocina':
+        // pantallaDestino = const CocinaPage();
+        pantallaDestino = const Productos(); // Reemplazar cuando crees la vista
+        break;
+      case 'mesero':
+        // pantallaDestino = const MeseroPage();
+        pantallaDestino = const Productos(); // Reemplazar cuando crees la vista
+        break;
+      case 'domicilio':
+      case 'domiciliario':
+        // pantallaDestino = const DomicilioPage();
+        pantallaDestino = const Productos(); // Reemplazar cuando crees la vista
+        break;
+      case 'usuario':
+      default:
+        pantallaDestino = const Productos(); // Vista normal para el cliente
+        break;
+    }
+
+    if (!mounted) return;
+
+    // Redirección dinámica según la pantallaDestino calculada
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => pantallaDestino),
+    );
+  }
+
+  Future<void> _login() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ingresa tu email y contraseña')),
+      );
+      return;
+    }
+
+    setState(() => _cargando = true);
+
+    try {
+      final respuesta = await UserService().loginUsuario(email, password);
+      await _guardarSesionYNavegar(respuesta);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+      );
+    } finally {
+      if (mounted) setState(() => _cargando = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
         width: double.infinity,
         height: double.infinity,
-<<<<<<< HEAD
-        decoration: BoxDecoration(
-=======
         decoration: const BoxDecoration(
->>>>>>> 16cdaf6631759378ad4d70b2ced589019b4d0f44
           image: DecorationImage(
             image: AssetImage('assets/images/background-fondo.png'),
             fit: BoxFit.cover,
@@ -68,10 +166,7 @@ class _IniciosesionState extends State<Iniciosesion> {
                         ],
                       ),
                     ),
-<<<<<<< HEAD
                     const SizedBox(height: 4),
-                    
-                    // NUEVO: Subtítulo agregado
                     const Text(
                       'Inicia sesion para continuar',
                       style: TextStyle(
@@ -80,42 +175,39 @@ class _IniciosesionState extends State<Iniciosesion> {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    
                     const SizedBox(height: 16),
                     Material(
-=======
-                    const SizedBox(height: 20),
-                    const Material(
->>>>>>> 16cdaf6631759378ad4d70b2ced589019b4d0f44
                       elevation: 4,
-                      borderRadius: BorderRadius.all(Radius.circular(30)),
+                      borderRadius: const BorderRadius.all(Radius.circular(30)),
                       child: _Input(
                         hint: 'Email/Usuario',
                         icon: Icons.email_outlined,
+                        controller: _emailController,
                       ),
                     ),
                     const SizedBox(height: 14),
-                    const Material(
+                    Material(
                       elevation: 4,
-                      borderRadius: BorderRadius.all(Radius.circular(30)),
+                      borderRadius: const BorderRadius.all(Radius.circular(30)),
                       child: _Input(
                         hint: 'Contraseña',
                         icon: Icons.lock_outline,
                         pass: true,
+                        controller: _passwordController,
                       ),
                     ),
-<<<<<<< HEAD
-
                     const SizedBox(height: 6),
-
-                    // NUEVO "¿Olvidaste tu Contraseña?" navegable alineado a la derecha
                     Align(
                       alignment: Alignment.centerRight,
                       child: GestureDetector(
                         onTap: () {
-                                Navigator.push(context, 
-                                MaterialPageRoute(builder: (context) => const RecuperacionCuenta()));
-                          },
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const RecuperacionCuenta(),
+                            ),
+                          );
+                        },
                         child: const Text(
                           '¿Olvidaste tu Contraseña?',
                           style: TextStyle(
@@ -126,16 +218,12 @@ class _IniciosesionState extends State<Iniciosesion> {
                         ),
                       ),
                     ),
-
-                    SizedBox(height: 18),
-=======
-                    const SizedBox(height: 22),
->>>>>>> 16cdaf6631759378ad4d70b2ced589019b4d0f44
+                    const SizedBox(height: 18),
                     SizedBox(
                       width: double.infinity,
                       height: 52,
                       child: ElevatedButton(
-                        onPressed: () {},
+                        onPressed: _cargando ? null : _login,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFE8A35E),
                           elevation: 4,
@@ -215,12 +303,8 @@ class _IniciosesionState extends State<Iniciosesion> {
                           ),
                         ),
                       ],
-<<<<<<< HEAD
                     ),
-                    
                     const SizedBox(height: 15),
-
-                    // NUEVO: Texto de Términos y condiciones inferior
                     const Text(
                       'Al continuar, aceptas nuestros Terminos y condiciones y Politicas de privacidad.',
                       textAlign: TextAlign.center,
@@ -229,8 +313,6 @@ class _IniciosesionState extends State<Iniciosesion> {
                         color: Colors.black54,
                         fontWeight: FontWeight.w500,
                       ),
-=======
->>>>>>> 16cdaf6631759378ad4d70b2ced589019b4d0f44
                     ),
                   ],
                 ),
@@ -247,10 +329,12 @@ class _Input extends StatelessWidget {
   final String hint;
   final IconData icon;
   final bool pass;
+  final TextEditingController controller;
 
   const _Input({
     required this.hint,
     required this.icon,
+    required this.controller,
     this.pass = false,
   });
 
@@ -263,6 +347,7 @@ class _Input extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE8A35E), width: 1.5),
       ),
       child: TextField(
+        controller: controller,
         obscureText: pass,
         decoration: InputDecoration(
           hintText: hint,
@@ -301,13 +386,6 @@ class _Social extends StatelessWidget {
         ),
         child: Center(child: child),
       ),
-<<<<<<< HEAD
-      child: Center(child: child),
-    ),
-  );
-}
-=======
     );
   }
 }
->>>>>>> 16cdaf6631759378ad4d70b2ced589019b4d0f44
