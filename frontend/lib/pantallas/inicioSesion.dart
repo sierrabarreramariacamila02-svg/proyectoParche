@@ -1,6 +1,8 @@
 import 'package:elparchee/components/productos.dart';
 import 'package:elparchee/models/user_model.dart';
 import 'package:elparchee/pages/admin_product_list_page.dart';
+import 'package:elparchee/pantallas/cocina.dart';
+import 'package:elparchee/pantallas/mesero.dart';
 import 'package:elparchee/pantallas/recuperacioncuenta.dart';
 import 'package:elparchee/pantallas/registro.dart';
 import 'package:elparchee/services/user_service.dart';
@@ -43,31 +45,35 @@ class _IniciosesionState extends State<Iniciosesion> {
     if (rol == 'pendiente') {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Tu cuenta está pendiente de aprobación por el administrador.'),
+          content: Text(
+            'Tu cuenta está pendiente de aprobación por el administrador.',
+          ),
           backgroundColor: Colors.orange,
         ),
       );
       return; // Detiene la navegación si no está aprobado
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('¡Bienvenido, ${usuario.nombre}!')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('¡Bienvenido, ${usuario.nombre}!')));
 
     Widget pantallaDestino;
 
     switch (rol) {
       case 'admin':
       case 'administrador':
-        pantallaDestino = const AdminProductListPage(); // Panel de administración
+        pantallaDestino =
+            const AdminProductListPage(); // Panel de administración
         break;
       case 'cocina':
-        // pantallaDestino = const CocinaPage();
-        pantallaDestino = const Productos(); // Reemplazar cuando crees la vista
+      case 'cocinero':
+        pantallaDestino =
+            const Cocina(); // Redirige ambos roles a la pantalla de cocina.
         break;
       case 'mesero':
         // pantallaDestino = const MeseroPage();
-        pantallaDestino = const Productos(); // Reemplazar cuando crees la vista
+        pantallaDestino = const Mesero(); // Reemplazar cuando crees la vista
         break;
       case 'domicilio':
       case 'domiciliario':
@@ -100,9 +106,9 @@ class _IniciosesionState extends State<Iniciosesion> {
       );
       return;
     }
-    
+
     setState(() => _cargando = true);
-    
+
     try {
       final respuesta = await UserService().loginUsuario(email, password);
       await _guardarSesionYNavegar(respuesta);
@@ -115,6 +121,7 @@ class _IniciosesionState extends State<Iniciosesion> {
       if (mounted) setState(() => _cargando = false);
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
