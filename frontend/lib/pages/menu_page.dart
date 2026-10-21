@@ -1,5 +1,7 @@
 import 'package:elparchee/components/chat_elparche_modal.dart';
 import 'package:flutter/material.dart';
+import 'package:elparchee/app_colors.dart';
+
 
 class MenuPage extends StatelessWidget {
   const MenuPage({super.key});
@@ -50,7 +52,7 @@ class MenuPage extends StatelessWidget {
           'Nuestra Carta',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
-        backgroundColor: const Color.fromARGB(255, 191, 40, 93),
+        backgroundColor: AppColors.barraHome,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -74,7 +76,7 @@ class MenuPage extends StatelessWidget {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Funcion de compra disponible proximamente'),
-                    backgroundColor: Color(0xFFE91E63),
+                    backgroundColor: AppColors.barraHome,
                   ),
                 );
               },
@@ -85,7 +87,7 @@ class MenuPage extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'fab_chat_menu',
-        backgroundColor: const Color.fromARGB(255, 188, 37, 82),
+        backgroundColor: AppColors.barraHome,
         foregroundColor: Colors.white,
         elevation: 6,
         icon: const Icon(Icons.support_agent_rounded, size: 26),
@@ -126,7 +128,7 @@ class ProductoCard extends StatelessWidget {
               child: Icon(
                 Icons.fastfood_rounded,
                 size: 84,
-                color: Color(0xFFB12A1A),
+                color: AppColors.barraHome,
               ),
             ),
           ),
@@ -150,7 +152,7 @@ class ProductoCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF8E1B10),
+                    color: AppColors.background,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -167,7 +169,7 @@ class ProductoCard extends StatelessWidget {
                       child: ElevatedButton(
                         onPressed: onComprar,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFB12A1A),
+                          backgroundColor: AppColors.background,
                           foregroundColor: Colors.white,
                         ),
                         child: const Text('Comprar'),

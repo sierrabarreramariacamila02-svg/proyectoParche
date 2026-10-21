@@ -5,6 +5,7 @@ import '../components/product_form_sheet.dart';
 import '../models/producto_model.dart';
 import '../services/admin_producto_service.dart';
 import '../services/producto_service.dart';
+import 'package:elparchee/app_colors.dart';
 
 // import 'menu_page.dart'; // AJUSTA: tu carta del cliente, si quieres enlazarla
 
@@ -39,7 +40,7 @@ class AdminProductListPage extends StatefulWidget {
 }
 
 class _AdminProductListPageState extends State<AdminProductListPage> {
-  static const Color brand = Color(0xFFBF285D);
+  static const Color brand = AppColors.barraHome;
 
   final ProductoService _productoService = ProductoService();
   late Future<List<ProductoModel>> _future;
@@ -56,17 +57,27 @@ class _AdminProductListPageState extends State<AdminProductListPage> {
   // Datos del admin guardados en el login
   Future<void> _loadAdmin() async {
     final prefs = await SharedPreferences.getInstance();
+
+    // 1. Obtenemos los valores de forma asíncrona AFUERA del setState
+    final name = prefs.getString('user_name') ?? 'Administrador';
+    final email = prefs.getString('user_email') ?? '';
+
     if (!mounted) return;
+
+    // 2. Actualizamos el estado de manera completamente síncrona
     setState(() {
-      _adminName = prefs.getString('user_name') ?? 'Administrador';
-      _adminEmail = prefs.getString('user_email') ?? '';
+      _adminName = name;
+      _adminEmail = email;
     });
   }
 
-  void _reload() =>
-      setState(() => _future = _productoService.obtenerProductos());
+  void _reload() {
+    setState(() {
+      _future = _productoService.obtenerProductos();
+    });
+  }
 
-  void _snack(String msg, {Color color = Colors.green}) {
+  void _snack(String msg, {Color color = AppColors.barraHome}) {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(msg), backgroundColor: color));
@@ -88,14 +99,17 @@ class _AdminProductListPageState extends State<AdminProductListPage> {
       _snack('"${p.nombre}" eliminado');
     } catch (e) {
       if (mounted)
-        _snack(e.toString().replaceAll('Exception: ', ''), color: Colors.red);
+        _snack(
+          e.toString().replaceAll('Exception: ', ''),
+          color: AppColors.barraHome,
+        );
     }
   }
 
   Widget _thumb(String? url) {
     if (url == null || url.isEmpty) {
       return Container(
-        color: Colors.pink.shade50,
+        color: AppColors.inputBackground,
         child: const Icon(Icons.production_quantity_limits, color: brand),
       );
     }
@@ -110,7 +124,7 @@ class _AdminProductListPageState extends State<AdminProductListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F4F0),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text(
           'Panel de administración',
@@ -164,7 +178,7 @@ class _AdminProductListPageState extends State<AdminProductListPage> {
               itemBuilder: (context, i) {
                 final p = items[i];
                 return Card(
-                  color: Colors.white,
+                  color: AppColors.inputBackground,
                   margin: const EdgeInsets.only(bottom: 12),
                   child: ListTile(
                     leading: ClipRRect(
@@ -195,7 +209,7 @@ class _AdminProductListPageState extends State<AdminProductListPage> {
                           tooltip: 'Eliminar',
                           icon: const Icon(
                             Icons.delete_outline,
-                            color: Colors.red,
+                            color: AppColors.barraHome,
                           ),
                           onPressed: () => _delete(p),
                         ),

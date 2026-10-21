@@ -82,7 +82,7 @@ class _AdminUserListPageState extends State<AdminUserListPage> {
         builder: (ctx, setSt) => AlertDialog(
           title: const Text('Editar rol de usuario'),
           content: DropdownButtonFormField<String>(
-            initialValue: rolSeleccionado,
+            value: rolSeleccionado,
             decoration: const InputDecoration(
               labelText: 'Rol',
               border: OutlineInputBorder(),
@@ -123,9 +123,178 @@ class _AdminUserListPageState extends State<AdminUserListPage> {
     );
   }
 
+  // 📋 Modal para agregar un nuevo usuario con correo, nombre y rol
+  void _mostrarFormularioAgregarUsuario() {
+    final formKey = GlobalKey<FormState>();
+    final nombreCtrl = TextEditingController();
+    final correoCtrl = TextEditingController();
+    String rolSeleccionado = 'pendiente';
+    bool guardando = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.9,
+              ),
+              decoration: const BoxDecoration(
+                color: Color(0xFFF6F4F0),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.black26,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                      const Text(
+                        'Agregar nuevo usuario',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: brand,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: nombreCtrl,
+                        enabled: !guardando,
+                        decoration: const InputDecoration(
+                          labelText: 'Nombre',
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (v) => v == null || v.trim().isEmpty
+                            ? 'Campo obligatorio'
+                            : null,
+                      ),
+                      const SizedBox(height: 14),
+                      TextFormField(
+                        controller: correoCtrl,
+                        enabled: !guardando,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: const InputDecoration(
+                          labelText: 'Correo electrónico',
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) {
+                            return 'Campo obligatorio';
+                          }
+                          if (!v.contains('@')) {
+                            return 'Ingresa un correo válido';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 14),
+                      DropdownButtonFormField<String>(
+                        value: rolSeleccionado,
+                        decoration: const InputDecoration(
+                          labelText: 'Rol',
+                          border: OutlineInputBorder(),
+                        ),
+                        items: _roles
+                            .map(
+                              (rol) => DropdownMenuItem(
+                                value: rol,
+                                child: Text(rol.toUpperCase()),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: guardando
+                            ? null
+                            : (nuevoRol) {
+                                if (nuevoRol != null) {
+                                  setModalState(
+                                      () => rolSeleccionado = nuevoRol);
+                                }
+                              },
+                      ),
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: brand,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        onPressed: guardando
+                            ? null
+                            : () async {
+                                if (!formKey.currentState!.validate()) return;
+                                setModalState(() => guardando = true);
+                                try {
+                                  // TODO: Conecta aquí tu servicio para registrar o guardar el usuario en la BD.
+                                  // Ejemplo: await _userService.crearUsuario(nombre: nombreCtrl.text.trim(), email: correoCtrl.text.trim(), rol: rolSeleccionado);
+                                  
+                                  await Future.delayed(
+                                      const Duration(milliseconds: 600)); // Simulación de red
+
+                                  if (mounted) {
+                                    Navigator.pop(context);
+                                    _reload();
+                                    _snack('Usuario creado exitosamente');
+                                  }
+                                } catch (e) {
+                                  setModalState(() => guardando = false);
+                                  if (mounted) {
+                                    _snack(
+                                        e.toString().replaceAll('Exception: ', ''),
+                                        brand);
+                                  }
+                                }
+                              },
+                        child: guardando
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text(
+                                'GUARDAR USUARIO',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white),
+                              ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F4F0),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text(
           'Gestión de Usuarios y Roles',
@@ -135,12 +304,11 @@ class _AdminUserListPageState extends State<AdminUserListPage> {
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       drawer: AdminDrawer(adminName: _adminName, adminEmail: _adminEmail),
-      // Botón flotante agregado en la parte inferior derecha
+      // Botón flotante actualizado para desplegar el formulario de creación
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: brand,
-        onPressed: () => _mostrarEditorRol,
-        tooltip: 'Editar rol de usuario',
-
+        onPressed: _mostrarFormularioAgregarUsuario,
+        tooltip: 'Agregar usuario',
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text(
           'Agregar',
@@ -153,7 +321,7 @@ class _AdminUserListPageState extends State<AdminUserListPage> {
         child: FutureBuilder<List<UserModel>>(
           future: _futureUsuarios,
           builder: (context, snapshot) {
-           if (snapshot.connectionState == ConnectionState.waiting) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator(color: brand));
             }
             if (snapshot.hasError) {
@@ -180,7 +348,7 @@ class _AdminUserListPageState extends State<AdminUserListPage> {
                     : 'pendiente';
 
                 return Card(
-                  color: Colors.white,
+                  color: AppColors.inputBackground,
                   margin: const EdgeInsets.only(bottom: 12),
                   child: Stack(
                     children: [
@@ -204,9 +372,7 @@ class _AdminUserListPageState extends State<AdminUserListPage> {
                             'Editar',
                             style: TextStyle(fontSize: 11),
                           ),
-                          onPressed: () => _mostrarEditorRol(
-                            user,
-                          ), // o _mostrarFormularioUsuario(user: user) si usas el unificado
+                          onPressed: () => _mostrarEditorRol(user),
                         ),
                       ),
                     ],

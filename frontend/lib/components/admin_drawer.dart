@@ -8,7 +8,7 @@ import '../pages/admin_product_list_page.dart';
  
 
 class AdminDrawer extends StatelessWidget {
-  static const Color _colorPrincipal = AppColors.buttonOrange;
+  static const Color _colorPrincipal = AppColors.barraHome;
 
   final String adminName;
   final String adminEmail;
@@ -61,7 +61,7 @@ class AdminDrawer extends StatelessWidget {
                   accountName: Text(adminName.isNotEmpty ? adminName : 'Administrador'),
                   accountEmail: Text(adminEmail.isNotEmpty ? adminEmail : 'Sin correo registrado'),
                 ),
-                _item(Icons.icecream_outlined, 'Productos', () {
+                _item(Icons.store, 'Productos', () {
                   Navigator.pop(context);
                   Navigator.push(
                     context,

@@ -2,7 +2,7 @@ class ProductoModel {
   final String id;
   final String nombre;
   final String descripcion;
-  final int precio;
+  final double precio;
   final String categoria;
   final String imagenUrl;
 
@@ -17,12 +17,13 @@ class ProductoModel {
 
   factory ProductoModel.fromJson(Map<String, dynamic> json) {
     return ProductoModel(
-      id: json['_id']?. toString() ?? json['id']?. toString() ?? '',
-      nombre: json['nombre'] ??'',
-      descripcion: json['descripcion'] ??'',
-      precio: (json['precio'] as int?)?.toInt() ?? 0,
-      categoria: json['categoria'] as String,
-      imagenUrl: json['imagenUrl'] ?? json['imagen'] ?? json['imagen_url'] ?? '',
+      id: json['_id']?.toString() ?? json['id']?.toString() ?? '',
+      nombre: json['nombre'] ?? '',
+      descripcion: json['descripcion'] ?? '',
+      precio: (json['precio'] as num?)?.toDouble() ?? 0,
+      categoria: json['categoria']?.toString() ?? 'Otros',
+      imagenUrl:
+          json['imagenUrl'] ?? json['imagen'] ?? json['imagen_url'] ?? '',
     );
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:elparchee/app_colors.dart';
 
 class ChatInputField extends StatefulWidget {
   final TextEditingController controlador;
@@ -44,7 +45,7 @@ class _ChatInputFieldState extends State<ChatInputField> {
             ),
             const SizedBox(width: 8),
             CircleAvatar(
-              backgroundColor: Colors.orange,
+              backgroundColor: AppColors.barraHome,
               child: IconButton(
                 icon: const Icon(Icons.send, color: Colors.white, size: 20),
                 onPressed: widget.onEnviar,

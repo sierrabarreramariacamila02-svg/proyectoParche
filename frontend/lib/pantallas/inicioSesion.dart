@@ -8,6 +8,9 @@ import 'package:elparchee/pantallas/registro.dart';
 import 'package:elparchee/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class Iniciosesion extends StatefulWidget {
   const Iniciosesion({super.key});
@@ -112,6 +115,53 @@ class _IniciosesionState extends State<Iniciosesion> {
     try {
       final respuesta = await UserService().loginUsuario(email, password);
       await _guardarSesionYNavegar(respuesta);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+      );
+    } finally {
+      if (mounted) setState(() => _cargando = false);
+    }
+  }
+
+  // ==========================================
+  // NUEVO: Función para iniciar sesión con Google
+  // ==========================================
+  Future<void> _loginConGoogle() async {
+    setState(() => _cargando = true);
+
+    try {
+      await GoogleSignIn().signOut();
+      // 1. Abrir la ventana emergente de Google
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+      if (googleUser == null) {
+        // El usuario canceló el inicio de sesión
+        if (mounted) setState(() => _cargando = false);
+        return;
+      }
+
+      final String email = googleUser.email;
+      final String name = googleUser.displayName ?? 'Usuario';
+
+      // 2. Enviar los datos al nuevo endpoint de tu backend
+      // Recuerda cambiar la IP según tu entorno (10.0.2.2 para emulador Android o tu IP local)
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:3000/api/auth/google'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'name': name}),
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> respuesta = jsonDecode(response.body);
+
+        // 3. Reutilizamos tu método existente para guardar sesión y navegar según el rol
+        await _guardarSesionYNavegar(respuesta);
+      } else {
+        final errorData = jsonDecode(response.body);
+        throw Exception(errorData['error'] ?? 'Error al autenticar con Google');
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -269,10 +319,30 @@ class _IniciosesionState extends State<Iniciosesion> {
                     const SizedBox(height: 20),
                     Row(
                       children: [
-                        _Social(
-                          child: Image.asset(
-                            'assets/images/google.png',
-                            height: 30,
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: _cargando ? null : _loginConGoogle,
+                            child: _Social(
+                              child: Row(
+                                // <--- Agregamos un Row aquí para agruparlos
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Image.asset(
+                                    'assets/images/google.png',
+                                    height: 30,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  const Text(
+                                    'Google',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
                       ],

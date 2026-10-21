@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../api_config.dart';
+import 'package:http_parser/http_parser.dart';
 
 class AdminProductService {
   static Future<String?> _obtenerToken() async {
@@ -37,6 +38,7 @@ class AdminProductService {
       bytes,
       filename:
           'productos_${DateTime.now().millisecondsSinceEpoch}.${subtipo == 'jpeg' ? 'jpg' : subtipo}',
+          contentType: MediaType('image', subtipo),
     );
   }
 
@@ -44,6 +46,7 @@ class AdminProductService {
     required String nombre,
     required String descripcion,
     required double precio,
+    required String categoria,
     required File imagen,
   }) async {
     final token = await _obtenerToken();
@@ -59,6 +62,7 @@ class AdminProductService {
     request.fields['nombre'] = nombre;
     request.fields['descripcion'] = descripcion;
     request.fields['precio'] = precio.toString();
+    request.fields['categoria'] = categoria;
     request.files.add(await _archivoImagen(imagen));
 
     final response = await http.Response.fromStream(await request.send());
@@ -72,6 +76,7 @@ class AdminProductService {
     required String nombre,
     required String descripcion,
     required double precio,
+    required String categoria,
     File? imagen,
   }) async {
     final token = await _obtenerToken();
@@ -87,6 +92,7 @@ class AdminProductService {
     request.fields['nombre'] = nombre;
     request.fields['descripcion'] = descripcion;
     request.fields['precio'] = precio.toString();
+    request.fields['categoria'] = categoria;
     if (imagen != null) {
       request.files.add(await _archivoImagen(imagen));
     }
