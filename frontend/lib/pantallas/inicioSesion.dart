@@ -1,5 +1,4 @@
 import 'package:elparchee/components/productos.dart';
-import 'package:elparchee/models/user_model.dart';
 import 'package:elparchee/pages/admin_product_list_page.dart';
 import 'package:elparchee/pantallas/recuperacioncuenta.dart';
 import 'package:elparchee/pantallas/registro.dart';
@@ -15,6 +14,77 @@ class Iniciosesion extends StatefulWidget {
 }
 
 class _IniciosesionState extends State<Iniciosesion> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final UserService _userService = UserService();
+  bool _cargando = false;
+
+  Future<void> _login() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      _mostrarMensaje('Ingresa tu email y contraseña.', color: Colors.orange);
+      return;
+    }
+
+    setState(() => _cargando = true);
+
+    try {
+      final response = await _userService.loginUsuario(email, password);
+      final token = response['token']?.toString();
+      final usuario = response['usuario'];
+
+      if (token == null || token.isEmpty || usuario == null) {
+        throw Exception('La respuesta del servidor no incluye la sesión activa.');
+      }
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('jwt_token', token);
+      await prefs.setString('user_name', usuario['nombre']?.toString() ?? 'Usuario');
+      await prefs.setString('user_email', usuario['email']?.toString() ?? email);
+      await prefs.setString('user_rol', usuario['rol']?.toString() ?? 'usuario');
+
+      if (!mounted) return;
+
+      final rol = (usuario['rol'] ?? '').toString().toLowerCase();
+      final destino = rol == 'admin' || rol == 'administrador'
+          ? const AdminProductListPage()
+          : const Productos();
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => destino),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      _mostrarMensaje(
+        e.toString().replaceAll('Exception: ', ''),
+        color: Colors.red,
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _cargando = false);
+      }
+    }
+  }
+
+  void _mostrarMensaje(String mensaje, {required Color color}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(mensaje),
+        backgroundColor: color,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -127,14 +197,23 @@ class _IniciosesionState extends State<Iniciosesion> {
                             borderRadius: BorderRadius.circular(20),
                           ),
                         ),
-                        child: const Text(
-                          'Iniciar sesión',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        child: _cargando
+                            ? const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2.5,
+                                ),
+                              )
+                            : const Text(
+                                'Iniciar sesión',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                       ),
                     ),
                     const SizedBox(height: 22),
