@@ -10,15 +10,27 @@ dependencies:
   flutter:
     sdk: flutter
   http: ^1.2.0
+  image_picker: ^1.0.8
+  shared_preferences: ^2.3.2
   video_player: ^2.8.6
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true
   assets:
     - assets/videos/
     - assets/images/
+
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/Logoicono.jpg"
+  min_sdk_android: 21
+  adaptive_icon_background: "#22130C"
+  adaptive_icon_foreground: "assets/images/Logoicono.jpg"

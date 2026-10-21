@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'confirmacioncodigo.dart';
+import '../services/user_service.dart'; // O el nombre con el que tengas tu archivo de servicios
 
 class RecuperacionCuenta extends StatefulWidget {
   const RecuperacionCuenta({super.key});
@@ -22,24 +23,38 @@ class _RecuperacionCuentaState extends State<RecuperacionCuenta> {
     super.dispose();
   }
 
-  void _enviarCodigo() {
-    final dato = _controlador.text.trim();
-    if (dato.isEmpty) {
-      setState(() => _error = 'Ingresa tu correo o teléfono');
-      return;
+  
+    Future<void> _enviarCodigo() async {
+      final dato = _controlador.text.trim();
+      if (dato.isEmpty) {
+        setState(() => _error = 'Ingresa tu correo o teléfono');
+        return;
+      }
+      setState(() => _error = null);
+
+      try {
+        await UserService().solicitarRecuperacion(dato);
+
+        if (!mounted) return;
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => ConfirmacionCodigo(destino: dato)),
+        );
+      } catch (e) {
+        if (!mounted) return;
+        setState(() {
+          _error = e.toString().replaceAll('Exception: ', '');
+        });
+      }
     }
-    setState(() => _error = null);
-    // TODO: aquí llama a tu backend para enviar el código
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => ConfirmacionCodigo(destino: dato)),
-    );
-  }
+  
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: false, // Evita que el teclado deforme o corte el fondo
+      resizeToAvoidBottomInset:
+          false, // Evita que el teclado deforme o corte el fondo
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -63,7 +78,7 @@ class _RecuperacionCuentaState extends State<RecuperacionCuenta> {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  
+
                   // Logo con resplandor
                   Center(
                     child: Container(
@@ -80,8 +95,11 @@ class _RecuperacionCuentaState extends State<RecuperacionCuenta> {
                       child: Image.asset(
                         'assets/images/Logo_el_parche.png',
                         height: 110,
-                        errorBuilder: (_, __, ___) =>
-                            const Icon(Icons.fastfood, size: 100, color: _naranja),
+                        errorBuilder: (_, __, ___) => const Icon(
+                          Icons.fastfood,
+                          size: 100,
+                          color: _naranja,
+                        ),
                       ),
                     ),
                   ),
@@ -112,7 +130,10 @@ class _RecuperacionCuentaState extends State<RecuperacionCuenta> {
                     decoration: InputDecoration(
                       hintText: 'Correo o teléfono',
                       errorText: _error,
-                      prefixIcon: const Icon(Icons.mail_outline, color: _naranja),
+                      prefixIcon: const Icon(
+                        Icons.mail_outline,
+                        color: _naranja,
+                      ),
                       filled: true,
                       fillColor: _crema,
                       border: OutlineInputBorder(

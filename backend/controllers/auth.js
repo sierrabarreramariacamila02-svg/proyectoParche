@@ -81,7 +81,7 @@ export const verificarCuenta = async (req, res) => {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
 
-    if (usuario.isVerified) {
+    if (usuario.isverified) {
       return res.status(400).json({ mensaje: 'Esta cuenta ya esta verificada' });
     }
 
@@ -97,9 +97,9 @@ export const verificarCuenta = async (req, res) => {
 
     // Marcar como verificado y limpiar el codigo
     const { error } = await supabase
-      .from('usuarios')
+      .from('usuario')
       .update({
-        isVerified: true,
+        isverified: true,
         codigoverificacion: null,
         codigoverificacionexpiracion: null
       })
@@ -135,7 +135,7 @@ export const login = async (req, res) => {
             return res.status(401).json({ error: "Credenciales incorrectas" });
         }
 
-        if (!usuario.isVerified) {
+        if (!usuario.isverified) {
       return res.status(403).json({
         error: 'Cuenta no verificada. Por favor verifica tu correo antes de iniciar sesion.'
       });
@@ -164,4 +164,51 @@ export const login = async (req, res) => {
         console.error(error);
         return res.status(500).json({ error: "Error interno del servidor" });
     }
+
+    
+};
+
+//codigo de recuperacion
+export const solicitarRecuperacion = async (req, res) => {
+  try {
+    const { email } = req.body;
+    console.log('1. Email recibido:', email);
+
+    const { data: usuario, error } = await supabase
+      .from('usuario')
+      .select('*')
+      .eq('email', email)
+      .single();
+
+    if (error || !usuario) {
+      console.log('Usuario no encontrado:', error);
+      return res.status(404).json({ error: 'El correo no está registrado' });
+    }
+    console.log('2. Usuario encontrado:', usuario.nombre);
+
+    const codigo = Math.floor(100000 + Math.random() * 900000).toString();
+
+    const { error: updateError } = await supabase
+      .from('usuario')
+      .update({ codigo_recuperacion: codigo })
+      .eq('email', email);
+
+    if (updateError) {
+      console.log('ERROR guardando código:', updateError);
+      return res.status(500).json({ error: 'No se pudo guardar el código' });
+    }
+    console.log('3. Código guardado:', codigo);
+
+    const { exito, error: emailError } = await enviarcodigoverificacion(email, usuario.nombre, codigo);
+    console.log('4. Resultado del envío:', exito, emailError);
+
+    if (!exito) {
+      return res.status(500).json({ error: 'No se pudo enviar el correo' });
+    }
+
+    return res.status(200).json({ message: 'Código enviado correctamente' });
+  } catch (error) {
+    console.error('ERROR general:', error);
+    return res.status(500).json({ error: error.message });
+  }
 };

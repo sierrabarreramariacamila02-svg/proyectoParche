@@ -1,5 +1,5 @@
 import express from 'express';
-import { login, registro, verificarCuenta } from '../controllers/auth.js';
+import { login, registro, verificarCuenta, solicitarRecuperacion } from '../controllers/auth.js';
 
 
 const router = express.Router();
@@ -11,6 +11,7 @@ router.post('/verificar', verificarCuenta);
 //olvido de contrseña
 router.post('/verificarCuenta',verificarCuenta);
 router.post('/verify-code',verificarCuenta);
+router.post('/password', solicitarRecuperacion);
 
 
 export default router;

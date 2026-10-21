@@ -28,12 +28,12 @@ class ProductoModel {
 
   Map<String, dynamic> toJson() {
     return {
+      '_id': id,
       'nombre': nombre,
       'descripcion': descripcion,
       'precio': precio,
       'categoria': categoria,
-      if (imagenUrl != null) 'imagenUrl': imagenUrl,
-      
+      'imagenUrl': imagenUrl,
     };
   }
 }
