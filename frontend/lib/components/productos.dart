@@ -1,5 +1,8 @@
 import 'package:elparchee/app_colors.dart';
+import 'package:elparchee/pantallas/buscar.dart';
 import 'package:elparchee/pantallas/carrito.dart';
+import 'package:elparchee/pantallas/pedidos.dart';
+import 'package:elparchee/pantallas/perfil.dart';
 import 'package:elparchee/pantallas/menuHamburguesas.dart';
 import 'package:elparchee/pantallas/menuOtros.dart';
 import 'package:elparchee/pantallas/menuPerro.dart';
@@ -14,7 +17,8 @@ class Productos extends StatefulWidget {
 }
 
 class _ProductosState extends State<Productos> {
-  final PageController _controller = PageController();
+  final PageController _promoController = PageController();
+  final PageController _contentPageController = PageController(); // Controlador para el carrusel de productos
   int paginaActual = 0;
   int _indiceIcono = 0;
   int _indiceFiltro = 0;
@@ -25,11 +29,21 @@ class _ProductosState extends State<Productos> {
     'assets/images/promo3.png',
   ];
 
-  final List<String> platos = [
+  // Listas de productos independientes para cada sección del carrusel
+  final List<String> platosDestacados = [
     'assets/images/plato1.png',
     'assets/images/plato2.png',
     'assets/images/plato3.png',
     'assets/images/plato4.png',
+  ];
+
+  final List<String> perrosYMas = [
+    'assets/images/plato2.png',
+    'assets/images/plato3.png',
+  ];
+
+  final List<String> bebidasList = [
+    'assets/images/plato1.png',
   ];
 
   final List<String> _filtros = [
@@ -86,7 +100,7 @@ class _ProductosState extends State<Productos> {
             SizedBox(
               height: 200,
               child: PageView.builder(
-                controller: _controller,
+                controller: _promoController,
                 itemCount: imagenes.length,
                 onPageChanged: (i) => setState(() => paginaActual = i),
                 itemBuilder: (_, i) => Container(
@@ -160,58 +174,31 @@ class _ProductosState extends State<Productos> {
                 );
               }).toList(),
             ),
-            _titulo('Platos destacados.'),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 0.8,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
-              ),
-              itemCount: platos.length,
-              itemBuilder: (_, i) => Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(12),
-                        ),
-                        child: Image.asset(
-                          platos[i],
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                        ),
-                      ),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Producto',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            '12,000 COP',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: AppColors.buttonOrange,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+            
+            // Título dinámico según la sección seleccionada en el filtro inferior
+            _titulo(
+              _indiceFiltro == 0
+                  ? 'Platos destacados.'
+                  : _indiceFiltro == 1
+                      ? 'Perros calientes y más.'
+                      : 'Bebidas.',
+            ),
+
+            // PageView que funciona como carrusel sincronizado con los botones inferiores
+            SizedBox(
+              height: 330,
+              child: PageView(
+                controller: _contentPageController,
+                onPageChanged: (index) {
+                  setState(() {
+                    _indiceFiltro = index; // Actualiza el filtro visual si el usuario desliza con el dedo
+                  });
+                },
+                children: [
+                  _buildProductGrid(platosDestacados),
+                  _buildProductGrid(perrosYMas),
+                  _buildProductGrid(bebidasList),
+                ],
               ),
             ),
             const SizedBox(height: 20),
@@ -283,7 +270,15 @@ class _ProductosState extends State<Productos> {
                       _filtros.length,
                       (i) => Expanded(
                         child: GestureDetector(
-                          onTap: () => setState(() => _indiceFiltro = i),
+                          onTap: () {
+                            setState(() => _indiceFiltro = i);
+                            // Al hacer clic en un filtro inferior, desliza suavemente el carrusel de productos
+                            _contentPageController.animateToPage(
+                              i,
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                            );
+                          },
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
                             padding: const EdgeInsets.symmetric(vertical: 8),
@@ -313,6 +308,62 @@ class _ProductosState extends State<Productos> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  // Método auxiliar para construir la cuadrícula de productos en cada página del carrusel
+  Widget _buildProductGrid(List<String> listaItems) {
+    return GridView.builder(
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 0.8,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+      ),
+      itemCount: listaItems.length,
+      itemBuilder: (_, i) => Card(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(12),
+                ),
+                child: Image.asset(
+                  listaItems[i],
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                ),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Producto',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    '12,000 COP',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.buttonOrange,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -368,12 +419,32 @@ class _ProductosState extends State<Productos> {
       icon,
       color: _indiceIcono == index ? AppColors.barraHome : Colors.brown,
     ),
-    onPressed: () => setState(() => _indiceIcono = index),
+    onPressed: () {
+      setState(() => _indiceIcono = index);
+
+      if (index == 1) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const Buscar()),
+        );
+      } else if (index == 2) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const Pedidos()),
+        );
+      } else if (index == 3) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const Perfil()),
+        );
+      }
+    },
   );
 
   @override
   void dispose() {
-    _controller.dispose();
+    _promoController.dispose();
+    _contentPageController.dispose(); // Liberamos el controlador del carrusel
     super.dispose();
   }
 }

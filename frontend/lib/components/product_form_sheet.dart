@@ -242,7 +242,7 @@ void _error(String msg) {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: _categoria,
+                  initialValue: _categoria,
                   decoration: const InputDecoration(
                     labelText: 'Categoría',
                     border: OutlineInputBorder(),

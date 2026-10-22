@@ -1,180 +1,211 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:elparchee/app_colors.dart';
 import 'package:elparchee/pantallas/pedidos.dart';
-import 'package:elparchee/components/productos.dart';
-import 'package:elparchee/pantallas/buscar.dart';
-import 'package:elparchee/pantallas/perfil.dart';
 
-class Domicilio extends StatelessWidget {
-  const Domicilio({super.key});
+class DomicilioPantalla extends StatefulWidget {
+  const DomicilioPantalla({super.key});
+
+  @override
+  State<DomicilioPantalla> createState() => _DomicilioPantallaState();
+}
+
+class _DomicilioPantallaState extends State<DomicilioPantalla> {
+  static const Color rojo = AppColors.barraHome;
+  static const Color naranja = AppColors.buttonOrange;
+  static const Color crema = AppColors.background;
+
+  final MapController _mapController = MapController();
+  final LatLng _ubicacionInicial = const LatLng(2.1994, -75.6297); // Coordenadas base (ej. Garzón, Huila)
 
   @override
   Widget build(BuildContext context) {
-    const rojo = AppColors.barraHome;
-    const naranja = AppColors.buttonOrange;
-    const crema = AppColors.background;
-
     return Scaffold(
       backgroundColor: crema,
-      appBar: AppBar(
-        backgroundColor: rojo,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text('Domicilio', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        actions: const [Icon(Icons.notifications_none, color: Colors.white), SizedBox(width: 16)],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(15),
+      body: Column(
         children: [
+          // Barra Superior
           Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)]),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            padding: const EdgeInsets.fromLTRB(10, 50, 20, 15),
+            decoration: const BoxDecoration(
+              color: rojo,
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(30),
+                bottomRight: Radius.circular(30),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Row(
+                Row(
                   children: [
-                    Icon(Icons.location_on, color: naranja),
-                    SizedBox(width: 8),
-                    Text("Datos de entrega", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    ),
+                    const SizedBox(width: 5),
+                    const Text(
+                      "Domicilio",
+                      style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
                   ],
                 ),
-                const Text("Confirma tu dirección para continuar con el pedido.", style: TextStyle(fontSize: 11, color: Colors.grey)),
-                const SizedBox(height: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(color: const Color(0xFFF2EAD8), borderRadius: BorderRadius.circular(20)),
-                  child: const TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Busca tu dirección...',
-                      icon: Icon(Icons.search, color: naranja, size: 20),
-                      border: InputBorder.none,
-                      isDense: true,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  decoration: BoxDecoration(color: const Color(0xFFF3C082), borderRadius: BorderRadius.circular(20)),
-                  child: const Center(
-                    child: Text("Elegir ubicación en el mapa", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.black87)),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                // Contenedor simulando mapa estático
-                Container(
-                  height: 120,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: Colors.grey.shade300,
-                    image: const DecorationImage(
-                      image: NetworkImage('https://maps.googleapis.com/maps/api/staticmap?center=4.5,-74.2&zoom=13&size=400x200&sensor=false'), // Placeholder estático simulado de mapa
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  child: const Center(child: Icon(Icons.location_pin, color: Colors.red, size: 40)),
-                ),
-                const SizedBox(height: 10),
-                _campoInfo(Icons.home, "Dirección", "Calle 10 #12-34"),
-                const Divider(height: 15),
-                _campoInfo(Icons.map, "Barrio", "Centro"),
-                const Divider(height: 15),
-                _campoInfo(Icons.note, "Indicaciones para llegar", "Casa color blanca, portón negro"),
+                const Icon(Icons.notifications_none, color: Colors.white),
               ],
             ),
           ),
-          const SizedBox(height: 15),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)]),
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.all(15),
               children: [
-                Text("Resumen de entrega", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                SizedBox(height: 6),
-                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text("Tiempo estimado", style: TextStyle(fontSize: 11, color: Colors.grey)), Text("30 - 45 min", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold))]),
-                SizedBox(height: 4),
-                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text("Costo de domicilio", style: TextStyle(fontSize: 11, color: Colors.grey)), Text("\$8.000", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold))]),
+                const Text("Datos de entrega", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: rojo)),
+                const SizedBox(height: 4),
+                const Text("Confirma tu dirección para continuar con el pedido.", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                const SizedBox(height: 12),
+                
+                // Buscador simulado
+                TextField(
+                  decoration: InputDecoration(
+                    hintText: "Busca tu dirección...",
+                    prefixIcon: const Icon(Icons.search, color: naranja),
+                    filled: true,
+                    fillColor: Colors.white,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(25), borderSide: BorderSide.none),
+                  ),
+                ),
+                const SizedBox(height: 10),
+
+                // Botón elegir en el mapa
+                OutlinedButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(Icons.map, color: naranja),
+                  label: const Text("Elegir ubicación en el mapa", style: TextStyle(color: Colors.black87)),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: naranja),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  ),
+                ),
+                const SizedBox(height: 10),
+
+                // Mini contenedor del Mapa (siguiendo metodología flutter_map)
+                Container(
+                  height: 180,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(15),
+                    child: FlutterMap(
+                      mapController: _mapController,
+                      options: MapOptions(
+                        initialCenter: _ubicacionInicial,
+                        initialZoom: 15.0,
+                      ),
+                      children: [
+                        TileLayer(
+                          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                          userAgentPackageName: 'com.elparchee.app',
+                        ),
+                        MarkerLayer(
+                          markers: [
+                            Marker(
+                              point: _ubicacionInicial,
+                              width: 40,
+                              height: 40,
+                              child: const Icon(Icons.location_pin, color: Colors.red, size: 40),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 15),
+
+                // Campos de Formulario de Dirección
+                _buildCampoTexto("Dirección", "Calle 10 #12-34", Icons.location_on),
+                const SizedBox(height: 10),
+                _buildCampoTexto("Barrio", "Centro", Icons.home),
+                const SizedBox(height: 10),
+                _buildCampoTexto("Indicaciones para llegar", "Casa color blanca, portón negro", Icons.edit_note),
+                const SizedBox(height: 20),
+
+                // Resumen de entrega
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text("Tiempo estimado", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                          Text("Costo de domicilio", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text("30 - 45 min", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                          Text("\$8.000", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Botón Confirmar Domicilio
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => const Pedidos()),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: rojo,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(double.infinity, 50),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                  ),
+                  child: const Text("Confirmar domicilio", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                ),
               ],
             ),
-          ),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const Pedidos()));
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: rojo,
-              foregroundColor: Colors.white,
-              minimumSize: const Size(double.infinity, 48),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-            ),
-            child: const Text("Confirmar domicilio", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
           ),
         ],
       ),
-      bottomNavigationBar: _buildBottomBar(context),
     );
   }
 
-  Widget _campoInfo(IconData icono, String titulo, String valor) {
-    return Row(
-      children: [
-        Icon(icono, size: 18, color: Colors.grey),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(titulo, style: const TextStyle(fontSize: 10, color: Colors.grey)),
-              Text(valor, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-            ],
-          ),
-        ),
-        const Icon(Icons.close, size: 16, color: Colors.grey),
-      ],
-    );
-  }
-
-  Widget _buildBottomBar(BuildContext context) {
+  Widget _buildCampoTexto(String label, String valor, IconData icono) {
     return Container(
-      color: AppColors.barraInferior,
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.only(top: 12, bottom: 8, left: 16, right: 16),
-          child: SizedBox(
-            height: 30,
-            child: Stack(
-              clipBehavior: Clip.none,
-              alignment: Alignment.center,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Row(
+        children: [
+          Icon(icono, color: naranja, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    IconButton(icon: const Icon(Icons.home_outlined, color: Colors.brown), onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const Productos()))),
-                    IconButton(icon: const Icon(Icons.search, color: Colors.brown), onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const Buscar()))),
-                    const SizedBox(width: 50),
-                    IconButton(icon: const Icon(Icons.receipt_long_outlined, color: Colors.brown), onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const Pedidos()))),
-                    IconButton(icon: const Icon(Icons.person_outline, color: Colors.brown), onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const Perfil()))),
-                  ],
-                ),
-                Positioned(
-                  top: -24,
-                  child: CircleAvatar(
-                    radius: 28,
-                    backgroundColor: AppColors.buttonOrange,
-                    child: IconButton(icon: const Icon(Icons.shopping_cart, color: Colors.white, size: 28), onPressed: () {}),
-                  ),
-                ),
+                Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                Text(valor, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
               ],
             ),
           ),
-        ),
+          const Icon(Icons.close, size: 16, color: Colors.grey),
+        ],
       ),
     );
   }

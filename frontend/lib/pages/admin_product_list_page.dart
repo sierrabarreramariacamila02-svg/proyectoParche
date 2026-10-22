@@ -98,11 +98,12 @@ class _AdminProductListPageState extends State<AdminProductListPage> {
       _reload();
       _snack('"${p.nombre}" eliminado');
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         _snack(
           e.toString().replaceAll('Exception: ', ''),
           color: AppColors.barraHome,
         );
+      }
     }
   }
 
