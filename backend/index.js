@@ -4,9 +4,6 @@ dotenv.config();
 import express from 'express';
 import cors from 'cors';
 import { logError } from './utils/logger.js';
-import { connectaDB } from './config/supabase.js';
-
-// Importación de todas las rutas del backend de El Parche
 import authRoutes from './routes/auth.js';
 import usuarioRoutes from './routes/usuario.js';
 import productoRoutes from './routes/producto.js';
@@ -20,17 +17,6 @@ import mensajesRoutes from './routes/mensajes.js';
 import chatBotRoutes from './routes/chatBot.js';
 import recuperarRoutes from './routes/recuperar.js';
 
-
-
- 
-
-connectaDB();
-
-
-
-connectaDB();
-
- 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
