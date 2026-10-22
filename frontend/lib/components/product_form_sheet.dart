@@ -40,7 +40,16 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
             : widget.producto!.precio.toString())
         : '',
   );
-  late String _categoria = widget.producto?.categoria ?? 'Otros';
+
+  // Lista de categorías disponibles
+  static const List<String> _categoriasOpciones = [
+    'Hamburguesas',
+    'Perros calientes',
+    'Salchipapas',
+    'Otros',
+  ];
+
+  late String _categoria;
 
   // Encuadre de la foto (arrastrar / zoom)
   final _capturaKey = GlobalKey();
@@ -51,6 +60,23 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
   bool get _esEdicion => widget.producto != null;
 
   @override
+  void initState() {
+    super.initState();
+    // Normaliza la categoría inicial para coincidir exactamente con la lista
+    _categoria = _obtenerCategoriaValida(widget.producto?.categoria);
+  }
+
+  String _obtenerCategoriaValida(String? catOriginal) {
+    if (catOriginal == null || catOriginal.trim().isEmpty) return 'Otros';
+    final strLimpio = catOriginal.trim().toLowerCase();
+
+    if (strLimpio.contains('hamburguesa')) return 'Hamburguesas';
+    if (strLimpio.contains('perro')) return 'Perros calientes';
+    if (strLimpio.contains('salchipapa')) return 'Salchipapas';
+    return 'Otros';
+  }
+
+  @override
   void dispose() {
     _nombreCtrl.dispose();
     _descCtrl.dispose();
@@ -59,33 +85,30 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
     super.dispose();
   }
 
-void _error(String msg) {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Error al guardar'),
-      content: Text(msg),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('OK'),
-        ),
-      ],
-    ),
-  );
-}
+  void _error(String msg) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Error al guardar'),
+        content: Text(msg),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
 
   // Convierte el texto introducido en un double válido limpiando puntos de miles y comas
   double? _parsePrecio(String texto) {
     String limpio = texto.trim();
     if (limpio.isEmpty) return null;
-    
-    // Si contiene puntos y comas (ej. "25.000,00"), eliminamos los puntos de miles
+
     if (limpio.contains('.') && limpio.contains(',')) {
       limpio = limpio.replaceAll('.', '').replaceAll(',', '.');
     } else if (limpio.contains('.')) {
-      // Si solo tiene puntos (ej. "25.000" como entero de miles), quitamos el punto
-      // a menos que sea un decimal corto como "25.5"
       final partes = limpio.split('.');
       if (partes.last.length == 3) {
         limpio = limpio.replaceAll('.', '');
@@ -93,7 +116,7 @@ void _error(String msg) {
     } else {
       limpio = limpio.replaceAll(',', '.');
     }
-    
+
     return double.tryParse(limpio);
   }
 
@@ -105,16 +128,14 @@ void _error(String msg) {
     if (hayFoto && AdminImageSelector.encuadreModificado(_encuadreCtrl)) {
       return AdminImageSelector.capturarEncuadre(_capturaKey);
     }
-    return _imagen; // null en edición = conserva la foto actual
+    return _imagen;
   }
 
   Future<void> _guardar() async {
-    // 1. Valida los campos de texto
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    // 2. Valida la imagen si es un producto nuevo
     if (!_esEdicion && _imagen == null) {
       _error('Selecciona una imagen');
       return;
@@ -125,7 +146,7 @@ void _error(String msg) {
     try {
       final nombre = _nombreCtrl.text.trim();
       final descripcion = _descCtrl.text.trim();
-      
+
       final precioParsed = _parsePrecio(_precioCtrl.text);
       if (precioParsed == null) {
         _error('Ingresa un precio válido');
@@ -194,7 +215,6 @@ void _error(String msg) {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      // sube el formulario cuando aparece el teclado
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
         constraints: BoxConstraints(
@@ -241,35 +261,25 @@ void _error(String msg) {
                       setState(() => _imagen = file),
                 ),
                 const SizedBox(height: 16),
+                
+                // --- SELECTOR DE CATEGORÍA ---
                 DropdownButtonFormField<String>(
                   value: _categoria,
                   decoration: const InputDecoration(
-                    labelText: 'Categoría',
+                    labelText: 'Categoría del menú',
                     border: OutlineInputBorder(),
                   ),
-                  items: const [
-                    DropdownMenuItem(
-                      value: 'Hamburguesas',
-                      child: Text('Hamburguesas'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'Perros calientes',
-                      child: Text('Perros calientes'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'Salchipapas',
-                      child: Text('Salchipapas'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'Otros',
-                      child: Text('Otros'),
-                    ),
-                  ],
+                  items: _categoriasOpciones.map((cat) {
+                    return DropdownMenuItem<String>(
+                      value: cat,
+                      child: Text(cat),
+                    );
+                  }).toList(),
                   onChanged: _guardando
                       ? null
-                      : (categoria) {
-                          if (categoria != null) {
-                            setState(() => _categoria = categoria);
+                      : (nuevaCat) {
+                          if (nuevaCat != null) {
+                            setState(() => _categoria = nuevaCat);
                           }
                         },
                 ),

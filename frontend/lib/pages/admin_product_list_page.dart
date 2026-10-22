@@ -7,9 +7,6 @@ import '../services/admin_producto_service.dart';
 import '../services/producto_service.dart';
 import 'package:elparchee/app_colors.dart';
 
-// import 'menu_page.dart'; // AJUSTA: tu carta del cliente, si quieres enlazarla
-
-/// Diálogo de confirmación reutilizable (también sirve en la carta del cliente)
 Future<bool> confirmarEliminacion(BuildContext context, String name) async {
   final ok = await showDialog<bool>(
     context: context,
@@ -46,6 +43,8 @@ class _AdminProductListPageState extends State<AdminProductListPage> {
   late Future<List<ProductoModel>> _future;
   String _adminName = '';
   String _adminEmail = '';
+  
+  bool _huboCambios = false;
 
   @override
   void initState() {
@@ -54,17 +53,13 @@ class _AdminProductListPageState extends State<AdminProductListPage> {
     _loadAdmin();
   }
 
-  // Datos del admin guardados en el login
   Future<void> _loadAdmin() async {
     final prefs = await SharedPreferences.getInstance();
-
-    // 1. Obtenemos los valores de forma asíncrona AFUERA del setState
     final name = prefs.getString('user_name') ?? 'Administrador';
     final email = prefs.getString('user_email') ?? '';
 
     if (!mounted) return;
 
-    // 2. Actualizamos el estado de manera completamente síncrona
     setState(() {
       _adminName = name;
       _adminEmail = email;
@@ -74,13 +69,14 @@ class _AdminProductListPageState extends State<AdminProductListPage> {
   void _reload() {
     setState(() {
       _future = _productoService.obtenerProductos();
+      _huboCambios = true;
     });
   }
 
   void _snack(String msg, {Color color = AppColors.barraHome}) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(msg), backgroundColor: color));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), backgroundColor: color),
+    );
   }
 
   Future<void> _openForm({ProductoModel? producto}) async {
@@ -98,11 +94,12 @@ class _AdminProductListPageState extends State<AdminProductListPage> {
       _reload();
       _snack('"${p.nombre}" eliminado');
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         _snack(
           e.toString().replaceAll('Exception: ', ''),
           color: AppColors.barraHome,
         );
+      }
     }
   }
 
@@ -123,103 +120,110 @@ class _AdminProductListPageState extends State<AdminProductListPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text(
-          'Panel de administración',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        Navigator.pop(context, _huboCambios);
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          title: const Text(
+            'Panel de administración',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          backgroundColor: brand,
+          iconTheme: const IconThemeData(color: Colors.white),
+          // SE ELIMINÓ EL 'leading' MANUAL PARA QUE APAREZCA EL BOTÓN DEL DRAWER AUTOMÁTICAMENTE
         ),
-        backgroundColor: brand,
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      drawer: AdminDrawer(adminName: _adminName, adminEmail: _adminEmail),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: brand,
-        foregroundColor: Colors.white,
-        tooltip: 'Nuevo producto',
-        onPressed: () => _openForm(),
-        child: const Icon(Icons.add),
-      ),
-      body: RefreshIndicator(
-        color: brand,
-        onRefresh: () async => _reload(),
-        child: FutureBuilder<List<ProductoModel>>(
-          future: _future,
-          builder: (context, snap) {
-            if (snap.connectionState == ConnectionState.waiting) {
-              return const Center(
-                child: CircularProgressIndicator(color: brand),
-              );
-            }
+        drawer: AdminDrawer(adminName: _adminName, adminEmail: _adminEmail),
+        floatingActionButton: FloatingActionButton(
+          backgroundColor: brand,
+          foregroundColor: Colors.white,
+          tooltip: 'Nuevo producto',
+          onPressed: () => _openForm(),
+          child: const Icon(Icons.add),
+        ),
+        body: RefreshIndicator(
+          color: brand,
+          onRefresh: () async => _reload(),
+          child: FutureBuilder<List<ProductoModel>>(
+            future: _future,
+            builder: (context, snap) {
+              if (snap.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(color: brand),
+                );
+              }
 
-            final items = snap.data ?? [];
-            if (snap.hasError || items.isEmpty) {
-              // ListView para que el "deslizar para recargar" funcione también aquí
-              return ListView(
-                children: [
-                  const SizedBox(height: 160),
-                  Center(
-                    child: Text(
-                      snap.hasError
-                          ? 'Error: ${snap.error}'.replaceAll('Exception: ', '')
-                          : 'No hay productos registrados.',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.black54),
-                    ),
-                  ),
-                ],
-              );
-            }
-
-            return ListView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
-              itemCount: items.length,
-              itemBuilder: (context, i) {
-                final p = items[i];
-                return Card(
-                  color: AppColors.inputBackground,
-                  margin: const EdgeInsets.only(bottom: 12),
-                  child: ListTile(
-                    leading: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: SizedBox(
-                        width: 50,
-                        height: 50,
-                        child: _thumb(p.imagenUrl),
+              final items = snap.data ?? [];
+              if (snap.hasError || items.isEmpty) {
+                return ListView(
+                  children: [
+                    const SizedBox(height: 160),
+                    Center(
+                      child: Text(
+                        snap.hasError
+                            ? 'Error: ${snap.error}'.replaceAll('Exception: ', '')
+                            : 'No hay productos registrados.',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.black54),
                       ),
                     ),
-                    title: Text(
-                      p.nombre.isEmpty ? 'Sin nombre' : p.nombre,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    subtitle: Text(
-                      '\$${p.precio.toStringAsFixed(2)}',
-                      style: const TextStyle(color: brand),
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          tooltip: 'Editar',
-                          icon: const Icon(Icons.edit, color: brand),
-                          onPressed: () => _openForm(producto: p),
-                        ),
-                        IconButton(
-                          tooltip: 'Eliminar',
-                          icon: const Icon(
-                            Icons.delete_outline,
-                            color: AppColors.barraHome,
-                          ),
-                          onPressed: () => _delete(p),
-                        ),
-                      ],
-                    ),
-                  ),
+                  ],
                 );
-              },
-            );
-          },
+              }
+
+              return ListView.builder(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
+                itemCount: items.length,
+                itemBuilder: (context, i) {
+                  final p = items[i];
+                  return Card(
+                    color: AppColors.inputBackground,
+                    margin: const EdgeInsets.only(bottom: 12),
+                    child: ListTile(
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: SizedBox(
+                          width: 50,
+                          height: 50,
+                          child: _thumb(p.imagenUrl),
+                        ),
+                      ),
+                      title: Text(
+                        p.nombre.isEmpty ? 'Sin nombre' : p.nombre,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: Text(
+                        '\$${p.precio.toStringAsFixed(2)}',
+                        style: const TextStyle(color: brand),
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            tooltip: 'Editar',
+                            icon: const Icon(Icons.edit, color: brand),
+                            onPressed: () => _openForm(producto: p),
+                          ),
+                          IconButton(
+                            tooltip: 'Eliminar',
+                            icon: const Icon(
+                              Icons.delete_outline,
+                              color: AppColors.barraHome,
+                            ),
+                            onPressed: () => _delete(p),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
         ),
       ),
     );

@@ -1,9 +1,12 @@
 import 'package:elparchee/app_colors.dart';
+import 'package:elparchee/components/categoria_menu_page.dart';
 import 'package:elparchee/pantallas/carrito.dart';
 import 'package:elparchee/pantallas/menuHamburguesas.dart';
 import 'package:elparchee/pantallas/menuOtros.dart';
 import 'package:elparchee/pantallas/menuPerro.dart';
 import 'package:elparchee/pantallas/menuSalchipapa.dart';
+import 'package:elparchee/models/producto_model.dart';
+import 'package:elparchee/services/producto_service.dart';
 import 'package:flutter/material.dart';
 
 class Productos extends StatefulWidget {
@@ -15,21 +18,19 @@ class Productos extends StatefulWidget {
 
 class _ProductosState extends State<Productos> {
   final PageController _controller = PageController();
+  final ProductoService _productoService = ProductoService();
+  
   int paginaActual = 0;
   int _indiceIcono = 0;
   int _indiceFiltro = 0;
+
+  List<ProductoModel> _listaProductos = [];
+  bool _isLoading = true;
 
   final List<String> imagenes = [
     'assets/images/promo1.png',
     'assets/images/promo2.png',
     'assets/images/promo3.png',
-  ];
-
-  final List<String> platos = [
-    'assets/images/plato1.png',
-    'assets/images/plato2.png',
-    'assets/images/plato3.png',
-    'assets/images/plato4.png',
   ];
 
   final List<String> _filtros = [
@@ -62,6 +63,42 @@ class _ProductosState extends State<Productos> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _cargarProductosHome();
+  }
+
+  Future<void> _cargarProductosHome() async {
+    setState(() => _isLoading = true);
+    try {
+      final productos = await _productoService.obtenerProductos();
+      if (!mounted) return;
+      setState(() {
+        _listaProductos = productos;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+    }
+  }
+
+  // Filtra los productos según la pestaña inferior seleccionada
+  List<ProductoModel> get _productosFiltrados {
+    if (_indiceFiltro == 0) {
+      return _listaProductos; // Todos o destacados
+    } else if (_indiceFiltro == 1) {
+      return _listaProductos
+          .where((p) => p.categoria.toLowerCase().contains('perro'))
+          .toList();
+    } else {
+      return _listaProductos
+          .where((p) => p.categoria.toLowerCase().contains('bebida') || p.categoria.toLowerCase().contains('otro'))
+          .toList();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFAF3E0),
@@ -78,144 +115,159 @@ class _ProductosState extends State<Productos> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _titulo('Promociones y descuentos!'),
-            SizedBox(
-              height: 200,
-              child: PageView.builder(
-                controller: _controller,
-                itemCount: imagenes.length,
-                onPageChanged: (i) => setState(() => paginaActual = i),
-                itemBuilder: (_, i) => Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 10),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(45),
-                    child: Image.asset(imagenes[i], fit: BoxFit.cover),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                imagenes.length,
-                (i) => AnimatedContainer(
-                  duration: const Duration(milliseconds: 400),
-                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                  width: paginaActual == i ? 18 : 8,
-                  height: 10,
-                  decoration: BoxDecoration(
-                    color: paginaActual == i
-                        ? AppColors.barraHome
-                        : Colors.grey.shade400,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-              ),
-            ),
-            _titulo('Menú.'),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: _categorias.map((c) {
-                final lbl = c['lbl'] as String;
-                return _catItem(
-                  c['img'] as String,
-                  lbl,
-                  c['color'] as Color,
-                  () {
-                    if (lbl == 'Perros calientes') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const MenuPerro(),
-                        ),
-                      );
-                    } else if (lbl == 'Hamburguesas') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const MenuHamburguesas(),
-                        ),
-                      );
-                    } else if (lbl == 'Salchipapas') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SalchipapasMenu(),
-                        ),
-                      );
-                    } else if (lbl == 'Otros') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const MenuOtros(),
-                        ),
-                      );
-                    }
-                  },
-                );
-              }).toList(),
-            ),
-            _titulo('Platos destacados.'),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 0.8,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
-              ),
-              itemCount: platos.length,
-              itemBuilder: (_, i) => Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(12),
-                        ),
-                        child: Image.asset(
-                          platos[i],
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                        ),
-                      ),
+      body: RefreshIndicator(
+        color: AppColors.barraHome,
+        onRefresh: _cargarProductosHome,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _titulo('Promociones y descuentos!'),
+              SizedBox(
+                height: 200,
+                child: PageView.builder(
+                  controller: _controller,
+                  itemCount: imagenes.length,
+                  onPageChanged: (i) => setState(() => paginaActual = i),
+                  itemBuilder: (_, i) => Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 10),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(45),
+                      child: Image.asset(imagenes[i], fit: BoxFit.cover),
                     ),
-                    const Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Producto',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            '12,000 COP',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: AppColors.buttonOrange,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  imagenes.length,
+                  (i) => AnimatedContainer(
+                    duration: const Duration(milliseconds: 400),
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    width: paginaActual == i ? 18 : 8,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: paginaActual == i
+                          ? AppColors.barraHome
+                          : Colors.grey.shade400,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ),
+              ),
+              _titulo('Menú.'),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: _categorias.map((c) {
+                  final lbl = c['lbl'] as String;
+                  return _catItem(
+                    c['img'] as String,
+                    lbl,
+                    c['color'] as Color,
+                    () {
+                      Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CategoriaMenuPage(
+              tituloCategoria: lbl,       // Ej: Si tocas "Hamburguesas", pone ese título
+              filtroBackend: lbl,         // Filtra los productos que creó el admin con esa categoría
+            ),
+          ),
+        );
+                    },
+                  );
+                }).toList(),
+              ),
+              _titulo('Platos destacados.'),
+              _isLoading
+                  ? const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(30.0),
+                        child: CircularProgressIndicator(color: AppColors.barraHome),
+                      ),
+                    )
+                  : _productosFiltrados.isEmpty
+                      ? const Padding(
+                          padding: EdgeInsets.all(20.0),
+                          child: Center(
+                            child: Text(
+                              'No hay productos disponibles en esta sección.',
+                              style: TextStyle(color: Colors.brown),
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-          ],
+                        )
+                      : GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            childAspectRatio: 0.8,
+                            crossAxisSpacing: 10,
+                            mainAxisSpacing: 10,
+                          ),
+                          itemCount: _productosFiltrados.length,
+                          itemBuilder: (_, i) {
+                            final p = _productosFiltrados[i];
+                            return Card(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: ClipRRect(
+                                      borderRadius: const BorderRadius.vertical(
+                                        top: Radius.circular(12),
+                                      ),
+                                      child: p.imagenUrl.isNotEmpty
+                                          ? Image.network(
+                                              p.imagenUrl,
+                                              fit: BoxFit.cover,
+                                              width: double.infinity,
+                                              errorBuilder: (_, __, ___) =>
+                                                  const Icon(Icons.broken_image),
+                                            )
+                                          : Container(
+                                              color: Colors.grey[300],
+                                              child: const Icon(Icons.fastfood),
+                                            ),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          p.nombre.isEmpty ? 'Producto' : p.nombre,
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.bold),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        Text(
+                                          '\$${p.precio.toStringAsFixed(0)} COP',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: AppColors.buttonOrange,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: Container(
@@ -319,57 +371,61 @@ class _ProductosState extends State<Productos> {
   }
 
   Widget _titulo(String t) => Padding(
-    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-    child: Text(
-      t,
-      style: const TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-        color: AppColors.barraHome,
-      ),
-    ),
-  );
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+        child: Text(
+          t,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: AppColors.barraHome,
+          ),
+        ),
+      );
 
   Widget _catItem(
     String img,
     String lbl,
     Color colorFondo,
     VoidCallback onTap,
-  ) => GestureDetector(
-    onTap: onTap,
-    child: Column(
-      children: [
-        Container(
-          width: 50,
-          height: 50,
-          decoration: BoxDecoration(
-            color: colorFondo,
-            shape: BoxShape.circle,
-            boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
-          ),
-          child: ClipOval(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Image.asset(img, fit: BoxFit.contain),
+  ) =>
+      GestureDetector(
+        onTap: onTap,
+        child: Column(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: colorFondo,
+                shape: BoxShape.circle,
+                boxShadow: const [
+                  BoxShadow(color: Colors.black12, blurRadius: 4)
+                ],
+              ),
+              child: ClipOval(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Image.asset(img, fit: BoxFit.contain),
+                ),
+              ),
             ),
-          ),
+            const SizedBox(height: 4),
+            Text(
+              lbl,
+              style: const TextStyle(
+                  fontSize: 10, fontWeight: FontWeight.w500),
+            ),
+          ],
         ),
-        const SizedBox(height: 4),
-        Text(
-          lbl,
-          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500),
-        ),
-      ],
-    ),
-  );
+      );
 
   Widget _navIcon(IconData icon, int index) => IconButton(
-    icon: Icon(
-      icon,
-      color: _indiceIcono == index ? AppColors.barraHome : Colors.brown,
-    ),
-    onPressed: () => setState(() => _indiceIcono = index),
-  );
+        icon: Icon(
+          icon,
+          color: _indiceIcono == index ? AppColors.barraHome : Colors.brown,
+        ),
+        onPressed: () => setState(() => _indiceIcono = index),
+      );
 
   @override
   void dispose() {

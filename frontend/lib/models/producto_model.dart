@@ -21,10 +21,22 @@ class ProductoModel {
       nombre: json['nombre'] ?? '',
       descripcion: json['descripcion'] ?? '',
       precio: (json['precio'] as num?)?.toDouble() ?? 0,
-      categoria: json['categoria']?.toString() ?? 'Otros',
+      // Normaliza la categoría que viene del backend para que coincida con las opciones del formulario
+      categoria: _mapearCategoria(json['categoria']?.toString()),
       imagenUrl:
           json['imagenUrl'] ?? json['imagen'] ?? json['imagen_url'] ?? '',
     );
+  }
+
+  // Función auxiliar para estandarizar el texto de la categoría
+  static String _mapearCategoria(String? cat) {
+    if (cat == null || cat.trim().isEmpty) return 'Otros';
+    final lower = cat.trim().toLowerCase();
+    
+    if (lower.contains('hamburguesa')) return 'Hamburguesas';
+    if (lower.contains('perro')) return 'Perros calientes';
+    if (lower.contains('salchipapa')) return 'Salchipapas';
+    return 'Otros';
   }
 
   Map<String, dynamic> toJson() {
