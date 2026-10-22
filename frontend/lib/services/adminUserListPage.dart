@@ -82,7 +82,7 @@ class _AdminUserListPageState extends State<AdminUserListPage> {
         builder: (ctx, setSt) => AlertDialog(
           title: const Text('Editar rol de usuario'),
           content: DropdownButtonFormField<String>(
-            value: rolSeleccionado,
+            initialValue: rolSeleccionado,
             decoration: const InputDecoration(
               labelText: 'Rol',
               border: OutlineInputBorder(),
@@ -209,7 +209,7 @@ class _AdminUserListPageState extends State<AdminUserListPage> {
                       ),
                       const SizedBox(height: 14),
                       DropdownButtonFormField<String>(
-                        value: rolSeleccionado,
+                        initialValue: rolSeleccionado,
                         decoration: const InputDecoration(
                           labelText: 'Rol',
                           border: OutlineInputBorder(),

@@ -264,7 +264,7 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
                 
                 // --- SELECTOR DE CATEGORÍA ---
                 DropdownButtonFormField<String>(
-                  value: _categoria,
+                  initialValue: _categoria,
                   decoration: const InputDecoration(
                     labelText: 'Categoría del menú',
                     border: OutlineInputBorder(),

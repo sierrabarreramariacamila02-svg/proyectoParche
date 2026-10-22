@@ -34,8 +34,12 @@ class _ConfirmacionCodigoState extends State<ConfirmacionCodigo> {
   @override
   void dispose() {
     _timer?.cancel();
-    for (var c in _controladores) c.dispose();
-    for (var f in _focos) f.dispose();
+    for (var c in _controladores) {
+      c.dispose();
+    }
+    for (var f in _focos) {
+      f.dispose();
+    }
     _nuevaPassController.dispose();
     super.dispose();
   }
@@ -83,7 +87,7 @@ class _ConfirmacionCodigoState extends State<ConfirmacionCodigo> {
       backgroundColor: _crema,
       body: Stack(
         children: [
-          Positioned.fill(child: Image.asset('assets/images/background-fondo.png', fit: BoxFit.cover, errorBuilder: (_, __, ___) => const SizedBox.shrink())),
+          Positioned.fill(child: Image.asset('assets/images/background-fondo.png', fit: BoxFit.cover, errorBuilder: (_, _, _) => const SizedBox.shrink())),
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 28),
@@ -93,7 +97,7 @@ class _ConfirmacionCodigoState extends State<ConfirmacionCodigo> {
                   Center(
                     child: Container(
                       
-                      child: Image.asset('assets/images/Logo_el_parche.png', height: 110, errorBuilder: (_, __, ___) => const Icon(Icons.fastfood, size: 100, color: _naranja)),
+                      child: Image.asset('assets/images/Logo_el_parche.png', height: 110, errorBuilder: (_, _, _) => const Icon(Icons.fastfood, size: 100, color: _naranja)),
                     ),
                   ),
                   const SizedBox(height: 16),

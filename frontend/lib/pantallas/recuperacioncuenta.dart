@@ -95,7 +95,7 @@ class _RecuperacionCuentaState extends State<RecuperacionCuenta> {
                       child: Image.asset(
                         'assets/images/Logo_el_parche.png',
                         height: 110,
-                        errorBuilder: (_, __, ___) => const Icon(
+                        errorBuilder: (_, _, _) => const Icon(
                           Icons.fastfood,
                           size: 100,
                           color: _naranja,

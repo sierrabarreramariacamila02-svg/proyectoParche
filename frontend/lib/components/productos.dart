@@ -1,6 +1,9 @@
 import 'package:elparchee/app_colors.dart';
+import 'package:elparchee/pantallas/buscar.dart';
 import 'package:elparchee/components/categoria_menu_page.dart';
 import 'package:elparchee/pantallas/carrito.dart';
+import 'package:elparchee/pantallas/pedidos.dart';
+import 'package:elparchee/pantallas/perfil.dart';
 import 'package:elparchee/pantallas/menuHamburguesas.dart';
 import 'package:elparchee/pantallas/menuOtros.dart';
 import 'package:elparchee/pantallas/menuPerro.dart';
@@ -18,8 +21,6 @@ class Productos extends StatefulWidget {
 
 class _ProductosState extends State<Productos> {
   final PageController _controller = PageController();
-  final ProductoService _productoService = ProductoService();
-  
   int paginaActual = 0;
   int _indiceIcono = 0;
   int _indiceFiltro = 0;
@@ -31,6 +32,13 @@ class _ProductosState extends State<Productos> {
     'assets/images/promo1.png',
     'assets/images/promo2.png',
     'assets/images/promo3.png',
+  ];
+
+  final List<String> platos = [
+    'assets/images/plato1.png',
+    'assets/images/plato2.png',
+    'assets/images/plato3.png',
+    'assets/images/plato4.png',
   ];
 
   final List<String> _filtros = [
@@ -115,159 +123,144 @@ class _ProductosState extends State<Productos> {
           ),
         ],
       ),
-      body: RefreshIndicator(
-        color: AppColors.barraHome,
-        onRefresh: _cargarProductosHome,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _titulo('Promociones y descuentos!'),
-              SizedBox(
-                height: 200,
-                child: PageView.builder(
-                  controller: _controller,
-                  itemCount: imagenes.length,
-                  onPageChanged: (i) => setState(() => paginaActual = i),
-                  itemBuilder: (_, i) => Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 10),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(45),
-                      child: Image.asset(imagenes[i], fit: BoxFit.cover),
-                    ),
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _titulo('Promociones y descuentos!'),
+            SizedBox(
+              height: 200,
+              child: PageView.builder(
+                controller: _controller,
+                itemCount: imagenes.length,
+                onPageChanged: (i) => setState(() => paginaActual = i),
+                itemBuilder: (_, i) => Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 10),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(45),
+                    child: Image.asset(imagenes[i], fit: BoxFit.cover),
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  imagenes.length,
-                  (i) => AnimatedContainer(
-                    duration: const Duration(milliseconds: 400),
-                    margin: const EdgeInsets.symmetric(horizontal: 3),
-                    width: paginaActual == i ? 18 : 8,
-                    height: 10,
-                    decoration: BoxDecoration(
-                      color: paginaActual == i
-                          ? AppColors.barraHome
-                          : Colors.grey.shade400,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                ),
-              ),
-              _titulo('Menú.'),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: _categorias.map((c) {
-                  final lbl = c['lbl'] as String;
-                  return _catItem(
-                    c['img'] as String,
-                    lbl,
-                    c['color'] as Color,
-                    () {
-                      Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => CategoriaMenuPage(
-              tituloCategoria: lbl,       // Ej: Si tocas "Hamburguesas", pone ese título
-              filtroBackend: lbl,         // Filtra los productos que creó el admin con esa categoría
             ),
-          ),
-        );
-                    },
-                  );
-                }).toList(),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                imagenes.length,
+                (i) => AnimatedContainer(
+                  duration: const Duration(milliseconds: 400),
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  width: paginaActual == i ? 18 : 8,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: paginaActual == i
+                        ? AppColors.barraHome
+                        : Colors.grey.shade400,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
               ),
-              _titulo('Platos destacados.'),
-              _isLoading
-                  ? const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(30.0),
-                        child: CircularProgressIndicator(color: AppColors.barraHome),
+            ),
+            _titulo('Menú.'),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: _categorias.map((c) {
+                final lbl = c['lbl'] as String;
+                return _catItem(
+                  c['img'] as String,
+                  lbl,
+                  c['color'] as Color,
+                  () {
+                    if (lbl == 'Perros calientes') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const MenuPerro(),
+                        ),
+                      );
+                    } else if (lbl == 'Hamburguesas') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const MenuHamburguesas(),
+                        ),
+                      );
+                    } else if (lbl == 'Salchipapas') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SalchipapasMenu(),
+                        ),
+                      );
+                    } else if (lbl == 'Otros') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const MenuOtros(),
+                        ),
+                      );
+                    }
+                  },
+                );
+              }).toList(),
+            ),
+            _titulo('Platos destacados.'),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.8,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+              ),
+              itemCount: platos.length,
+              itemBuilder: (_, i) => Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(12),
+                        ),
+                        child: Image.asset(
+                          platos[i],
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                        ),
                       ),
-                    )
-                  : _productosFiltrados.isEmpty
-                      ? const Padding(
-                          padding: EdgeInsets.all(20.0),
-                          child: Center(
-                            child: Text(
-                              'No hay productos disponibles en esta sección.',
-                              style: TextStyle(color: Colors.brown),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Producto',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            '12,000 COP',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.buttonOrange,
                             ),
                           ),
-                        )
-                      : GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            childAspectRatio: 0.8,
-                            crossAxisSpacing: 10,
-                            mainAxisSpacing: 10,
-                          ),
-                          itemCount: _productosFiltrados.length,
-                          itemBuilder: (_, i) {
-                            final p = _productosFiltrados[i];
-                            return Card(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    child: ClipRRect(
-                                      borderRadius: const BorderRadius.vertical(
-                                        top: Radius.circular(12),
-                                      ),
-                                      child: p.imagenUrl.isNotEmpty
-                                          ? Image.network(
-                                              p.imagenUrl,
-                                              fit: BoxFit.cover,
-                                              width: double.infinity,
-                                              errorBuilder: (_, __, ___) =>
-                                                  const Icon(Icons.broken_image),
-                                            )
-                                          : Container(
-                                              color: Colors.grey[300],
-                                              child: const Icon(Icons.fastfood),
-                                            ),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          p.nombre.isEmpty ? 'Producto' : p.nombre,
-                                          style: const TextStyle(
-                                              fontWeight: FontWeight.bold),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        Text(
-                                          '\$${p.precio.toStringAsFixed(0)} COP',
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            color: AppColors.buttonOrange,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-              const SizedBox(height: 20),
-            ],
-          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
         ),
       ),
       bottomNavigationBar: Container(
@@ -335,7 +328,15 @@ class _ProductosState extends State<Productos> {
                       _filtros.length,
                       (i) => Expanded(
                         child: GestureDetector(
-                          onTap: () => setState(() => _indiceFiltro = i),
+                          onTap: () {
+                            setState(() => _indiceFiltro = i);
+                            // Al hacer clic en un filtro inferior, desliza suavemente el carrusel de productos
+                            _contentPageController.animateToPage(
+                              i,
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                            );
+                          },
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
                             padding: const EdgeInsets.symmetric(vertical: 8),
@@ -365,6 +366,62 @@ class _ProductosState extends State<Productos> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  // Método auxiliar para construir la cuadrícula de productos en cada página del carrusel
+  Widget _buildProductGrid(List<String> listaItems) {
+    return GridView.builder(
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 0.8,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+      ),
+      itemCount: listaItems.length,
+      itemBuilder: (_, i) => Card(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(12),
+                ),
+                child: Image.asset(
+                  listaItems[i],
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                ),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Producto',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    '12,000 COP',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.buttonOrange,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -420,16 +477,17 @@ class _ProductosState extends State<Productos> {
       );
 
   Widget _navIcon(IconData icon, int index) => IconButton(
-        icon: Icon(
-          icon,
-          color: _indiceIcono == index ? AppColors.barraHome : Colors.brown,
-        ),
-        onPressed: () => setState(() => _indiceIcono = index),
-      );
+    icon: Icon(
+      icon,
+      color: _indiceIcono == index ? AppColors.barraHome : Colors.brown,
+    ),
+    onPressed: () => setState(() => _indiceIcono = index),
+  );
 
   @override
   void dispose() {
-    _controller.dispose();
+    _promoController.dispose();
+    _contentPageController.dispose(); // Liberamos el controlador del carrusel
     super.dispose();
   }
 }
