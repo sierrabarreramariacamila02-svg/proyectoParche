@@ -1,19 +1,15 @@
 import multer from 'multer';
 
-const storage = multer.memoryStorage();
+// Guarda temporalmente en memoria para enviarlo directo a la nube
+const storage = multer.memoryStorage(); 
 
 const fileFilter = (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
         cb(null, true);
     } else {
-        cb(new Error('Solo se permiten archivos de imagen válidos'), false);
+        cb(new Error('Solo se permiten imágenes'), false);
     }
 };
 
-const upload = multer({
-    storage,
-    fileFilter,
-    limits: { fileSize: 5 * 1024 * 1024 } // Límite de 5 MB
-});
-
+const upload = multer({ storage, fileFilter });
 export default upload;

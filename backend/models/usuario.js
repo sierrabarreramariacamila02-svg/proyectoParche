@@ -57,7 +57,7 @@ export const crearUsuarioModel = async (
         telefono,
         direccion,
         rol: rol || 'cliente',
-        estaverificado: false,
+        isverified: false,
         codigoverificacion,
         codigoverificacionexpiracion
       }
@@ -94,7 +94,7 @@ export const getUsuarios = async () => {
   try {
     const { data, error } = await supabase
       .from('usuario')
-      .select('id, nombre, email, telefono, direccion, rol, creado_en, estaverificado')
+      .select('id, nombre, email, telefono, direccion, rol, creado_en, isverified')
       .order('id', { ascending: false });
 
     if (error) logError('getUsuarios', error);
@@ -109,7 +109,7 @@ export const obtenerUsuarioPorId = async (usuarioId) => {
   try {
     const { data, error } = await supabase
       .from('usuario')
-      .select('id, nombre, email, telefono, direccion, rol, creado_en, estaverificado')
+      .select('id, nombre, email, telefono, direccion, rol, creado_en, isverified')
       .eq('id', usuarioId)
       .single();
 
@@ -194,7 +194,7 @@ export const crearUsuarioGoogle = async (userData) => {
           googleId: userData.googleId,
           avatar: userData.avatar,
           rol: userData.rol,
-          estaverificado: true // quien entra por Google ya viene con el correo confirmado
+          isverified: true // quien entra por Google ya viene con el correo confirmado
         }
       ])
       .select()

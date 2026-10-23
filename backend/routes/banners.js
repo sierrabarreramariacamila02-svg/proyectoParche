@@ -4,8 +4,8 @@ import upload from '../middlewares/multer.js';
 
 const router = Router();
 
-router.get('/banners', listarBanners);
-router.post('/banners', upload.single('imagen'), crear);
-router.delete('/banners/:id', eliminar);
+router.get('/', listarBanners);
+router.post('/', upload.single('imagen'), crear);
+router.delete('/:id', eliminar);
 
 export default router;

@@ -16,6 +16,7 @@ import calificacionRoutes from './routes/calificacion.js';
 import mensajesRoutes from './routes/mensajes.js';
 import chatBotRoutes from './routes/chatBot.js';
 import recuperarRoutes from './routes/recuperar.js';
+import bannerRoutes from './routes/banners.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -48,6 +49,7 @@ app.use('/api/calificaciones', calificacionRoutes);
 app.use('/api/mensajes', mensajesRoutes);
 app.use('/api/chatbot', chatBotRoutes);
 app.use('/api/recuperar', recuperarRoutes);
+app.use('/api/banners', bannerRoutes);
 
 // Ruta base de comprobación
 app.get('/', (req, res) => {
