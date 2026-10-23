@@ -21,6 +21,10 @@ class Productos extends StatefulWidget {
 
 class _ProductosState extends State<Productos> {
   final PageController _controller = PageController();
+  final PageController _promoController = PageController();
+  final PageController _contentPageController = PageController();
+  final ProductoService _productoService = ProductoService();
+
   int paginaActual = 0;
   int _indiceIcono = 0;
   int _indiceFiltro = 0;
@@ -101,7 +105,11 @@ class _ProductosState extends State<Productos> {
           .toList();
     } else {
       return _listaProductos
-          .where((p) => p.categoria.toLowerCase().contains('bebida') || p.categoria.toLowerCase().contains('otro'))
+          .where(
+            (p) =>
+                p.categoria.toLowerCase().contains('bebida') ||
+                p.categoria.toLowerCase().contains('otro'),
+          )
           .toList();
     }
   }
@@ -384,9 +392,7 @@ class _ProductosState extends State<Productos> {
       ),
       itemCount: listaItems.length,
       itemBuilder: (_, i) => Card(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -428,53 +434,49 @@ class _ProductosState extends State<Productos> {
   }
 
   Widget _titulo(String t) => Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-        child: Text(
-          t,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: AppColors.barraHome,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+    child: Text(
+      t,
+      style: const TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+        color: AppColors.barraHome,
+      ),
+    ),
+  );
 
   Widget _catItem(
     String img,
     String lbl,
     Color colorFondo,
     VoidCallback onTap,
-  ) =>
-      GestureDetector(
-        onTap: onTap,
-        child: Column(
-          children: [
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                color: colorFondo,
-                shape: BoxShape.circle,
-                boxShadow: const [
-                  BoxShadow(color: Colors.black12, blurRadius: 4)
-                ],
-              ),
-              child: ClipOval(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Image.asset(img, fit: BoxFit.contain),
-                ),
-              ),
+  ) => GestureDetector(
+    onTap: onTap,
+    child: Column(
+      children: [
+        Container(
+          width: 50,
+          height: 50,
+          decoration: BoxDecoration(
+            color: colorFondo,
+            shape: BoxShape.circle,
+            boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
+          ),
+          child: ClipOval(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Image.asset(img, fit: BoxFit.contain),
             ),
-            const SizedBox(height: 4),
-            Text(
-              lbl,
-              style: const TextStyle(
-                  fontSize: 10, fontWeight: FontWeight.w500),
-            ),
-          ],
+          ),
         ),
-      );
+        const SizedBox(height: 4),
+        Text(
+          lbl,
+          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500),
+        ),
+      ],
+    ),
+  );
 
   Widget _navIcon(IconData icon, int index) => IconButton(
     icon: Icon(
@@ -486,8 +488,9 @@ class _ProductosState extends State<Productos> {
 
   @override
   void dispose() {
+    _controller.dispose();
     _promoController.dispose();
-    _contentPageController.dispose(); // Liberamos el controlador del carrusel
+    _contentPageController.dispose();
     super.dispose();
   }
 }
