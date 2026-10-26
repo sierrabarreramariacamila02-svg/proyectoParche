@@ -1,5 +1,5 @@
 import { obtenerProductos, obtenerProductoPorId, crearProducto, actualizarProducto, eliminarProducto } from '../models/producto.js';
-import { v2 as cloudinary } from 'cloudinary'; // Asegúrate de importar cloudinary si ya lo usas en tu proyecto
+import { cloudinary } from '../config/cloudinary.js';
 
 // Función auxiliar para subir el buffer de multer a Cloudinary mediante una Promesa
 const subirACloudinary = (fileBuffer) => {
@@ -78,9 +78,6 @@ export const crear = async (req, res) => {
 };
 export const editar = async (req, res) => {
     try {
-        console.log('📦 EDITAR - req.body recibido:', req.body);
-        console.log('🖼️ EDITAR - req.file recibido:', req.file);
-
         const { id } = req.params;
         const { nombre, descripcion, precio, categoria, imagen_url } = req.body;
 
@@ -90,24 +87,23 @@ export const editar = async (req, res) => {
             datosActualizados.precio = Number(precio.toString().replace(/[^0-9.]/g, ''));
         }
 
-        // Si subió un archivo nuevo o mandó una URL de texto nueva, la actualizamos
+        // Si subió una foto nueva, se sube a Cloudinary y se guarda esa URL
         if (req.file) {
-            const baseUrl = `${req.protocol}://${req.get('host')}`;
-            datosActualizados.imagen_url = `${baseUrl}/uploads/${req.file.filename}`;
+            datosActualizados.imagen_url = await subirACloudinary(req.file.buffer);
         } else if (imagen_url) {
             datosActualizados.imagen_url = imagen_url;
         }
 
         const { data, error } = await actualizarProducto(id, datosActualizados);
-        
+
         if (error) {
             console.error('❌ Error al actualizar producto en Supabase:', error);
             return res.status(500).json({ error: 'Error al actualizar el producto', detalle: error.message });
         }
-        
-        return res.status(200).json({ 
-            message: 'Producto actualizado', 
-            producto: data && data.length > 0 ? data[0] : null 
+
+        return res.status(200).json({
+            message: 'Producto actualizado',
+            producto: data && data.length > 0 ? data[0] : null
         });
 
     } catch (error) {
