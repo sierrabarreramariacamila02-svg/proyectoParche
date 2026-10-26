@@ -4,6 +4,7 @@ import 'package:elparchee/components/productos.dart';
 import 'package:elparchee/pantallas/buscar.dart';
 import 'package:elparchee/pantallas/carrito.dart';
 import 'package:elparchee/pantallas/pedidos.dart';
+import 'package:elparchee/pantallas/notificaciones.dart'; // <-- Importado
 
 class Perfil extends StatefulWidget {
   const Perfil({super.key});
@@ -33,7 +34,12 @@ class _PerfilState extends State<Perfil> {
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_none, color: Colors.white),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const Notificaciones()),
+              );
+            },
           ),
         ],
       ),
@@ -121,7 +127,12 @@ class _PerfilState extends State<Perfil> {
                           ),
                           IconButton(
                             icon: const Icon(Icons.person_outline, color: AppColors.barraHome),
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const Perfil()),
+                              );
+                            },
                           ),
                         ],
                       ),

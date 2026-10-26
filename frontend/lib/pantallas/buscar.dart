@@ -4,6 +4,7 @@ import 'package:elparchee/components/productos.dart';
 import 'package:elparchee/pantallas/carrito.dart';
 import 'package:elparchee/pantallas/pedidos.dart';
 import 'package:elparchee/pantallas/perfil.dart';
+import 'package:elparchee/pantallas/notificaciones.dart'; // <-- Importado
 
 class Buscar extends StatefulWidget {
   const Buscar({super.key});
@@ -41,7 +42,18 @@ class _BuscarState extends State<Buscar> {
       appBar: AppBar(
         backgroundColor: red,
         title: const Text('Buscar', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        actions: const [Icon(Icons.notifications_none, color: Colors.white), SizedBox(width: 16)],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_none, color: Colors.white),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const Notificaciones()),
+              );
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),

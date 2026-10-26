@@ -4,6 +4,7 @@ import 'package:elparchee/components/productos.dart';
 import 'package:elparchee/pantallas/buscar.dart';
 import 'package:elparchee/pantallas/perfil.dart';
 import 'package:elparchee/pantallas/carrito.dart';
+import 'package:elparchee/pantallas/notificaciones.dart';
 
 class Pedidos extends StatelessWidget {
   const Pedidos({super.key});
@@ -11,6 +12,12 @@ class Pedidos extends StatelessWidget {
   static const Color rojo = AppColors.barraHome;
   static const Color naranja = AppColors.buttonOrange;
   static const Color crema = AppColors.background;
+
+  final List<String> _filtros = const [
+    'Productos destacados',
+    'Perros calientes y mas',
+    'Bebidas',
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -28,14 +35,22 @@ class Pedidos extends StatelessWidget {
                 bottomRight: Radius.circular(30),
               ),
             ),
-            child: const Row(
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
+                const Text(
                   "Pedidos",
                   style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
                 ),
-                Icon(Icons.notifications_none, color: Colors.white),
+                IconButton(
+                  icon: const Icon(Icons.notifications_none, color: Colors.white),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const Notificaciones()),
+                    );
+                  },
+                ),
               ],
             ),
           ),
@@ -83,7 +98,6 @@ class Pedidos extends StatelessWidget {
                       ),
                       const SizedBox(height: 20),
 
-                      // Línea de estados del pedido
                       _buildPasoEstado("Pedido recibido", "12:10 p.m.", true, true),
                       _buildPasoEstado("En preparación", "12:15 p.m.", true, true),
                       _buildPasoEstado("En camino", "Pendiente", false, true),
@@ -108,33 +122,119 @@ class Pedidos extends StatelessWidget {
           ),
         ],
       ),
+      
+      // Barra de navegación idéntica a las demás pantallas
       bottomNavigationBar: Container(
         color: AppColors.barraInferior,
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
+            padding: const EdgeInsets.only(
+              top: 12,
+              bottom: 8,
+              left: 16,
+              right: 16,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                IconButton(
-                  icon: const Icon(Icons.home_outlined, color: Colors.brown),
-                  onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const Productos())),
+                SizedBox(
+                  height: 30,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    alignment: Alignment.center,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.home_outlined, color: Colors.brown),
+                            onPressed: () {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(builder: (_) => const Productos()),
+                              );
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.search, color: Colors.brown),
+                            onPressed: () {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(builder: (_) => const Buscar()),
+                              );
+                            },
+                          ),
+                          const SizedBox(width: 50),
+                          IconButton(
+                            // Ícono activo en Pedidos con el color principal de la barra
+                            icon: const Icon(Icons.receipt_long_outlined, color: AppColors.barraHome),
+                            onPressed: () {},
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.person_outline, color: Colors.brown),
+                            onPressed: () {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(builder: (_) => const Perfil()),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                      Positioned(
+                        top: -24,
+                        child: CircleAvatar(
+                          radius: 28,
+                          backgroundColor: AppColors.buttonOrange,
+                          child: IconButton(
+                            icon: const Icon(
+                              Icons.shopping_cart_outlined,
+                              color: Colors.white,
+                              size: 28,
+                            ),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const Carrito(),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.search, color: Colors.brown),
-                  onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const Buscar())),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.shopping_cart_outlined, color: Colors.brown),
-                  onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const Carrito())),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.receipt_long, color: naranja), // Activo en Pedidos
-                  onPressed: () {},
-                ),
-                IconButton(
-                  icon: const Icon(Icons.person_outline, color: Colors.brown),
-                  onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const Perfil())),
+                const SizedBox(height: 12),
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.barraInferior,
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                  child: Row(
+                    children: List.generate(
+                      _filtros.length,
+                      (i) => Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          decoration: BoxDecoration(
+                            color: i == 0 ? AppColors.buttonOrange : Colors.transparent,
+                            borderRadius: BorderRadius.circular(25),
+                          ),
+                          child: Text(
+                            _filtros[i],
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: i == 0 ? Colors.black : Colors.black87,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),

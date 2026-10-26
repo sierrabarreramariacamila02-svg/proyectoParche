@@ -1,6 +1,5 @@
 import 'package:elparchee/app_colors.dart';
 import 'package:elparchee/pantallas/buscar.dart';
-import 'package:elparchee/components/categoria_menu_page.dart';
 import 'package:elparchee/pantallas/carrito.dart';
 import 'package:elparchee/pantallas/pedidos.dart';
 import 'package:elparchee/pantallas/perfil.dart';
@@ -8,6 +7,7 @@ import 'package:elparchee/pantallas/menuHamburguesas.dart';
 import 'package:elparchee/pantallas/menuOtros.dart';
 import 'package:elparchee/pantallas/menuPerro.dart';
 import 'package:elparchee/pantallas/menuSalchipapa.dart';
+import 'package:elparchee/pantallas/notificaciones.dart'; // <-- Importado
 import 'package:elparchee/models/producto_model.dart';
 import 'package:elparchee/services/producto_service.dart';
 import 'package:flutter/material.dart';
@@ -21,8 +21,6 @@ class Productos extends StatefulWidget {
 
 class _ProductosState extends State<Productos> {
   final PageController _controller = PageController();
-  final PageController _promoController = PageController();
-  final PageController _contentPageController = PageController();
   final ProductoService _productoService = ProductoService();
 
   int paginaActual = 0;
@@ -31,18 +29,12 @@ class _ProductosState extends State<Productos> {
 
   List<ProductoModel> _listaProductos = [];
   bool _isLoading = true;
+  String? _errorCarga;
 
   final List<String> imagenes = [
     'assets/images/promo1.png',
     'assets/images/promo2.png',
     'assets/images/promo3.png',
-  ];
-
-  final List<String> platos = [
-    'assets/images/plato1.png',
-    'assets/images/plato2.png',
-    'assets/images/plato3.png',
-    'assets/images/plato4.png',
   ];
 
   final List<String> _filtros = [
@@ -81,7 +73,10 @@ class _ProductosState extends State<Productos> {
   }
 
   Future<void> _cargarProductosHome() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _errorCarga = null;
+    });
     try {
       final productos = await _productoService.obtenerProductos();
       if (!mounted) return;
@@ -91,14 +86,16 @@ class _ProductosState extends State<Productos> {
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() => _isLoading = false);
+      setState(() {
+        _isLoading = false;
+        _errorCarga = e.toString().replaceFirst('Exception: ', '');
+      });
     }
   }
 
-  // Filtra los productos según la pestaña inferior seleccionada
   List<ProductoModel> get _productosFiltrados {
     if (_indiceFiltro == 0) {
-      return _listaProductos; // Todos o destacados
+      return _listaProductos;
     } else if (_indiceFiltro == 1) {
       return _listaProductos
           .where((p) => p.categoria.toLowerCase().contains('perro'))
@@ -127,7 +124,12 @@ class _ProductosState extends State<Productos> {
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_none, color: Colors.white),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const Notificaciones()),
+              );
+            },
           ),
         ],
       ),
@@ -213,60 +215,41 @@ class _ProductosState extends State<Productos> {
                 );
               }).toList(),
             ),
-            _titulo('Platos destacados.'),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 0.8,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
-              ),
-              itemCount: platos.length,
-              itemBuilder: (_, i) => Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+            _titulo(_filtros[_indiceFiltro]),
+            if (_isLoading)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(32),
+                  child: CircularProgressIndicator(),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(12),
-                        ),
-                        child: Image.asset(
-                          platos[i],
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                        ),
+              )
+            else if (_errorCarga != null)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      Text(
+                        'No se pudieron cargar los productos: $_errorCarga',
+                        textAlign: TextAlign.center,
                       ),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Producto',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            '12,000 COP',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: AppColors.buttonOrange,
-                            ),
-                          ),
-                        ],
+                      TextButton(
+                        onPressed: _cargarProductosHome,
+                        child: const Text('Reintentar'),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ),
+              )
+            else if (_productosFiltrados.isEmpty)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Text('No hay productos en esta categoría.'),
+                ),
+              )
+            else
+              _buildProductGrid(_productosFiltrados),
             const SizedBox(height: 20),
           ],
         ),
@@ -338,12 +321,6 @@ class _ProductosState extends State<Productos> {
                         child: GestureDetector(
                           onTap: () {
                             setState(() => _indiceFiltro = i);
-                            // Al hacer clic en un filtro inferior, desliza suavemente el carrusel de productos
-                            _contentPageController.animateToPage(
-                              i,
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeInOut,
-                            );
                           },
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
@@ -379,57 +356,74 @@ class _ProductosState extends State<Productos> {
     );
   }
 
-  // Método auxiliar para construir la cuadrícula de productos en cada página del carrusel
-  Widget _buildProductGrid(List<String> listaItems) {
+  Widget _buildProductGrid(List<ProductoModel> productos) {
     return GridView.builder(
       physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        childAspectRatio: 0.8,
+        childAspectRatio: 0.72,
         crossAxisSpacing: 10,
         mainAxisSpacing: 10,
       ),
-      itemCount: listaItems.length,
-      itemBuilder: (_, i) => Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(12),
-                ),
-                child: Image.asset(
-                  listaItems[i],
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                ),
+      itemCount: productos.length,
+      itemBuilder: (_, i) {
+        final producto = productos[i];
+        return Card(
+          clipBehavior: Clip.antiAlias,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: producto.imagenUrl.isEmpty
+                    ? const Center(
+                        child: Icon(
+                          Icons.fastfood,
+                          size: 48,
+                          color: Colors.grey,
+                        ),
+                      )
+                    : Image.network(
+                        producto.imagenUrl,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        errorBuilder: (_, _, _) => const Center(
+                          child: Icon(
+                            Icons.broken_image_outlined,
+                            size: 48,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ),
               ),
-            ),
-            const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Producto',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    '12,000 COP',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppColors.buttonOrange,
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      producto.nombre,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
-                  ),
-                ],
+                    Text(
+                      '\$${producto.precio.toStringAsFixed(0)} COP',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.buttonOrange,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
-        ),
-      ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -483,14 +477,26 @@ class _ProductosState extends State<Productos> {
       icon,
       color: _indiceIcono == index ? AppColors.barraHome : Colors.brown,
     ),
-    onPressed: () => setState(() => _indiceIcono = index),
+    onPressed: () {
+      setState(() => _indiceIcono = index);
+      final Widget? pagina = switch (index) {
+        1 => const Buscar(),
+        2 => const Pedidos(),
+        3 => const Perfil(),
+        _ => null,
+      };
+      if (pagina != null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => pagina),
+        );
+      }
+    },
   );
 
   @override
   void dispose() {
     _controller.dispose();
-    _promoController.dispose();
-    _contentPageController.dispose();
     super.dispose();
   }
 }

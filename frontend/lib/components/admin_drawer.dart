@@ -6,7 +6,6 @@ import '../pages/menu_page.dart';
 import '../pantallas/inicioSesion.dart';
 import 'package:elparchee/app_colors.dart';
 import '../pages/admin_product_list_page.dart';
-import 'package:elparchee/components/admin_banner_list_page.dart';
 
 class AdminDrawer extends StatelessWidget {
   static const Color _colorPrincipal = AppColors.barraHome;
