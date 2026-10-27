@@ -1,15 +1,18 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { supabase } from '../config/supabase.js';
-import { crearUsuariocontroller, obtenerUsuarioPorEmail } from '../models/usuario.js';
+import {
+    actualizarUsuario,
+    crearUsuariocontroller,
+    obtenerUsuarioPorEmail
+} from '../models/usuario.js';
 import { enviarcodigoverificacion } from '../utils/emailService.js';
 
 
 // Registro de usuario
 export const registro = async (req, res) => {
     try {
-        // Extraemos 'rol' además de los otros datos del body
-        const { nombre, email, password, telefono, direccion, rol } = req.body;
+        const { nombre, email, password, telefono, direccion } = req.body;
 
         if (!nombre || !email || !password) {
             return res.status(400).json({
@@ -17,8 +20,9 @@ export const registro = async (req, res) => {
             });
         }
 
-        const { data: usuarioExiste } = await obtenerUsuarioPorEmail(email);
-        if (usuarioExiste) {
+        const correoNormalizado = email.trim().toLowerCase();
+        const { data: usuarioExiste } = await obtenerUsuarioPorEmail(correoNormalizado);
+        if (usuarioExiste && (!usuarioExiste.creado_por_admin || usuarioExiste.isverified)) {
             return res.status(400).json({
                 error: "El email ya está registrado"
             });
@@ -29,24 +33,39 @@ export const registro = async (req, res) => {
         const codigoverificacion = Math.floor(100000 + Math.random() * 900000).toString();
         const codigoverificacionexpiracion = new Date(Date.now() + 15 * 60 * 1000).toISOString();
 
-        // Si envías 'admin' toma 'admin', de lo contrario asigna 'cliente' por defecto
-        const rolFinal = rol ? rol : 'cliente';
-
-        const { data: nuevoUsuario, error } = await crearUsuariocontroller(
-            nombre,
-            email,
-            hashedPassword,
-            telefono,
-            direccion,
-            rolFinal,
-            codigoverificacion,
-            codigoverificacionexpiracion
-        );
+        let nuevoUsuario;
+        let error;
+        if (usuarioExiste?.creado_por_admin) {
+            const resultado = await actualizarUsuario(usuarioExiste.id, {
+                nombre,
+                password: hashedPassword,
+                telefono: telefono || null,
+                direccion: direccion || null,
+                codigoverificacion,
+                codigoverificacionexpiracion,
+                isverified: false,
+            });
+            error = resultado.error;
+            nuevoUsuario = Array.isArray(resultado.data) ? resultado.data[0] : resultado.data;
+        } else {
+            const resultado = await crearUsuariocontroller(
+                nombre,
+                correoNormalizado,
+                hashedPassword,
+                telefono,
+                direccion,
+                'usuario',
+                codigoverificacion,
+                codigoverificacionexpiracion
+            );
+            nuevoUsuario = resultado.data;
+            error = resultado.error;
+        }
 
         if (error) throw error;
 
         // Enviar el código de verificación por correo
-        const { exito, error: emailError } = await enviarcodigoverificacion(email, nombre, codigoverificacion);
+        const { exito, error: emailError } = await enviarcodigoverificacion(correoNormalizado, nombre, codigoverificacion);
         if (!exito) {
             console.error("Error enviando correo de verificación:", emailError);
             return res.status(500).json({
@@ -54,9 +73,11 @@ export const registro = async (req, res) => {
             });
         }
 
+        const usuarioSeguro = { ...nuevoUsuario };
+        if (usuarioSeguro) delete usuarioSeguro.password;
         return res.status(201).json({
             message: "Usuario creado exitosamente",
-            usuario: nuevoUsuario
+            usuario: usuarioSeguro
         });
 
     } catch (error) {
@@ -76,7 +97,8 @@ export const verificarCuenta = async (req, res) => {
       return res.status(400).json({ error: 'Email y codigo son obligatorios' });
     }
 
-    const { data: usuario } = await obtenerUsuarioPorEmail(email);
+    const correoNormalizado = email.trim().toLowerCase();
+    const { data: usuario } = await obtenerUsuarioPorEmail(correoNormalizado);
     if (!usuario) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
@@ -90,7 +112,7 @@ export const verificarCuenta = async (req, res) => {
     }
 
     const ahora = new Date();
-    const expiracion = new Date(usuario.codigoverificacionExpiracion);
+    const expiracion = new Date(usuario.codigoverificacionexpiracion);
     if (ahora > expiracion) {
       return res.status(400).json({ error: 'El codigo ha expirado. Solicita uno nuevo.' });
     }
@@ -103,11 +125,22 @@ export const verificarCuenta = async (req, res) => {
         codigoverificacion: null,
         codigoverificacionexpiracion: null
       })
-      .eq('email', email);
+      .eq('email', correoNormalizado);
 
     if (error) throw error;
 
-    res.json({ mensaje: 'Cuenta verificada con exito. Ya puedes iniciar sesion.' });
+    const token = jwt.sign(
+      { id: usuario.id, email: usuario.email, rol: usuario.rol },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+    const usuarioSinPassword = { ...usuario };
+    delete usuarioSinPassword.password;
+    return res.json({
+      mensaje: 'Cuenta verificada con exito.',
+      token,
+      usuario: usuarioSinPassword,
+    });
   } catch (error) {
     console.error('Error en verificacion:', error);
     res.status(500).json({ error: 'Error al verificar la cuenta' });
@@ -125,7 +158,7 @@ export const login = async (req, res) => {
             return res.status(400).json({ error: "Email y password son requeridos" });
         }
 
-        const { data: usuario, error } = await obtenerUsuarioPorEmail(email);
+        const { data: usuario, error } = await obtenerUsuarioPorEmail(email.trim().toLowerCase());
         if (error || !usuario) {
             return res.status(401).json({ error: "Credenciales incorrectas" });
         }

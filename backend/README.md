@@ -48,6 +48,13 @@ El proyecto utiliza una arquitectura moderna basada en un servidor backend API R
 ## 2. Ejecutar al servidor
 ** npm run dev
 
+## 3. Preparar la gestión de usuarios administrativos
+
+Antes de usar la creación, edición o eliminación de usuarios desde el panel, ejecuta
+`migrations/202610270001_add_admin_managed_users.sql` en el SQL Editor de Supabase.
+Esta migración añade la marca que separa las cuentas creadas/gestionadas desde el
+panel de los registros normales.
+
 ---
 
 ## 📂 Estructura del proyecto

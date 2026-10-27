@@ -46,7 +46,7 @@ export const obtenerProducto = async (req, res) => {
 
 export const crear = async (req, res) => {
     try {
-        const { nombre, descripcion, precio, categoria } = req.body;
+        const { nombre, descripcion, precio, categoria, destacado } = req.body;
 
         if (!nombre || !precio) {
             return res.status(400).json({ error: 'Nombre y precio son obligatorios' });
@@ -65,6 +65,7 @@ export const crear = async (req, res) => {
             descripcion,
             precio: precioLimpio,
             categoria,
+            destacado: destacado === 'true' || destacado === true,
             ...(imagenUrl && { imagen_url: imagenUrl })
         };
 
@@ -79,9 +80,13 @@ export const crear = async (req, res) => {
 export const editar = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombre, descripcion, precio, categoria, imagen_url } = req.body;
+        const { nombre, descripcion, precio, categoria, imagen_url, destacado } = req.body;
 
         let datosActualizados = { nombre, descripcion, categoria };
+
+        if (destacado !== undefined) {
+        datosActualizados.destacado = destacado === 'true' || destacado === true;
+}
 
         if (precio !== undefined && precio !== '') {
             datosActualizados.precio = Number(precio.toString().replace(/[^0-9.]/g, ''));

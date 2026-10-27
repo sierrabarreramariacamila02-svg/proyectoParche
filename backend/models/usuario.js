@@ -18,7 +18,8 @@ export const crearUsuariocontroller = async (nombre, email, password, telefono, 
           rol: rol || 'cliente',
           codigoverificacion: codigoverificacion,
           codigoverificacionexpiracion:codigoverificacionexpiracion,
-          isverified: false
+          isverified: false,
+          creado_por_admin: false
         }
       ])
       .select()
@@ -94,7 +95,8 @@ export const getUsuarios = async () => {
   try {
     const { data, error } = await supabase
       .from('usuario')
-      .select('id, nombre, email, telefono, direccion, rol, creado_en, isverified')
+      .select('id, nombre, email, telefono, direccion, rol, creado_en, isverified, creado_por_admin')
+      .eq('creado_por_admin', true)
       .order('id', { ascending: false });
 
     if (error) logError('getUsuarios', error);
@@ -109,7 +111,7 @@ export const obtenerUsuarioPorId = async (usuarioId) => {
   try {
     const { data, error } = await supabase
       .from('usuario')
-      .select('id, nombre, email, telefono, direccion, rol, creado_en, isverified')
+      .select('id, nombre, email, telefono, direccion, rol, creado_en, isverified, creado_por_admin')
       .eq('id', usuarioId)
       .single();
 
@@ -122,6 +124,22 @@ export const obtenerUsuarioPorId = async (usuarioId) => {
     return { data, error: null };
   } catch (error) {
     logError('obtenerUsuarioPorId', error);
+    return { data: null, error };
+  }
+};
+
+export const crearUsuarioAdministrativo = async (usuario) => {
+  try {
+    const { data, error } = await supabase
+      .from('usuario')
+      .insert([{ ...usuario, creado_por_admin: true, isverified: false }])
+      .select('id, nombre, email, telefono, direccion, rol, creado_en, isverified, creado_por_admin')
+      .single();
+
+    if (error) logError('crearUsuarioAdministrativo', error);
+    return { data, error };
+  } catch (error) {
+    logError('crearUsuarioAdministrativo', error);
     return { data: null, error };
   }
 };
@@ -207,4 +225,3 @@ export const crearUsuarioGoogle = async (userData) => {
     return { data: null, error };
   }
 };
-
