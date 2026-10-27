@@ -5,17 +5,15 @@ import '../models/producto_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ProductoService {
-  // 1. Obtener la lista de productos para renderizar en el menú
+  // Obtener la lista de productos (para el Home o filtrados por categoría en el Menú)
   Future<List<ProductoModel>> obtenerProductos({String? categoria}) async {
-    // 1. Creamos la ruta base como un String de texto
     String endpoint = '${ApiConfig.baseUrl}/productos';
 
-    // 2. Concatenamos el parámetro de categoría si viene especificado
-    if (categoria != null && categoria.isNotEmpty) {
+    // Si viene una categoría válida y no es 'Todos', la adjuntamos como parámetro
+    if (categoria != null && categoria.trim().isNotEmpty && categoria != 'Todos') {
       endpoint += '?categoria=$categoria';
     }
 
-    // 3. Convertimos el texto final en un objeto Uri válido
     final url = Uri.parse(endpoint);
 
     // Obtener el token de autenticación guardado

@@ -16,13 +16,7 @@ class _AdminUserListPageState extends State<AdminUserListPage> {
   final _userService = AdminUserService();
   late Future<List<UserModel>> _futureUsuarios;
   String _adminName = '', _adminEmail = '';
-  final _roles = [
-    'pendiente',
-    'mesero',
-    'cocinero',
-    'domiciliario',
-    'administrador',
-  ];
+  final _roles = ['pendiente', 'mesero', 'cocinero', 'domiciliario', 'admin'];
 
   @override
   void initState() {
@@ -53,6 +47,12 @@ class _AdminUserListPageState extends State<AdminUserListPage> {
     ).showSnackBar(SnackBar(content: Text(msg), backgroundColor: bg));
   }
 
+  String _etiquetaRol(String rol) =>
+      rol == 'admin' ? 'ADMINISTRADOR' : rol.toUpperCase();
+
+  String _rolNormalizado(String rol) =>
+      rol.toLowerCase() == 'administrador' ? 'admin' : rol.toLowerCase();
+
   Future<void> _actualizarRol(UserModel user, String nuevoRol) async {
     final userId = user.id;
     if (userId == null || userId.isEmpty) {
@@ -75,7 +75,10 @@ class _AdminUserListPageState extends State<AdminUserListPage> {
   }
 
   void _mostrarEditorRol(UserModel user) {
-    String rolSeleccionado = _roles.contains(user.rol) ? user.rol : 'pendiente';
+    final rolActual = _rolNormalizado(user.rol);
+    String rolSeleccionado = _roles.contains(rolActual)
+        ? rolActual
+        : 'pendiente';
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
@@ -91,7 +94,7 @@ class _AdminUserListPageState extends State<AdminUserListPage> {
                 .map(
                   (rol) => DropdownMenuItem(
                     value: rol,
-                    child: Text(rol.toUpperCase()),
+                    child: Text(_etiquetaRol(rol)),
                   ),
                 )
                 .toList(),
@@ -130,8 +133,9 @@ class _AdminUserListPageState extends State<AdminUserListPage> {
     final correoCtrl = TextEditingController();
     String rolSeleccionado = 'pendiente';
     bool guardando = false;
+    String? errorGuardar;
 
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -218,7 +222,7 @@ class _AdminUserListPageState extends State<AdminUserListPage> {
                             .map(
                               (rol) => DropdownMenuItem(
                                 value: rol,
-                                child: Text(rol.toUpperCase()),
+                                child: Text(_etiquetaRol(rol)),
                               ),
                             )
                             .toList(),
@@ -227,10 +231,19 @@ class _AdminUserListPageState extends State<AdminUserListPage> {
                             : (nuevoRol) {
                                 if (nuevoRol != null) {
                                   setModalState(
-                                      () => rolSeleccionado = nuevoRol);
+                                    () => rolSeleccionado = nuevoRol,
+                                  );
                                 }
                               },
                       ),
+                      if (errorGuardar != null) ...[
+                        const SizedBox(height: 12),
+                        Text(
+                          errorGuardar!,
+                          style: const TextStyle(color: Colors.red),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
                       const SizedBox(height: 20),
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
@@ -242,26 +255,35 @@ class _AdminUserListPageState extends State<AdminUserListPage> {
                             ? null
                             : () async {
                                 if (!formKey.currentState!.validate()) return;
-                                setModalState(() => guardando = true);
+                                setModalState(() {
+                                  guardando = true;
+                                  errorGuardar = null;
+                                });
                                 try {
-                                  // TODO: Conecta aquí tu servicio para registrar o guardar el usuario en la BD.
-                                  // Ejemplo: await _userService.crearUsuario(nombre: nombreCtrl.text.trim(), email: correoCtrl.text.trim(), rol: rolSeleccionado);
-                                  
-                                  await Future.delayed(
-                                      const Duration(milliseconds: 600)); // Simulación de red
+                                  final existentePromovido = await _userService
+                                      .crearUsuario(
+                                        nombre: nombreCtrl.text.trim(),
+                                        email: correoCtrl.text.trim(),
+                                        rol: rolSeleccionado,
+                                      );
 
                                   if (mounted) {
-                                    Navigator.pop(context);
+                                    Navigator.of(this.context).pop();
                                     _reload();
-                                    _snack('Usuario creado exitosamente');
+                                    _snack(
+                                      existentePromovido
+                                          ? 'Usuario agregado al panel con el rol seleccionado.'
+                                          : 'Usuario agregado. Podrá completar su registro con ese correo.',
+                                    );
                                   }
                                 } catch (e) {
-                                  setModalState(() => guardando = false);
-                                  if (mounted) {
-                                    _snack(
-                                        e.toString().replaceAll('Exception: ', ''),
-                                        brand);
-                                  }
+                                  setModalState(() {
+                                    guardando = false;
+                                    errorGuardar = e.toString().replaceFirst(
+                                      'Exception: ',
+                                      '',
+                                    );
+                                  });
                                 }
                               },
                         child: guardando
@@ -276,8 +298,9 @@ class _AdminUserListPageState extends State<AdminUserListPage> {
                             : const Text(
                                 'GUARDAR USUARIO',
                                 style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white),
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
                               ),
                       ),
                     ],
@@ -288,7 +311,45 @@ class _AdminUserListPageState extends State<AdminUserListPage> {
           );
         },
       ),
+    ).whenComplete(() {
+      nombreCtrl.dispose();
+      correoCtrl.dispose();
+    });
+  }
+
+  Future<void> _eliminarUsuario(UserModel user) async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Eliminar usuario'),
+        content: Text(
+          '¿Deseas eliminar a ${user.nombre}? Esta acción no se puede deshacer.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
     );
+    if (confirmar != true || user.id == null || user.id!.isEmpty) return;
+
+    try {
+      await _userService.eliminarUsuario(user.id);
+      if (!mounted) return;
+      _reload();
+      _snack('Usuario eliminado');
+    } catch (e) {
+      if (mounted) {
+        _snack(e.toString().replaceAll('Exception: ', ''), brand);
+      }
+    }
   }
 
   @override
@@ -322,7 +383,9 @@ class _AdminUserListPageState extends State<AdminUserListPage> {
           future: _futureUsuarios,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator(color: brand));
+              return const Center(
+                child: CircularProgressIndicator(color: brand),
+              );
             }
             if (snapshot.hasError) {
               return Center(
@@ -343,8 +406,9 @@ class _AdminUserListPageState extends State<AdminUserListPage> {
               itemCount: usuarios.length,
               itemBuilder: (context, i) {
                 final user = usuarios[i];
-                final rolActual = _roles.contains(user.rol)
-                    ? user.rol
+                final rolNormalizado = _rolNormalizado(user.rol);
+                final rolActual = _roles.contains(rolNormalizado)
+                    ? _etiquetaRol(rolNormalizado)
                     : 'pendiente';
 
                 return Card(
@@ -363,16 +427,31 @@ class _AdminUserListPageState extends State<AdminUserListPage> {
                         isThreeLine: true,
                       ),
                       Positioned(
-                        bottom: 8,
-                        right: 8,
-                        child: TextButton.icon(
-                          style: TextButton.styleFrom(foregroundColor: brand),
-                          icon: const Icon(Icons.edit_outlined, size: 14),
-                          label: const Text(
-                            'Editar',
-                            style: TextStyle(fontSize: 11),
-                          ),
-                          onPressed: () => _mostrarEditorRol(user),
+                        bottom: 4,
+                        right: 4,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            TextButton.icon(
+                              style: TextButton.styleFrom(
+                                foregroundColor: brand,
+                              ),
+                              icon: const Icon(Icons.edit_outlined, size: 14),
+                              label: const Text(
+                                'Editar',
+                                style: TextStyle(fontSize: 11),
+                              ),
+                              onPressed: () => _mostrarEditorRol(user),
+                            ),
+                            IconButton(
+                              tooltip: 'Eliminar usuario',
+                              icon: const Icon(
+                                Icons.delete_outline,
+                                color: Colors.red,
+                              ),
+                              onPressed: () => _eliminarUsuario(user),
+                            ),
+                          ],
                         ),
                       ),
                     ],

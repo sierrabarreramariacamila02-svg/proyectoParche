@@ -5,6 +5,7 @@ class ProductoModel {
   final double precio;
   final String categoria;
   final String imagenUrl;
+  final bool destacado;
 
   ProductoModel({
     required this.id,
@@ -13,18 +14,20 @@ class ProductoModel {
     required this.precio,
     required this.categoria,
     required this.imagenUrl,
+    this.destacado = false,
   });
 
   factory ProductoModel.fromJson(Map<String, dynamic> json) {
     return ProductoModel(
-      id: json['_id']?.toString() ?? json['id']?.toString() ?? '',
+      id: json['id']?.toString() ?? json['_id']?.toString() ?? '',
       nombre: json['nombre'] ?? '',
       descripcion: json['descripcion'] ?? '',
-      precio: (json['precio'] as num?)?.toDouble() ?? 0,
+      precio: (json['precio'] as num?)?.toDouble() ?? 0.0,
       // Normaliza la categoría que viene del backend para que coincida con las opciones del formulario
       categoria: _mapearCategoria(json['categoria']?.toString()),
-      imagenUrl:
-          json['imagenUrl'] ?? json['imagen'] ?? json['imagen_url'] ?? '',
+      // Prioriza 'imagen_url' (Supabase/Cloudinary) asegurando compatibilidad
+      imagenUrl: json['imagen_url'] ?? json['imagenUrl'] ?? json['imagen'] ?? '',
+      destacado: json['destacado'] == true,
     );
   }
 
@@ -41,12 +44,12 @@ class ProductoModel {
 
   Map<String, dynamic> toJson() {
     return {
-      '_id': id,
       'nombre': nombre,
       'descripcion': descripcion,
       'precio': precio,
       'categoria': categoria,
-      'imagenUrl': imagenUrl,
+      'imagen_url': imagenUrl,
+      'destacado': destacado // Alineado con la columna de Supabase
     };
   }
 }

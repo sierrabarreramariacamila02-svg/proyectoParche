@@ -11,7 +11,10 @@ class ProductFormSheet extends StatefulWidget {
   final ProductoModel? producto;
   const ProductFormSheet({super.key, this.producto});
 
-  static Future<bool> abrir(BuildContext context, {ProductoModel? producto}) async {
+  static Future<bool> abrir(
+    BuildContext context, {
+    ProductoModel? producto,
+  }) async {
     final guardado = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
@@ -29,15 +32,17 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
   static const Color _colorPrincipal = AppColors.barraHome;
 
   final _formKey = GlobalKey<FormState>();
-  late final _nombreCtrl =
-      TextEditingController(text: widget.producto?.nombre ?? '');
-  late final _descCtrl =
-      TextEditingController(text: widget.producto?.descripcion ?? '');
+  late final _nombreCtrl = TextEditingController(
+    text: widget.producto?.nombre ?? '',
+  );
+  late final _descCtrl = TextEditingController(
+    text: widget.producto?.descripcion ?? '',
+  );
   late final _precioCtrl = TextEditingController(
     text: widget.producto?.precio != null
         ? (widget.producto!.precio % 1 == 0
-            ? widget.producto!.precio.toInt().toString()
-            : widget.producto!.precio.toString())
+              ? widget.producto!.precio.toInt().toString()
+              : widget.producto!.precio.toString())
         : '',
   );
 
@@ -50,6 +55,7 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
   ];
 
   late String _categoria;
+  late bool _destacado = widget.producto?.destacado ?? false;
 
   // Encuadre de la foto (arrastrar / zoom)
   final _capturaKey = GlobalKey();
@@ -122,7 +128,8 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
 
   // Si el admin movió la foto, se sube el recorte tal como quedó en el recuadro
   Future<File?> _imagenParaSubir() async {
-    final hayFoto = _imagen != null ||
+    final hayFoto =
+        _imagen != null ||
         (widget.producto?.imagenUrl != null &&
             widget.producto!.imagenUrl.isNotEmpty);
     if (hayFoto && AdminImageSelector.encuadreModificado(_encuadreCtrl)) {
@@ -165,6 +172,7 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
           descripcion: descripcion,
           precio: precio,
           categoria: categoria,
+          destacado: _destacado,
           imagen: imagen,
         );
       } else {
@@ -173,6 +181,7 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
           descripcion: descripcion,
           precio: precio,
           categoria: categoria,
+          destacado: _destacado,
           imagen: imagen!,
         );
       }
@@ -185,8 +194,12 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
     }
   }
 
-  Widget _campo(TextEditingController ctrl, String etiqueta,
-      {int maxLines = 1, bool esNumero = false}) {
+  Widget _campo(
+    TextEditingController ctrl,
+    String etiqueta, {
+    int maxLines = 1,
+    bool esNumero = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: TextFormField(
@@ -215,10 +228,13 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
       child: Container(
         constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.9),
+          maxHeight: MediaQuery.of(context).size.height * 0.9,
+        ),
         decoration: const BoxDecoration(
           color: Color(0xFFF6F4F0),
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -261,7 +277,7 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
                       setState(() => _imagen = file),
                 ),
                 const SizedBox(height: 16),
-                
+
                 // --- SELECTOR DE CATEGORÍA ---
                 DropdownButtonFormField<String>(
                   initialValue: _categoria,
@@ -287,6 +303,17 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
                 _campo(_nombreCtrl, 'Nombre del producto'),
                 _campo(_descCtrl, 'Descripción', maxLines: 2),
                 _campo(_precioCtrl, 'Precio', esNumero: true),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Plato destacado'),
+                  subtitle: const Text(
+                    'Se mostrará en "Productos destacados" del inicio',
+                  ),
+                  value: _destacado,
+                  onChanged: _guardando
+                      ? null
+                      : (v) => setState(() => _destacado = v),
+                ),
                 const SizedBox(height: 6),
                 ElevatedButton(
                   onPressed: _guardando ? null : _guardar,

@@ -9,8 +9,8 @@ import 'package:elparchee/pantallas/menuPerro.dart';
 import 'package:elparchee/pantallas/menuSalchipapa.dart';
 import 'package:elparchee/pantallas/notificaciones.dart'; // <-- Importado
 import 'package:elparchee/models/producto_model.dart';
-import 'package:elparchee/services/producto_service.dart';
 import 'package:flutter/material.dart';
+import 'package:elparchee/services/destacado_service.dart';
 
 class Productos extends StatefulWidget {
   const Productos({super.key});
@@ -21,13 +21,11 @@ class Productos extends StatefulWidget {
 
 class _ProductosState extends State<Productos> {
   final PageController _controller = PageController();
-  final ProductoService _productoService = ProductoService();
 
   int paginaActual = 0;
   int _indiceIcono = 0;
-  int _indiceFiltro = 0;
 
-  List<ProductoModel> _listaProductos = [];
+  List<ProductoModel> _listaDestacados = [];
   bool _isLoading = true;
   String? _errorCarga;
 
@@ -37,79 +35,44 @@ class _ProductosState extends State<Productos> {
     'assets/images/promo3.png',
   ];
 
-  final List<String> _filtros = [
-    'Productos destacados',
-    'Perros calientes y mas',
-    'Bebidas',
-  ];
-
   final List<Map<String, dynamic>> _categorias = [
-    {
-      'img': 'assets/images/hamburguesa.png',
-      'lbl': 'Hamburguesas',
-      'color': AppColors.inputBackground,
-    },
-    {
-      'img': 'assets/images/perro.png',
-      'lbl': 'Perros calientes',
-      'color': AppColors.inputBackground,
-    },
-    {
-      'img': 'assets/images/salchipapa.png',
-      'lbl': 'Salchipapas',
-      'color': AppColors.inputBackground,
-    },
-    {
-      'img': 'assets/images/otros.png',
-      'lbl': 'Otros',
-      'color': AppColors.inputBackground,
-    },
+    {'img': 'assets/images/hamburguesa.png', 'lbl': 'Hamburguesas', 'color': AppColors.inputBackground},
+    {'img': 'assets/images/perro.png', 'lbl': 'Perros calientes', 'color': AppColors.inputBackground},
+    {'img': 'assets/images/salchipapa.png', 'lbl': 'Salchipapas', 'color': AppColors.inputBackground},
+    {'img': 'assets/images/otros.png', 'lbl': 'Otros', 'color': AppColors.inputBackground},
   ];
 
   @override
   void initState() {
     super.initState();
+    DestacadoService.cambios.addListener(_alCambiarDestacados);
     _cargarProductosHome();
   }
 
-  Future<void> _cargarProductosHome() async {
-    setState(() {
-      _isLoading = true;
-      _errorCarga = null;
-    });
-    try {
-      final productos = await _productoService.obtenerProductos();
-      if (!mounted) return;
-      setState(() {
-        _listaProductos = productos;
-        _isLoading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-        _errorCarga = e.toString().replaceFirst('Exception: ', '');
-      });
-    }
+  void _alCambiarDestacados() {
+    if (mounted) _cargarProductosHome();
   }
 
-  List<ProductoModel> get _productosFiltrados {
-    if (_indiceFiltro == 0) {
-      return _listaProductos;
-    } else if (_indiceFiltro == 1) {
-      return _listaProductos
-          .where((p) => p.categoria.toLowerCase().contains('perro'))
-          .toList();
-    } else {
-      return _listaProductos
-          .where(
-            (p) =>
-                p.categoria.toLowerCase().contains('bebida') ||
-                p.categoria.toLowerCase().contains('otro'),
-          )
-          .toList();
-    }
+Future<void> _cargarProductosHome() async {
+  setState(() {
+    _isLoading = true;
+    _errorCarga = null;
+  });
+  try {
+    final lista = await DestacadoService.obtener();
+    if (!mounted) return;
+    setState(() {
+      _listaDestacados = lista.map((d) => d.toProducto()).toList();
+      _isLoading = false;
+    });
+  } catch (e) {
+    if (!mounted) return;
+    setState(() {
+      _isLoading = false;
+      _errorCarga = e.toString().replaceFirst('Exception: ', '');
+    });
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -164,9 +127,7 @@ class _ProductosState extends State<Productos> {
                   width: paginaActual == i ? 18 : 8,
                   height: 10,
                   decoration: BoxDecoration(
-                    color: paginaActual == i
-                        ? AppColors.barraHome
-                        : Colors.grey.shade400,
+                    color: paginaActual == i ? AppColors.barraHome : Colors.grey.shade400,
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -177,45 +138,20 @@ class _ProductosState extends State<Productos> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: _categorias.map((c) {
                 final lbl = c['lbl'] as String;
-                return _catItem(
-                  c['img'] as String,
-                  lbl,
-                  c['color'] as Color,
-                  () {
-                    if (lbl == 'Perros calientes') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const MenuPerro(),
-                        ),
-                      );
-                    } else if (lbl == 'Hamburguesas') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const MenuHamburguesas(),
-                        ),
-                      );
-                    } else if (lbl == 'Salchipapas') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SalchipapasMenu(),
-                        ),
-                      );
-                    } else if (lbl == 'Otros') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const MenuOtros(),
-                        ),
-                      );
-                    }
-                  },
-                );
+                return _catItem(c['img'] as String, lbl, c['color'] as Color, () {
+                  if (lbl == 'Perros calientes') {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const MenuPerro()));
+                  } else if (lbl == 'Hamburguesas') {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const MenuHamburguesas()));
+                  } else if (lbl == 'Salchipapas') {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const SalchipapasMenu()));
+                  } else if (lbl == 'Otros') {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const MenuOtros()));
+                  }
+                });
               }).toList(),
             ),
-            _titulo(_filtros[_indiceFiltro]),
+            _titulo('Productos destacados'),
             if (_isLoading)
               const Center(
                 child: Padding(
@@ -241,15 +177,15 @@ class _ProductosState extends State<Productos> {
                   ),
                 ),
               )
-            else if (_productosFiltrados.isEmpty)
+            else if (_listaDestacados.isEmpty)
               const Center(
                 child: Padding(
                   padding: EdgeInsets.all(24),
-                  child: Text('No hay productos en esta categoría.'),
+                  child: Text('No hay productos destacados disponibles.'),
                 ),
               )
             else
-              _buildProductGrid(_productosFiltrados),
+              _buildProductGrid(_listaDestacados),
             const SizedBox(height: 20),
           ],
         ),
@@ -258,97 +194,38 @@ class _ProductosState extends State<Productos> {
         color: AppColors.barraInferior,
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.only(
-              top: 12,
-              bottom: 8,
-              left: 16,
-              right: 16,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  height: 30,
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    alignment: Alignment.center,
+            padding: const EdgeInsets.only(top: 12, bottom: 8, left: 16, right: 16),
+            child: SizedBox(
+              height: 30,
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          _navIcon(Icons.home_outlined, 0),
-                          _navIcon(Icons.search, 1),
-                          const SizedBox(width: 50),
-                          _navIcon(Icons.receipt_long_outlined, 2),
-                          _navIcon(Icons.person_outline, 3),
-                        ],
-                      ),
-                      Positioned(
-                        top: -24,
-                        child: CircleAvatar(
-                          radius: 28,
-                          backgroundColor: AppColors.buttonOrange,
-                          child: IconButton(
-                            icon: const Icon(
-                              Icons.shopping_cart_outlined,
-                              color: Colors.white,
-                              size: 28,
-                            ),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const Carrito(),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ),
+                      _navIcon(Icons.home_outlined, 0),
+                      _navIcon(Icons.search, 1),
+                      const SizedBox(width: 50),
+                      _navIcon(Icons.receipt_long_outlined, 2),
+                      _navIcon(Icons.person_outline, 3),
                     ],
                   ),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.barraInferior,
-                    borderRadius: BorderRadius.circular(25),
-                  ),
-                  child: Row(
-                    children: List.generate(
-                      _filtros.length,
-                      (i) => Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            setState(() => _indiceFiltro = i);
-                          },
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            decoration: BoxDecoration(
-                              color: _indiceFiltro == i
-                                  ? AppColors.buttonOrange
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(25),
-                            ),
-                            child: Text(
-                              _filtros[i],
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: _indiceFiltro == i
-                                    ? Colors.black
-                                    : Colors.black87,
-                              ),
-                            ),
-                          ),
-                        ),
+                  Positioned(
+                    top: -24,
+                    child: CircleAvatar(
+                      radius: 28,
+                      backgroundColor: AppColors.buttonOrange,
+                      child: IconButton(
+                        icon: const Icon(Icons.shopping_cart_outlined, color: Colors.white, size: 28),
+                        onPressed: () {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const Carrito()));
+                        },
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -358,6 +235,7 @@ class _ProductosState extends State<Productos> {
 
   Widget _buildProductGrid(List<ProductoModel> productos) {
     return GridView.builder(
+      shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -496,6 +374,7 @@ class _ProductosState extends State<Productos> {
 
   @override
   void dispose() {
+    DestacadoService.cambios.removeListener(_alCambiarDestacados);
     _controller.dispose();
     super.dispose();
   }

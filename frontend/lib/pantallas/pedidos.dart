@@ -13,12 +13,6 @@ class Pedidos extends StatelessWidget {
   static const Color naranja = AppColors.buttonOrange;
   static const Color crema = AppColors.background;
 
-  final List<String> _filtros = const [
-    'Productos destacados',
-    'Perros calientes y mas',
-    'Bebidas',
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -134,10 +128,7 @@ class Pedidos extends StatelessWidget {
               left: 16,
               right: 16,
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
+            child: SizedBox(
                   height: 30,
                   child: Stack(
                     clipBehavior: Clip.none,
@@ -204,39 +195,7 @@ class Pedidos extends StatelessWidget {
                         ),
                       ),
                     ],
-                  ),
                 ),
-                const SizedBox(height: 12),
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.barraInferior,
-                    borderRadius: BorderRadius.circular(25),
-                  ),
-                  child: Row(
-                    children: List.generate(
-                      _filtros.length,
-                      (i) => Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          decoration: BoxDecoration(
-                            color: i == 0 ? AppColors.buttonOrange : Colors.transparent,
-                            borderRadius: BorderRadius.circular(25),
-                          ),
-                          child: Text(
-                            _filtros[i],
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: i == 0 ? Colors.black : Colors.black87,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
             ),
           ),
         ),

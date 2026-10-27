@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // CAMBIO 1: import nuevo (barra de estado)
 import 'package:elparchee/app_colors.dart';
+import 'package:elparchee/services/producto_service.dart';
+import 'package:elparchee/components/menu_helpers.dart';
 
 // CAMBIO 2: constantes nuevas con los colores que ya usabas en esta pantalla
 const Color _wine = Color(0xFF7A1C1C);
@@ -14,12 +16,41 @@ class MenuPerro extends StatefulWidget {
 }
 
 class _MenuPerroState extends State<MenuPerro> {
-  final List<Map<String, dynamic>> items = [
-    {'title': 'Perro Clásico', 'desc': 'Salchicha, salsas básicas', 'price': '\$12,000', 'qty': 1},
-    {'title': 'Perro Suizo', 'desc': 'Con cebolla caramelizada y queso fundido', 'price': '\$15,000', 'qty': 1},
-    {'title': 'Perro Especial', 'desc': 'Salchicha, caramelizada y queso fundido', 'price': '\$18,000', 'qty': 1},
-    {'title': 'Perro Doble', 'desc': 'Doble salchicha, queso y tocineta', 'price': '\$20,000', 'qty': 1},
-  ];
+  final ProductoService _productoService = ProductoService();
+  List<Map<String, dynamic>> items = [];
+  bool _cargando = true;
+  String? _error;
+
+@override
+void initState() {
+  super.initState();
+  _cargarProductos();
+}
+
+Future<void> _cargarProductos() async {
+  try {
+  final todos = await _productoService.obtenerProductos(); // sin filtro del backend
+    final productos = todos.where((p) => p.categoria == 'Perros calientes').toList();
+
+    if (!mounted) return;
+    setState(() {
+      items = productos.map((p) => {
+        'title': p.nombre,
+        'desc': p.descripcion,
+        'price': formatearPrecio(p.precio),
+        'qty': 1,
+        'imagen': p.imagenUrl,
+      }).toList();
+      _cargando = false;
+    });
+  } catch (e) {
+    if (!mounted) return;
+    setState(() {
+      _error = e.toString();
+      _cargando = false;
+    });
+  }
+}
 
   // CAMBIO 3: estado nuevo para el buscador
   String _query = '';
@@ -54,8 +85,12 @@ class _MenuPerroState extends State<MenuPerro> {
 
             // Lista de productos
             Expanded(
-              child: filtered.isEmpty
-                  ? const Center(child: Text('No encontramos ese perro'))
+              child: _cargando
+    ? const Center(child: CircularProgressIndicator(color: Color(0xFF7A1C1C)))
+    : _error != null
+        ? Center(child: Text(_error!))
+        : filtered.isEmpty
+            ? const Center(child: Text('No hay perros calientes todavía'))
                   : ListView.builder(
                       // CAMBIO 8: padding propio de la lista + espacio abajo
                       // para el botón flotante "Ver mi Pedido".
@@ -72,8 +107,7 @@ class _MenuPerroState extends State<MenuPerro> {
                           decoration: BoxDecoration(color: AppColors.barraInferior, borderRadius: BorderRadius.circular(15), boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 4))]),
                           child: Row(
                             children: [
-                              const Icon(Icons.lunch_dining_outlined, size: 50, color: Colors.orange),
-                              const SizedBox(width: 12),
+                              ImagenProducto(url: item['imagen'] ?? '', icono: Icons.lunch_dining_outlined),                              const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,

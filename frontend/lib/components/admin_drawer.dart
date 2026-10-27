@@ -1,5 +1,6 @@
 import 'package:elparchee/components/admin_banner_list_page.dart';
 import 'package:elparchee/services/adminUserListPage.dart';
+import 'package:elparchee/services/admin_destacado_page.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../pages/menu_page.dart';
@@ -80,6 +81,17 @@ class AdminDrawer extends StatelessWidget {
                     ),
                   );
                 }),
+
+                _item(Icons.star_outline, 'Platos destacados', () {
+  Navigator.pop(context);
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => const AdminDestacadosPage(),
+    ),
+  );
+}),
+
 
                 // --- 2. OPCIÓN DE BANNERS / PROMOCIONES CONECTADA ---
                 _item(Icons.image_outlined, 'Banners y Promociones', () {

@@ -48,6 +48,7 @@ class AdminProductService {
     required double precio,
     required String categoria,
     required File imagen,
+    bool destacado = false
   }) async {
     final token = await _obtenerToken();
     if (token == null || token.isEmpty) {
@@ -63,6 +64,7 @@ class AdminProductService {
     request.fields['descripcion'] = descripcion;
     request.fields['precio'] = precio.toString();
     request.fields['categoria'] = categoria;
+    request.fields['destacado'] = destacado.toString();
     request.files.add(await _archivoImagen(imagen));
 
     final response = await http.Response.fromStream(await request.send());
@@ -77,6 +79,7 @@ class AdminProductService {
     required String descripcion,
     required double precio,
     required String categoria,
+    bool destacado = false,
     File? imagen,
   }) async {
     final token = await _obtenerToken();
@@ -93,6 +96,7 @@ class AdminProductService {
     request.fields['descripcion'] = descripcion;
     request.fields['precio'] = precio.toString();
     request.fields['categoria'] = categoria;
+    request.fields['destacado'] = destacado.toString();
     if (imagen != null) {
       request.files.add(await _archivoImagen(imagen));
     }

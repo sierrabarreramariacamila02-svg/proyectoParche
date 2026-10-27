@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // CAMBIO 1: import nuevo (barra de estado)
 import 'package:elparchee/app_colors.dart';
+import 'package:elparchee/services/producto_service.dart';
+import 'package:elparchee/components/menu_helpers.dart';
 
 class SalchipapasMenu extends StatefulWidget {
   const SalchipapasMenu({super.key});
@@ -10,11 +12,45 @@ class SalchipapasMenu extends StatefulWidget {
 }
 
 class _SalchipapasMenuState extends State<SalchipapasMenu> {
-  final List<Map<String, dynamic>> items = [
-    {'title': 'Salchipapa Clásica', 'desc': 'Carne angus, clásica, queso y lechuga', 'price': '\$17,000', 'qty': 1},
-    {'title': 'Salchipapa Mixta', 'desc': 'Carne angus, caramelizada + cheddar y bacon', 'price': '\$13,000', 'qty': 1},
-    {'title': 'Salchipapa con Pollo', 'desc': 'Carne angus, con pollo crispy y salsas', 'price': '\$16,000', 'qty': 1},
-  ];
+  final ProductoService _productoService = ProductoService();
+  List<Map<String, dynamic>> items = [];
+  bool _cargando = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _cargarProductos();
+  }
+
+  Future<void> _cargarProductos() async {
+    try {
+      final todos = await _productoService.obtenerProductos();
+      final productos =
+          todos.where((p) => p.categoria == 'Salchipapas').toList();
+      if (!mounted) return;
+      setState(() {
+        items = productos
+            .map(
+              (p) => {
+                'title': p.nombre,
+                'desc': p.descripcion,
+                'price': formatearPrecio(p.precio),
+                'qty': 1,
+                'imagen': p.imagenUrl,
+              },
+            )
+            .toList();
+        _cargando = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.toString();
+        _cargando = false;
+      });
+    }
+  }
 
   // CAMBIO 2: estado nuevo para el buscador
   String _query = '';
@@ -23,9 +59,11 @@ class _SalchipapasMenuState extends State<SalchipapasMenu> {
   Widget build(BuildContext context) {
     // CAMBIO 3: lista filtrada por el texto del buscador
     final filtered = items
-        .where((e) => (e['title'] as String)
-            .toLowerCase()
-            .contains(_query.trim().toLowerCase()))
+        .where(
+          (e) => (e['title'] as String).toLowerCase().contains(
+            _query.trim().toLowerCase(),
+          ),
+        )
         .toList();
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -49,8 +87,16 @@ class _SalchipapasMenuState extends State<SalchipapasMenu> {
 
             // Lista de productos
             Expanded(
-              child: filtered.isEmpty
-                  ? const Center(child: Text('No encontramos esa salchipapa'))
+              child: _cargando
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF7A1C1C),
+                      ),
+                    )
+                  : _error != null
+                  ? Center(child: Text(_error!))
+                  : filtered.isEmpty
+                  ? const Center(child: Text('No hay salchipapas todavía'))
                   : ListView.builder(
                       // CAMBIO 7: padding propio de la lista + espacio abajo
                       // para el botón flotante "Ver mi Pedido".
@@ -64,37 +110,98 @@ class _SalchipapasMenuState extends State<SalchipapasMenu> {
                         return Container(
                           margin: const EdgeInsets.only(bottom: 12),
                           padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(color: AppColors.barraInferior, borderRadius: BorderRadius.circular(15), boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 4))]),
+                          decoration: BoxDecoration(
+                            color: AppColors.barraInferior,
+                            borderRadius: BorderRadius.circular(15),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black12,
+                                blurRadius: 4,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
                           child: Row(
                             children: [
-                              const Icon(Icons.dinner_dining, size: 50, color: Colors.orange),
+                              ImagenProducto(
+                                url: item['imagen'] ?? '',
+                                icono: Icons.dinner_dining,
+                              ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(item['title'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                                    Text(item['desc'], style: const TextStyle(color: Colors.black54, fontSize: 11)),
+                                    Text(
+                                      item['title'],
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                    Text(
+                                      item['desc'],
+                                      style: const TextStyle(
+                                        color: Colors.black54,
+                                        fontSize: 11,
+                                      ),
+                                    ),
                                     const SizedBox(height: 8),
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Text(item['price'], style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF7A1C1C), fontSize: 15)),
+                                        Text(
+                                          item['price'],
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFF7A1C1C),
+                                            fontSize: 15,
+                                          ),
+                                        ),
                                         Row(
                                           children: [
                                             IconButton(
-                                              icon: const Icon(Icons.remove, size: 18),
-                                              onPressed: () => setState(() { if (item['qty'] > 1) item['qty']--; }),
+                                              icon: const Icon(
+                                                Icons.remove,
+                                                size: 18,
+                                              ),
+                                              onPressed: () => setState(() {
+                                                if (item['qty'] > 1) {
+                                                  item['qty']--;
+                                                }
+                                              }),
                                             ),
-                                            Text('${item['qty']}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                            Text(
+                                              '${item['qty']}',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
                                             IconButton(
-                                              icon: const Icon(Icons.add, size: 18),
-                                              onPressed: () => setState(() => item['qty']++),
+                                              icon: const Icon(
+                                                Icons.add,
+                                                size: 18,
+                                              ),
+                                              onPressed: () =>
+                                                  setState(() => item['qty']++),
                                             ),
                                             ElevatedButton(
                                               onPressed: () {},
-                                              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF7A1C1C), shadowColor: Colors.black12, elevation: 4),
-                                              child: const Text('Añadir', style: TextStyle(color: Colors.white, fontSize: 12),),
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: const Color(
+                                                  0xFF7A1C1C,
+                                                ),
+                                                shadowColor: Colors.black12,
+                                                elevation: 4,
+                                              ),
+                                              child: const Text(
+                                                'Añadir',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 12,
+                                                ),
+                                              ),
                                             ),
                                           ],
                                         ),
@@ -116,7 +223,10 @@ class _SalchipapasMenuState extends State<SalchipapasMenu> {
           onPressed: () {},
           backgroundColor: const Color(0xFF7A1C1C),
           icon: const Icon(Icons.shopping_cart, color: Colors.white),
-          label: const Text('Ver mi Pedido', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          label: const Text(
+            'Ver mi Pedido',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
         ),
       ),
     );
@@ -209,8 +319,14 @@ class _MenuHeader extends StatelessWidget {
                 style: const TextStyle(fontSize: 14),
                 decoration: InputDecoration(
                   hintText: searchHint,
-                  hintStyle: const TextStyle(color: Colors.black45, fontSize: 14),
-                  prefixIcon: const Icon(Icons.search_rounded, color: Colors.black45),
+                  hintStyle: const TextStyle(
+                    color: Colors.black45,
+                    fontSize: 14,
+                  ),
+                  prefixIcon: const Icon(
+                    Icons.search_rounded,
+                    color: Colors.black45,
+                  ),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(vertical: 13),
                 ),

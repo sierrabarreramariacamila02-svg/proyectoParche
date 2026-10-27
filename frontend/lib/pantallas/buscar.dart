@@ -14,7 +14,6 @@ class Buscar extends StatefulWidget {
 }
 
 class _BuscarState extends State<Buscar> {
-  int _indiceFiltro = 0;
   List<String> searches = [
     'Combo Familiar',
     'Hamburguesa clásica',
@@ -22,12 +21,6 @@ class _BuscarState extends State<Buscar> {
     'Bebida',
     'Perros calientes',
     'Postres'
-  ];
-
-  final List<String> _filtros = [
-    'Productos destacados',
-    'Perros calientes y mas',
-    'Bebidas',
   ];
 
   @override
@@ -141,10 +134,7 @@ class _BuscarState extends State<Buscar> {
               left: 16,
               right: 16,
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
+            child: SizedBox(
                   height: 30,
                   child: Stack(
                     clipBehavior: Clip.none,
@@ -208,47 +198,7 @@ class _BuscarState extends State<Buscar> {
                         ),
                       ),
                     ],
-                  ),
                 ),
-                const SizedBox(height: 12),
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.barraInferior,
-                    borderRadius: BorderRadius.circular(25),
-                  ),
-                  child: Row(
-                    children: List.generate(
-                      _filtros.length,
-                      (i) => Expanded(
-                        child: GestureDetector(
-                          onTap: () => setState(() => _indiceFiltro = i),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            decoration: BoxDecoration(
-                              color: _indiceFiltro == i
-                                  ? AppColors.buttonOrange
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(25),
-                            ),
-                            child: Text(
-                              _filtros[i],
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: _indiceFiltro == i
-                                    ? Colors.black
-                                    : Colors.black87,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
             ),
           ),
         ),

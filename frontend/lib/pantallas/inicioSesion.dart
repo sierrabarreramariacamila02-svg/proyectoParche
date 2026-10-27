@@ -1,10 +1,7 @@
-import 'package:elparchee/components/productos.dart';
 import 'package:elparchee/models/user_model.dart';
-import 'package:elparchee/pages/admin_product_list_page.dart';
-import 'package:elparchee/pantallas/cocina.dart';
-import 'package:elparchee/pantallas/mesero.dart';
 import 'package:elparchee/pantallas/recuperacioncuenta.dart';
 import 'package:elparchee/pantallas/registro.dart';
+import 'package:elparchee/services/role_navigation.dart';
 import 'package:elparchee/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -61,40 +58,11 @@ class _IniciosesionState extends State<Iniciosesion> {
       context,
     ).showSnackBar(SnackBar(content: Text('¡Bienvenido, ${usuario.nombre}!')));
 
-    Widget pantallaDestino;
-
-    switch (rol) {
-      case 'admin':
-      case 'administrador':
-        pantallaDestino =
-            const AdminProductListPage(); // Panel de administración
-        break;
-      case 'cocina':
-      case 'cocinero':
-        pantallaDestino =
-            const Cocina(); // Redirige ambos roles a la pantalla de cocina.
-        break;
-      case 'mesero':
-        // pantallaDestino = const MeseroPage();
-        pantallaDestino = const Mesero(); // Reemplazar cuando crees la vista
-        break;
-      case 'domicilio':
-      case 'domiciliario':
-        // pantallaDestino = const DomicilioPage();
-        pantallaDestino = const Productos(); // Reemplazar cuando crees la vista
-        break;
-      case 'usuario':
-      default:
-        pantallaDestino = const Productos(); // Vista normal para el cliente
-        break;
-    }
-
     if (!mounted) return;
 
-    // Redirección dinámica según la pantallaDestino calculada
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => pantallaDestino),
+      MaterialPageRoute(builder: (_) => pantallaParaRol(rol)),
     );
   }
 
@@ -318,30 +286,44 @@ class _IniciosesionState extends State<Iniciosesion> {
                     ),
                     const SizedBox(height: 20),
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: _cargando ? null : _loginConGoogle,
-                            child: _Social(
-                              child: Row(
-                                // <--- Agregamos un Row aquí para agruparlos
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Image.asset(
-                                    'assets/images/google.png',
-                                    height: 30,
+                        GestureDetector(
+                          onTap: _cargando ? null : _loginConGoogle,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(30),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.05),
+                                  blurRadius: 5,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Image.asset(
+                                  'assets/images/google.png',
+                                  height: 30,
+                                ),
+                                const SizedBox(width: 12),
+                                const Text(
+                                  'Google',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
                                   ),
-                                  const SizedBox(width: 12),
-                                  const Text(
-                                    'Google',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black87,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -431,33 +413,6 @@ class _Input extends StatelessWidget {
           border: InputBorder.none,
           prefixIcon: Icon(icon, color: const Color(0xFFB94E0C)),
         ),
-      ),
-    );
-  }
-}
-
-class _Social extends StatelessWidget {
-  final Widget child;
-
-  const _Social({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        height: 52,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 4,
-              offset: Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Center(child: child),
       ),
     );
   }
