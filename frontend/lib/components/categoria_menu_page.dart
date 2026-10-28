@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/producto_model.dart';
 import '../services/producto_service.dart';
 import 'package:elparchee/app_colors.dart';
+import '../services/cart_service.dart';
 
 class CategoriaMenuPage extends StatefulWidget {
   final String tituloCategoria;
@@ -96,13 +97,33 @@ class _CategoriaMenuPageState extends State<CategoriaMenuPage> {
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           subtitle: Text(p.descripcion),
-                          trailing: Text(
-                            '\$${p.precio.toStringAsFixed(0)}',
-                            style: const TextStyle(
-                              color: brand,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '\$${p.precio.toStringAsFixed(0)}',
+                                style: const TextStyle(
+                                  color: brand,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              IconButton(
+                                tooltip: 'Agregar al carrito',
+                                onPressed: () {
+                                  CartService.instance.add(p);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        '${p.nombre} agregado al carrito',
+                                      ),
+                                    ),
+                                  );
+                                },
+                                icon: const Icon(Icons.add_shopping_cart),
+                                color: brand,
+                              ),
+                            ],
                           ),
                         ),
                       );

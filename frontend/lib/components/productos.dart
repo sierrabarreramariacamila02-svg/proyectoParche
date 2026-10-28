@@ -8,12 +8,18 @@ import 'package:elparchee/pantallas/menuOtros.dart';
 import 'package:elparchee/pantallas/menuPerro.dart';
 import 'package:elparchee/pantallas/menuSalchipapa.dart';
 import 'package:elparchee/pantallas/notificaciones.dart'; // <-- Importado
+import 'package:elparchee/components/categoria_menu_page.dart';
 import 'package:elparchee/models/producto_model.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:elparchee/services/destacado_service.dart';
+import 'package:elparchee/services/cart_service.dart';
+import 'admin_drawer.dart';
 
 class Productos extends StatefulWidget {
-  const Productos({super.key});
+  final bool isAdmin;
+
+  const Productos({super.key, this.isAdmin = false});
 
   @override
   State<Productos> createState() => _ProductosState();
@@ -28,6 +34,8 @@ class _ProductosState extends State<Productos> {
   List<ProductoModel> _listaDestacados = [];
   bool _isLoading = true;
   String? _errorCarga;
+  String _nombreUsuario = 'username';
+  String _correoUsuario = '';
 
   final List<String> imagenes = [
     'assets/images/promo1.png',
@@ -47,6 +55,16 @@ class _ProductosState extends State<Productos> {
     super.initState();
     DestacadoService.cambios.addListener(_alCambiarDestacados);
     _cargarProductosHome();
+    if (widget.isAdmin) _cargarDatosAdmin();
+  }
+
+  Future<void> _cargarDatosAdmin() async {
+    final preferencias = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _nombreUsuario = preferencias.getString('user_name') ?? 'Administrador';
+      _correoUsuario = preferencias.getString('user_email') ?? '';
+    });
   }
 
   void _alCambiarDestacados() {
@@ -80,9 +98,12 @@ Future<void> _cargarProductosHome() async {
       backgroundColor: const Color(0xFFFAF3E0),
       appBar: AppBar(
         backgroundColor: AppColors.barraHome,
-        title: const Text(
-          'Hola username!',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        title: Text(
+          widget.isAdmin ? 'Hola, $_nombreUsuario' : 'Hola username!',
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         actions: [
           IconButton(
@@ -96,6 +117,12 @@ Future<void> _cargarProductosHome() async {
           ),
         ],
       ),
+      drawer: widget.isAdmin
+          ? AdminDrawer(
+              adminName: _nombreUsuario,
+              adminEmail: _correoUsuario,
+            )
+          : null,
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -139,15 +166,15 @@ Future<void> _cargarProductosHome() async {
               children: _categorias.map((c) {
                 final lbl = c['lbl'] as String;
                 return _catItem(c['img'] as String, lbl, c['color'] as Color, () {
-                  if (lbl == 'Perros calientes') {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const MenuPerro()));
-                  } else if (lbl == 'Hamburguesas') {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const MenuHamburguesas()));
-                  } else if (lbl == 'Salchipapas') {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const SalchipapasMenu()));
-                  } else if (lbl == 'Otros') {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const MenuOtros()));
-                  }
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => CategoriaMenuPage(
+                        tituloCategoria: lbl,
+                        filtroBackend: lbl,
+                      ),
+                    ),
+                  );
                 });
               }).toList(),
             ),
@@ -293,6 +320,24 @@ Future<void> _cargarProductosHome() async {
                       style: const TextStyle(
                         fontSize: 12,
                         color: AppColors.buttonOrange,
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: IconButton(
+                        tooltip: 'Agregar al carrito',
+                        visualDensity: VisualDensity.compact,
+                        onPressed: () {
+                          CartService.instance.add(producto);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                '${producto.nombre} agregado al carrito',
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.add_shopping_cart),
                       ),
                     ),
                   ],

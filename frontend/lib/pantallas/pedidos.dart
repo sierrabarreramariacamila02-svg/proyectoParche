@@ -1,242 +1,195 @@
-import 'package:flutter/material.dart';
-import 'package:elparchee/app_colors.dart';
-import 'package:elparchee/components/productos.dart';
-import 'package:elparchee/pantallas/buscar.dart';
-import 'package:elparchee/pantallas/perfil.dart';
-import 'package:elparchee/pantallas/carrito.dart';
-import 'package:elparchee/pantallas/notificaciones.dart';
+import 'dart:async';
 
-class Pedidos extends StatelessWidget {
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../app_colors.dart';
+import '../components/customer_bottom_navigation.dart';
+import '../services/restaurant_order_service.dart';
+
+class Pedidos extends StatefulWidget {
   const Pedidos({super.key});
 
-  static const Color rojo = AppColors.barraHome;
-  static const Color naranja = AppColors.buttonOrange;
-  static const Color crema = AppColors.background;
+  @override
+  State<Pedidos> createState() => _PedidosState();
+}
+
+class _PedidosState extends State<Pedidos> {
+  final RestaurantOrderService _orders = RestaurantOrderService();
+  List<Map<String, dynamic>> _pedidos = [];
+  Timer? _timer;
+  bool _cargando = true;
+  bool _esUsuario = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _inicializar();
+  }
+
+  Future<void> _inicializar() async {
+    final preferences = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    _esUsuario =
+        (preferences.getString('user_role') ?? '').toLowerCase() == 'usuario';
+    if (!_esUsuario) {
+      setState(() => _cargando = false);
+      return;
+    }
+    await _cargarPedidos();
+    _timer = Timer.periodic(
+      const Duration(seconds: 10),
+      (_) => _cargarPedidos(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _cargarPedidos() async {
+    try {
+      final pedidos = await _orders.listarPedidosCliente();
+      if (!mounted) return;
+      setState(() {
+        _pedidos = pedidos;
+        _error = null;
+        _cargando = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _error = error.toString().replaceFirst('Exception: ', '');
+        _cargando = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: crema,
-      body: Column(
-        children: [
-          // Barra Superior
-          Container(
-            padding: const EdgeInsets.fromLTRB(10, 50, 20, 15),
-            decoration: const BoxDecoration(
-              color: rojo,
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(30),
-                bottomRight: Radius.circular(30),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text('Mis pedidos'),
+        backgroundColor: AppColors.barraHome,
+        foregroundColor: Colors.white,
+        actions: [
+          if (_esUsuario)
+            IconButton(
+              tooltip: 'Actualizar pedidos',
+              onPressed: _cargarPedidos,
+              icon: const Icon(Icons.refresh),
+            ),
+        ],
+      ),
+      body: !_esUsuario
+          ? const Center(
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Text(
+                  'El historial de compras está disponible únicamente para cuentas de usuario.',
+                  textAlign: TextAlign.center,
+                ),
               ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  "Pedidos",
-                  style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.notifications_none, color: Colors.white),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const Notificaciones()),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(15),
-              children: [
-                // Tarjeta de Pedido Confirmado
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 5)],
-                  ),
-                  child: Column(
-                    children: [
-                      const CircleAvatar(
-                        radius: 25,
-                        backgroundColor: naranja,
-                        child: Icon(Icons.check, color: Colors.white, size: 30),
-                      ),
-                      const SizedBox(height: 10),
-                      const Text("¡Pedido confirmado!", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: rojo)),
-                      const SizedBox(height: 5),
-                      const Text("Tu pedido #1234 ha sido recibido y está en proceso.", 
-                        textAlign: TextAlign.center, 
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
-                      ),
-                      const SizedBox(height: 15),
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: crema,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+            )
+          : _cargando
+              ? const Center(child: CircularProgressIndicator())
+              : _error != null
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.delivery_dining, color: naranja),
-                            SizedBox(width: 10),
-                            Text("Tiempo estimado de entrega\n30 - 45 min", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                            Text(_error!, textAlign: TextAlign.center),
+                            TextButton(
+                              onPressed: _cargarPedidos,
+                              child: const Text('Reintentar'),
+                            ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 20),
-
-                      _buildPasoEstado("Pedido recibido", "12:10 p.m.", true, true),
-                      _buildPasoEstado("En preparación", "12:15 p.m.", true, true),
-                      _buildPasoEstado("En camino", "Pendiente", false, true),
-                      _buildPasoEstado("Entregado", "Pendiente", false, false),
-
-                      const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: naranja,
-                          foregroundColor: Colors.white,
-                          minimumSize: const Size(double.infinity, 40),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                        ),
-                        child: const Text("Ver seguimiento"),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-      
-      // Barra de navegación idéntica a las demás pantallas
-      bottomNavigationBar: Container(
-        color: AppColors.barraInferior,
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.only(
-              top: 12,
-              bottom: 8,
-              left: 16,
-              right: 16,
-            ),
-            child: SizedBox(
-                  height: 30,
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    alignment: Alignment.center,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.home_outlined, color: Colors.brown),
-                            onPressed: () {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(builder: (_) => const Productos()),
-                              );
-                            },
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.search, color: Colors.brown),
-                            onPressed: () {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(builder: (_) => const Buscar()),
-                              );
-                            },
-                          ),
-                          const SizedBox(width: 50),
-                          IconButton(
-                            // Ícono activo en Pedidos con el color principal de la barra
-                            icon: const Icon(Icons.receipt_long_outlined, color: AppColors.barraHome),
-                            onPressed: () {},
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.person_outline, color: Colors.brown),
-                            onPressed: () {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(builder: (_) => const Perfil()),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                      Positioned(
-                        top: -24,
-                        child: CircleAvatar(
-                          radius: 28,
-                          backgroundColor: AppColors.buttonOrange,
-                          child: IconButton(
-                            icon: const Icon(
-                              Icons.shopping_cart_outlined,
-                              color: Colors.white,
-                              size: 28,
-                            ),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const Carrito(),
-                                ),
-                              );
-                            },
+                    )
+                  : _pedidos.isEmpty
+                      ? const Center(
+                          child: Text('Todavía no has realizado pedidos.'),
+                        )
+                      : RefreshIndicator(
+                          onRefresh: _cargarPedidos,
+                          child: ListView.builder(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: _pedidos.length,
+                            itemBuilder: (context, index) =>
+                                _pedidoCard(_pedidos[index]),
                           ),
                         ),
-                      ),
-                    ],
-                ),
-            ),
-          ),
+      bottomNavigationBar: const CustomerBottomNavigation(selectedIndex: 2),
+    );
+  }
+
+  Widget _pedidoCard(Map<String, dynamic> pedido) {
+    final estado = (pedido['estado'] ?? 'pendiente')
+        .toString()
+        .replaceAll('_', ' ');
+    final detalles = (pedido['detalle_pedido'] as List<dynamic>?) ?? [];
+    final mesa = pedido['numero_mesa']?.toString();
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ExpansionTile(
+        leading: Icon(
+          pedido['estado'] == 'listo' || pedido['estado'] == 'entregado'
+              ? Icons.check_circle_outline
+              : Icons.receipt_long,
+          color: AppColors.barraHome,
         ),
+        title: Text('Pedido #${pedido['id']}'),
+        subtitle: Text(
+          '${pedido['tipo_pedido'] ?? 'Pedido'} · $estado',
+          style: const TextStyle(color: AppColors.barraHome),
+        ),
+        trailing: Text(
+          '\$${(pedido['total'] as num?)?.toStringAsFixed(0) ?? '0'} COP',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        children: [
+          if (mesa != null)
+            _detailRow('Mesa', mesa),
+          if ((pedido['direccion_entrega'] ?? '').toString().isNotEmpty)
+            _detailRow('Dirección', pedido['direccion_entrega'].toString()),
+          ...detalles.map((detalle) {
+            final item = Map<String, dynamic>.from(detalle as Map);
+            final producto = item['producto'] is Map
+                ? Map<String, dynamic>.from(item['producto'] as Map)
+                : <String, dynamic>{};
+            return _detailRow(
+              '${item['cantidad']} × ${producto['nombre'] ?? 'Producto'}',
+              '\$${(item['subtotal'] as num?)?.toStringAsFixed(0) ?? '0'}',
+            );
+          }),
+        ],
       ),
     );
   }
 
-  Widget _buildPasoEstado(String titulo, String hora, bool completado, bool mostrarLinea) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Column(
-          children: [
-            Container(
-              width: 20,
-              height: 20,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: completado ? naranja : Colors.grey.shade300,
-              ),
-              child: Icon(completado ? Icons.check : Icons.circle, size: 12, color: Colors.white),
-            ),
-            if (mostrarLinea)
-              Container(
-                width: 2,
-                height: 30,
-                color: completado ? naranja : Colors.grey.shade300,
-              ),
-          ],
-        ),
-        const SizedBox(width: 15),
-        Expanded(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(titulo, style: TextStyle(fontWeight: FontWeight.bold, color: completado ? Colors.black : Colors.grey)),
-              Text(hora, style: const TextStyle(fontSize: 11, color: Colors.grey)),
-            ],
+  Widget _detailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: Text(label)),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(value, textAlign: TextAlign.end),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
