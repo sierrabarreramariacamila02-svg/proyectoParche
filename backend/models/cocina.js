@@ -17,3 +17,12 @@ export const actualizarCocina = async (id, cambios) => {
   const { data, error } = await supabase.from('cocina').update(cambios).eq('id', id).select();
   return { data, error };
 };
+
+export const actualizarCocinaPorPedido = async (pedidoId, cambios) => {
+  const { data, error } = await supabase
+    .from('cocina')
+    .update(cambios)
+    .eq('pedido_id', pedidoId)
+    .select();
+  return { data, error };
+};

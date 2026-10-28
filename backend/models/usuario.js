@@ -111,7 +111,7 @@ export const obtenerUsuarioPorId = async (usuarioId) => {
   try {
     const { data, error } = await supabase
       .from('usuario')
-      .select('id, nombre, email, telefono, direccion, rol, creado_en, isverified, creado_por_admin')
+      .select('id, nombre, email, telefono, direccion, avatar, rol, creado_en, isverified, creado_por_admin')
       .eq('id', usuarioId)
       .single();
 

@@ -9,6 +9,7 @@ import {
   eliminarUsuario
 } from '../models/usuario.js';
 import { logError } from '../utils/logger.js';
+import { cloudinary } from '../config/cloudinary.js';
 
 const ROLES_ADMINISTRABLES = new Set([
   'pendiente',
@@ -156,6 +157,75 @@ export const getUsuarioPorIdController = async (req, res) => {
   }
 };
 export const obtenerUsuarioPorIdController = getUsuarioPorIdController;
+
+export const getMiPerfilController = async (req, res) => {
+  try {
+    const { data, error } = await obtenerUsuarioPorId(req.usuario.id);
+    if (error || !data) {
+      if (error) logError('getMiPerfilController', error);
+      return res.status(404).json({ error: 'No se encontró el perfil del usuario' });
+    }
+    return res.status(200).json(data);
+  } catch (error) {
+    logError('getMiPerfilController', error);
+    return res.status(500).json({ error: 'Error al obtener el perfil' });
+  }
+};
+
+const subirAvatar = (buffer) => new Promise((resolve, reject) => {
+  const stream = cloudinary.uploader.upload_stream(
+    { folder: 'perfiles' },
+    (error, result) => {
+      if (error) return reject(error);
+      if (!result?.secure_url) return reject(new Error('Cloudinary no devolvió la URL de la imagen'));
+      resolve(result.secure_url);
+    }
+  );
+  stream.end(buffer);
+});
+
+export const actualizarMiPerfilController = async (req, res) => {
+  try {
+    const cambios = {};
+    for (const campo of ['nombre', 'telefono', 'direccion']) {
+      if (req.body[campo] !== undefined) {
+        cambios[campo] = String(req.body[campo]).trim() || null;
+      }
+    }
+
+    if (cambios.nombre !== undefined && !cambios.nombre) {
+      return res.status(400).json({ error: 'El nombre no puede estar vacío' });
+    }
+
+    if (req.file) {
+      cambios.avatar = await subirAvatar(req.file.buffer);
+    }
+
+    if (Object.keys(cambios).length === 0) {
+      return res.status(400).json({ error: 'No hay cambios para guardar' });
+    }
+
+    const { data, error } = await actualizarUsuario(req.usuario.id, cambios);
+    if (error) {
+      logError('actualizarMiPerfilController', error);
+      return res.status(500).json({ error: 'No se pudo actualizar el perfil' });
+    }
+
+    const perfil = Array.isArray(data) ? data[0] : data;
+    if (!perfil) {
+      return res.status(404).json({ error: 'No se encontró el perfil del usuario' });
+    }
+    delete perfil.password;
+
+    return res.status(200).json({
+      mensaje: 'Perfil actualizado correctamente',
+      usuario: perfil
+    });
+  } catch (error) {
+    logError('actualizarMiPerfilController', error);
+    return res.status(500).json({ error: 'Error al actualizar el perfil' });
+  }
+};
 
 // 4. Actualizar usuario
 export const actualizarUsuarioController = async (req, res) => {
