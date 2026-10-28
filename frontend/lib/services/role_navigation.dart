@@ -2,7 +2,7 @@ import 'package:elparchee/components/productos.dart';
 import 'package:elparchee/pages/admin_product_list_page.dart';
 import 'package:elparchee/pantallas/cocina.dart';
 import 'package:elparchee/pantallas/domicilio.dart';
-import 'package:elparchee/pantallas/mesero.dart';
+import 'package:elparchee/pantallas/mesero1.dart';
 import 'package:flutter/material.dart';
 
 Widget pantallaParaRol(String rol) {
@@ -14,7 +14,7 @@ Widget pantallaParaRol(String rol) {
     case 'cocinero':
       return const Cocina();
     case 'mesero':
-      return const Mesero();
+      return const GestionMesas();
     case 'domicilio':
     case 'domiciliario':
       return const DomicilioPantalla();
