@@ -1,11 +1,11 @@
 import 'package:elparchee/app_colors.dart';
-import 'package:elparchee/components/categoria_menu_page.dart';
 import 'package:elparchee/components/customer_bottom_navigation.dart';
 import 'package:elparchee/models/producto_model.dart';
 import 'package:elparchee/pantallas/detalle_producto.dart';
 import 'package:elparchee/pantallas/notificaciones.dart';
 import 'package:elparchee/services/cart_service.dart';
 import 'package:elparchee/services/destacado_service.dart';
+import 'package:elparchee/services/producto_service.dart'; // 👈 Asegúrate de tener tu servicio de productos importado
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -102,12 +102,13 @@ class _ProductosState extends State<Productos> {
     }
   }
 
-  void _abrirCategoria(String nombre) {
+  // 🛠️ MODIFICADO: Ahora en lugar de abrir una página genérica de categoría vacía,
+  // consultamos los productos de esa categoría y los mostramos con la misma estructura interactiva.
+  void _abrirCategoria(String nombreCategoria) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) =>
-            CategoriaMenuPage(tituloCategoria: nombre, filtroBackend: nombre),
+        builder: (_) => _DetalleCategoriaScreen(tituloCategoria: nombreCategoria),
       ),
     );
   }
@@ -380,5 +381,148 @@ class _ProductosState extends State<Productos> {
     DestacadoService.cambios.removeListener(_alCambiarDestacados);
     _controller.dispose();
     super.dispose();
+  }
+}
+
+// ----------------------------------------------------------------------
+// Widget interno para mostrar los productos de la categoría seleccionada
+// con la misma estructura y diseño de detalle que la primera imagen.
+// ----------------------------------------------------------------------
+class _DetalleCategoriaScreen extends StatefulWidget {
+  final String tituloCategoria;
+
+  const _DetalleCategoriaScreen({required this.tituloCategoria});
+
+  @override
+  State<_DetalleCategoriaScreen> createState() => _DetalleCategoriaScreenState();
+}
+
+class _DetalleCategoriaScreenState extends State<_DetalleCategoriaScreen> {
+  final ProductoService _productoService = ProductoService();
+  late Future<List<ProductoModel>> _futureProductos;
+
+  @override
+  void initState() {
+    super.initState();
+    _futureProductos = _productoService.obtenerProductos(categoria: widget.tituloCategoria);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFFAF3E0),
+      appBar: AppBar(
+        backgroundColor: AppColors.barraHome,
+        title: Text(
+          widget.tituloCategoria,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+      ),
+      body: FutureBuilder<List<ProductoModel>>(
+        future: _futureProductos,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error al cargar: ${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('No hay productos en esta categoría'));
+          }
+
+          final productos = snapshot.data!;
+
+          return GridView.builder(
+            padding: const EdgeInsets.all(16),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 0.72,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+            ),
+            itemCount: productos.length,
+            itemBuilder: (_, index) {
+              final producto = productos[index];
+              return InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ProductDetailScreen(
+                        title: widget.tituloCategoria,
+                        imageUrl: producto.imagenUrl,
+                        price: '\$${producto.precio.toStringAsFixed(0)} COP',
+                        name: producto.nombre,
+                        description: producto.descripcion,
+                        rawPrice: producto.precio,
+                        onAgregarAlCarrito: (item) {
+                          CartService.instance.add(
+                            producto,
+                            quantity: item['cant'] as int? ?? 1,
+                          );
+                        },
+                      ),
+                    ),
+                  );
+                },
+                child: Card(
+                  clipBehavior: Clip.antiAlias,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: producto.imagenUrl.isEmpty
+                            ? const Center(
+                                child: Icon(
+                                  Icons.fastfood,
+                                  size: 48,
+                                  color: Colors.grey,
+                                ),
+                              )
+                            : Image.network(
+                                producto.imagenUrl,
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                errorBuilder: (_, _, _) => const Center(
+                                  child: Icon(
+                                    Icons.broken_image_outlined,
+                                    size: 48,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              producto.nombre,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              '\$${producto.precio.toStringAsFixed(0)} COP',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppColors.buttonOrange,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
   }
 }
