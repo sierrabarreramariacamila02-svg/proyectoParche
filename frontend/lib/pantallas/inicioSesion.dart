@@ -171,23 +171,24 @@ class _IniciosesionState extends State<Iniciosesion> {
                         ),
                       ),
                     ),
-                    Transform.translate(offset: const Offset(0, -25)),
+                    const SizedBox(height: 25),
+                    Transform.translate(offset: const Offset(0, 20)),
                     const Text(
                       '¡BIENVENIDO!',
                       style: TextStyle(
-                        fontSize: 34,
+                        fontSize: 40,
                         fontWeight: FontWeight.w900,
                         color: Color(0xFFD35400),
                         shadows: [
                           Shadow(
                             offset: Offset(2, 2),
-                            blurRadius: 3,
+                            blurRadius: 15,
                             color: Colors.black26,
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     const Text(
                       'Inicia sesion para continuar',
                       style: TextStyle(
@@ -198,17 +199,17 @@ class _IniciosesionState extends State<Iniciosesion> {
                     ),
                     const SizedBox(height: 16),
                     Material(
-                      elevation: 4,
+                      elevation: 5,
                       borderRadius: const BorderRadius.all(Radius.circular(30)),
                       child: _Input(
-                        hint: 'Email/Usuario',
+                        hint: 'Correo',
                         icon: Icons.email_outlined,
                         controller: _emailController,
                       ),
                     ),
                     const SizedBox(height: 14),
                     Material(
-                      elevation: 4,
+                      elevation: 5,
                       borderRadius: const BorderRadius.all(Radius.circular(30)),
                       child: _Input(
                         hint: 'Contraseña',
@@ -300,7 +301,7 @@ class _IniciosesionState extends State<Iniciosesion> {
                               borderRadius: BorderRadius.circular(30),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.05),
+                                  color: Colors.black38,
                                   blurRadius: 5,
                                   offset: const Offset(0, 2),
                                 ),
@@ -404,7 +405,13 @@ class _Input extends StatelessWidget {
       child: TextField(
         controller: controller,
         obscureText: pass,
+        textAlignVertical: TextAlignVertical.center,
         decoration: InputDecoration(
+          isDense: true,
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 16.0,
+            horizontal: 16.0,
+          ),
           hintText: hint,
           hintStyle: const TextStyle(
             color: Colors.black87,

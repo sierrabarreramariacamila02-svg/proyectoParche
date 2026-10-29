@@ -84,10 +84,7 @@ class _PerfilState extends State<Perfil> {
       }
     } catch (error) {
       if (!mounted) return;
-      _mostrarMensaje(
-        'No se pudo seleccionar la imagen: $error',
-        error: true,
-      );
+      _mostrarMensaje('No se pudo seleccionar la imagen: $error', error: true);
     }
   }
 
@@ -160,133 +157,133 @@ class _PerfilState extends State<Perfil> {
       body: _cargando
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(_error!, textAlign: TextAlign.center),
-                        TextButton(
-                          onPressed: () {
-                            setState(() {
-                              _cargando = true;
-                              _error = null;
-                            });
-                            _cargarPerfil();
-                          },
-                          child: const Text('Reintentar'),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              : ListView(
-                  padding: const EdgeInsets.all(20),
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Center(
-                      child: Stack(
-                        children: [
-                          CircleAvatar(
-                            radius: 54,
-                            backgroundColor: AppColors.buttonOrange,
-                            backgroundImage: _imagenPerfil,
-                            child: _imagenPerfil == null
-                                ? const Icon(
-                                    Icons.person,
-                                    size: 60,
-                                    color: Colors.white,
-                                  )
-                                : null,
-                          ),
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: IconButton.filled(
-                              onPressed: _seleccionarFoto,
-                              tooltip: 'Cambiar foto',
-                              icon: const Icon(Icons.camera_alt),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Center(
-                      child: TextButton.icon(
-                        onPressed: _seleccionarFoto,
-                        icon: const Icon(Icons.photo_library_outlined),
-                        label: const Text('Cambiar foto de perfil'),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    TextField(
-                      controller: _nombreController,
-                      textCapitalization: TextCapitalization.words,
-                      decoration: const InputDecoration(
-                        labelText: 'Nombre completo',
-                        prefixIcon: Icon(Icons.person_outline),
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      initialValue: _correo,
-                      readOnly: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Correo electrónico',
-                        prefixIcon: Icon(Icons.email_outlined),
-                        helperText: 'El correo no se puede editar desde el perfil.',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _telefonoController,
-                      keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(
-                        labelText: 'Teléfono',
-                        prefixIcon: Icon(Icons.phone_outlined),
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _direccionController,
-                      maxLines: 2,
-                      decoration: const InputDecoration(
-                        labelText: 'Dirección guardada',
-                        prefixIcon: Icon(Icons.location_on_outlined),
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      height: 48,
-                      child: ElevatedButton.icon(
-                        onPressed: _guardando ? null : _guardar,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.barraHome,
-                          foregroundColor: Colors.white,
-                        ),
-                        icon: _guardando
-                            ? const SizedBox(
-                                height: 18,
-                                width: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Icon(Icons.save_outlined),
-                        label: Text(
-                          _guardando ? 'Guardando...' : 'Guardar cambios',
-                        ),
-                      ),
+                    Text(_error!, textAlign: TextAlign.center),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _cargando = true;
+                          _error = null;
+                        });
+                        _cargarPerfil();
+                      },
+                      child: const Text('Reintentar'),
                     ),
                   ],
                 ),
+              ),
+            )
+          : ListView(
+              padding: const EdgeInsets.all(20),
+              children: [
+                Center(
+                  child: Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 54,
+                        backgroundColor: AppColors.buttonOrange,
+                        backgroundImage: _imagenPerfil,
+                        child: _imagenPerfil == null
+                            ? const Icon(
+                                Icons.person,
+                                size: 60,
+                                color: Colors.white,
+                              )
+                            : null,
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: IconButton.filled(
+                          onPressed: _seleccionarFoto,
+                          tooltip: 'Cambiar foto',
+                          icon: const Icon(Icons.camera_alt),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Center(
+                  child: TextButton.icon(
+                    onPressed: _seleccionarFoto,
+                    icon: const Icon(Icons.photo_library_outlined),
+                    label: const Text('Cambiar foto de perfil'),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: _nombreController,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: const InputDecoration(
+                    labelText: 'Nombre completo',
+                    prefixIcon: Icon(Icons.person_outline),
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  initialValue: _correo,
+                  readOnly: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Correo electrónico',
+                    prefixIcon: Icon(Icons.email_outlined),
+                    helperText: 'El correo no se puede editar desde el perfil.',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _telefonoController,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(
+                    labelText: 'Teléfono',
+                    prefixIcon: Icon(Icons.phone_outlined),
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _direccionController,
+                  maxLines: 2,
+                  decoration: const InputDecoration(
+                    labelText: 'Dirección guardada',
+                    prefixIcon: Icon(Icons.location_on_outlined),
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  height: 48,
+                  child: ElevatedButton.icon(
+                    onPressed: _guardando ? null : _guardar,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.barraHome,
+                      foregroundColor: Colors.white,
+                    ),
+                    icon: _guardando
+                        ? const SizedBox(
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.save_outlined),
+                    label: Text(
+                      _guardando ? 'Guardando...' : 'Guardar cambios',
+                    ),
+                  ),
+                ),
+              ],
+            ),
       bottomNavigationBar: const CustomerBottomNavigation(selectedIndex: 3),
     );
   }
-} 
+}

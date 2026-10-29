@@ -1,8 +1,15 @@
 import 'package:elparchee/app_colors.dart';
+<<<<<<< Updated upstream
 import 'package:elparchee/components/customer_bottom_navigation.dart';
+=======
+import 'package:elparchee/components/categoria_menu_page.dart';
+>>>>>>> Stashed changes
 import 'package:elparchee/models/producto_model.dart';
+import 'package:elparchee/pantallas/carrito.dart'; // O la ruta de tu pantalla de carrito
 import 'package:elparchee/pantallas/detalle_producto.dart';
 import 'package:elparchee/pantallas/notificaciones.dart';
+import 'package:elparchee/pantallas/pedidos.dart'; // Asegúrate de tener esta importación
+import 'package:elparchee/pantallas/perfil.dart'; // Asegúrate de tener esta importación
 import 'package:elparchee/services/cart_service.dart';
 import 'package:elparchee/services/destacado_service.dart';
 import 'package:elparchee/services/producto_service.dart'; // 👈 Asegúrate de tener tu servicio de productos importado
@@ -222,7 +229,7 @@ class _ProductosState extends State<Productos> {
             else if (_listaDestacados.isEmpty)
               const Center(
                 child: Padding(
-                  padding: EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(24),
                   child: Text('No hay productos destacados disponibles.'),
                 ),
               )
@@ -232,7 +239,69 @@ class _ProductosState extends State<Productos> {
           ],
         ),
       ),
-      bottomNavigationBar: const CustomerBottomNavigation(selectedIndex: 0),
+      // Botón flotante central del carrito funcional
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: AppColors.buttonOrange,
+        elevation: 4.0,
+        shape: const CircleBorder(),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const Carrito()), // Reemplaza 'Carrito' con el nombre de tu clase de carrito si es diferente
+          );
+        },
+        child: const Icon(Icons.shopping_cart, color: Colors.white),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      // Barra de navegación inferior con iconos funcionales
+      bottomNavigationBar: BottomAppBar(
+        color: const Color(0xFFF2D6BD),
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 8.0,
+        child: SizedBox(
+          height: 60,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              // Icono Home (ya estás aquí, puedes dejarlo vacio o recargar)
+              IconButton(
+                icon: const Icon(Icons.home, color: AppColors.barraHome),
+                onPressed: () {
+                  // Ya estás en la pantalla principal
+                },
+              ),
+              // Icono Búsqueda
+              IconButton(
+                icon: const Icon(Icons.search, color: Colors.brown),
+                onPressed: () {
+                  // Opcional: acción o pantalla de búsqueda
+                },
+              ),
+              const SizedBox(width: 40), // Espacio para el botón flotante del carrito
+              // Icono Pedidos
+              IconButton(
+                icon: const Icon(Icons.receipt_long, color: Colors.brown),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const Pedidos()),
+                  );
+                },
+              ),
+              // Icono Perfil
+              IconButton(
+                icon: const Icon(Icons.person_outline, color: Colors.brown),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const Perfil()),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -382,6 +451,7 @@ class _ProductosState extends State<Productos> {
     _controller.dispose();
     super.dispose();
   }
+<<<<<<< Updated upstream
 }
 
 // ----------------------------------------------------------------------
@@ -525,4 +595,6 @@ class _DetalleCategoriaScreenState extends State<_DetalleCategoriaScreen> {
       ),
     );
   }
+=======
+>>>>>>> Stashed changes
 }
