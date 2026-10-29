@@ -1,19 +1,14 @@
 import 'package:elparchee/app_colors.dart';
-import 'package:elparchee/pantallas/buscar.dart';
-import 'package:elparchee/pantallas/carrito.dart';
-import 'package:elparchee/pantallas/pedidos.dart';
-import 'package:elparchee/pantallas/perfil.dart';
-import 'package:elparchee/pantallas/menuHamburguesas.dart';
-import 'package:elparchee/pantallas/menuOtros.dart';
-import 'package:elparchee/pantallas/menuPerro.dart';
-import 'package:elparchee/pantallas/menuSalchipapa.dart';
-import 'package:elparchee/pantallas/notificaciones.dart'; // <-- Importado
 import 'package:elparchee/components/categoria_menu_page.dart';
+import 'package:elparchee/components/customer_bottom_navigation.dart';
 import 'package:elparchee/models/producto_model.dart';
+import 'package:elparchee/pantallas/detalle_producto.dart';
+import 'package:elparchee/pantallas/notificaciones.dart';
+import 'package:elparchee/services/cart_service.dart';
+import 'package:elparchee/services/destacado_service.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:elparchee/services/destacado_service.dart';
-import 'package:elparchee/services/cart_service.dart';
+
 import 'admin_drawer.dart';
 
 class Productos extends StatefulWidget {
@@ -27,27 +22,40 @@ class Productos extends StatefulWidget {
 
 class _ProductosState extends State<Productos> {
   final PageController _controller = PageController();
-
-  int paginaActual = 0;
-  int _indiceIcono = 0;
-
+  int _paginaActual = 0;
   List<ProductoModel> _listaDestacados = [];
   bool _isLoading = true;
   String? _errorCarga;
   String _nombreUsuario = 'username';
   String _correoUsuario = '';
 
-  final List<String> imagenes = [
+  final List<String> _imagenes = [
     'assets/images/promo1.png',
     'assets/images/promo2.png',
     'assets/images/promo3.png',
   ];
 
-  final List<Map<String, dynamic>> _categorias = [
-    {'img': 'assets/images/hamburguesa.png', 'lbl': 'Hamburguesas', 'color': AppColors.inputBackground},
-    {'img': 'assets/images/perro.png', 'lbl': 'Perros calientes', 'color': AppColors.inputBackground},
-    {'img': 'assets/images/salchipapa.png', 'lbl': 'Salchipapas', 'color': AppColors.inputBackground},
-    {'img': 'assets/images/otros.png', 'lbl': 'Otros', 'color': AppColors.inputBackground},
+  final List<Map<String, Object>> _categorias = [
+    {
+      'img': 'assets/images/hamburguesa.png',
+      'lbl': 'Hamburguesas',
+      'color': AppColors.inputBackground,
+    },
+    {
+      'img': 'assets/images/perro.png',
+      'lbl': 'Perros calientes',
+      'color': AppColors.inputBackground,
+    },
+    {
+      'img': 'assets/images/salchipapa.png',
+      'lbl': 'Salchipapas',
+      'color': AppColors.inputBackground,
+    },
+    {
+      'img': 'assets/images/otros.png',
+      'lbl': 'Otros',
+      'color': AppColors.inputBackground,
+    },
   ];
 
   @override
@@ -71,26 +79,38 @@ class _ProductosState extends State<Productos> {
     if (mounted) _cargarProductosHome();
   }
 
-Future<void> _cargarProductosHome() async {
-  setState(() {
-    _isLoading = true;
-    _errorCarga = null;
-  });
-  try {
-    final lista = await DestacadoService.obtener();
-    if (!mounted) return;
+  Future<void> _cargarProductosHome() async {
     setState(() {
-      _listaDestacados = lista.map((d) => d.toProducto()).toList();
-      _isLoading = false;
+      _isLoading = true;
+      _errorCarga = null;
     });
-  } catch (e) {
-    if (!mounted) return;
-    setState(() {
-      _isLoading = false;
-      _errorCarga = e.toString().replaceFirst('Exception: ', '');
-    });
+    try {
+      final lista = await DestacadoService.obtener();
+      if (!mounted) return;
+      setState(() {
+        _listaDestacados = lista
+            .map((destacado) => destacado.toProducto())
+            .toList();
+        _isLoading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorCarga = error.toString().replaceFirst('Exception: ', '');
+      });
+    }
   }
-}
+
+  void _abrirCategoria(String nombre) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            CategoriaMenuPage(tituloCategoria: nombre, filtroBackend: nombre),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -118,10 +138,7 @@ Future<void> _cargarProductosHome() async {
         ],
       ),
       drawer: widget.isAdmin
-          ? AdminDrawer(
-              adminName: _nombreUsuario,
-              adminEmail: _correoUsuario,
-            )
+          ? AdminDrawer(adminName: _nombreUsuario, adminEmail: _correoUsuario)
           : null,
       body: SingleChildScrollView(
         child: Column(
@@ -132,13 +149,13 @@ Future<void> _cargarProductosHome() async {
               height: 200,
               child: PageView.builder(
                 controller: _controller,
-                itemCount: imagenes.length,
-                onPageChanged: (i) => setState(() => paginaActual = i),
-                itemBuilder: (_, i) => Container(
+                itemCount: _imagenes.length,
+                onPageChanged: (index) => setState(() => _paginaActual = index),
+                itemBuilder: (_, index) => Container(
                   margin: const EdgeInsets.symmetric(horizontal: 10),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(45),
-                    child: Image.asset(imagenes[i], fit: BoxFit.cover),
+                    child: Image.asset(_imagenes[index], fit: BoxFit.cover),
                   ),
                 ),
               ),
@@ -147,14 +164,16 @@ Future<void> _cargarProductosHome() async {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
-                imagenes.length,
-                (i) => AnimatedContainer(
+                _imagenes.length,
+                (index) => AnimatedContainer(
                   duration: const Duration(milliseconds: 400),
                   margin: const EdgeInsets.symmetric(horizontal: 3),
-                  width: paginaActual == i ? 18 : 8,
+                  width: _paginaActual == index ? 18 : 8,
                   height: 10,
                   decoration: BoxDecoration(
-                    color: paginaActual == i ? AppColors.barraHome : Colors.grey.shade400,
+                    color: _paginaActual == index
+                        ? AppColors.barraHome
+                        : Colors.grey.shade400,
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -163,19 +182,14 @@ Future<void> _cargarProductosHome() async {
             _titulo('Menú.'),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: _categorias.map((c) {
-                final lbl = c['lbl'] as String;
-                return _catItem(c['img'] as String, lbl, c['color'] as Color, () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => CategoriaMenuPage(
-                        tituloCategoria: lbl,
-                        filtroBackend: lbl,
-                      ),
-                    ),
-                  );
-                });
+              children: _categorias.map((categoria) {
+                final nombre = categoria['lbl']! as String;
+                return _catItem(
+                  categoria['img']! as String,
+                  nombre,
+                  categoria['color']! as Color,
+                  () => _abrirCategoria(nombre),
+                );
               }).toList(),
             ),
             _titulo('Productos destacados'),
@@ -217,46 +231,7 @@ Future<void> _cargarProductosHome() async {
           ],
         ),
       ),
-      bottomNavigationBar: Container(
-        color: AppColors.barraInferior,
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.only(top: 12, bottom: 8, left: 16, right: 16),
-            child: SizedBox(
-              height: 30,
-              child: Stack(
-                clipBehavior: Clip.none,
-                alignment: Alignment.center,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _navIcon(Icons.home_outlined, 0),
-                      _navIcon(Icons.search, 1),
-                      const SizedBox(width: 50),
-                      _navIcon(Icons.receipt_long_outlined, 2),
-                      _navIcon(Icons.person_outline, 3),
-                    ],
-                  ),
-                  Positioned(
-                    top: -24,
-                    child: CircleAvatar(
-                      radius: 28,
-                      backgroundColor: AppColors.buttonOrange,
-                      child: IconButton(
-                        icon: const Icon(Icons.shopping_cart_outlined, color: Colors.white, size: 28),
-                        onPressed: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const Carrito()));
-                        },
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
+      bottomNavigationBar: const CustomerBottomNavigation(selectedIndex: 0),
     );
   }
 
@@ -272,88 +247,93 @@ Future<void> _cargarProductosHome() async {
         mainAxisSpacing: 10,
       ),
       itemCount: productos.length,
-      itemBuilder: (_, i) {
-        final producto = productos[i];
-        return Card(
-          clipBehavior: Clip.antiAlias,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: producto.imagenUrl.isEmpty
-                    ? const Center(
-                        child: Icon(
-                          Icons.fastfood,
-                          size: 48,
-                          color: Colors.grey,
-                        ),
-                      )
-                    : Image.network(
-                        producto.imagenUrl,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        errorBuilder: (_, _, _) => const Center(
+      itemBuilder: (_, index) {
+        final producto = productos[index];
+        return InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ProductDetailScreen(
+                  title: 'Detalle del producto',
+                  imageUrl: producto.imagenUrl,
+                  price: '\$${producto.precio.toStringAsFixed(0)} COP',
+                  name: producto.nombre,
+                  description: producto.descripcion,
+                  rawPrice: producto.precio,
+                  onAgregarAlCarrito: (item) {
+                    CartService.instance.add(
+                      producto,
+                      quantity: item['cant'] as int? ?? 1,
+                    );
+                  },
+                ),
+              ),
+            );
+          },
+          child: Card(
+            clipBehavior: Clip.antiAlias,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: producto.imagenUrl.isEmpty
+                      ? const Center(
                           child: Icon(
-                            Icons.broken_image_outlined,
+                            Icons.fastfood,
                             size: 48,
                             color: Colors.grey,
                           ),
+                        )
+                      : Image.network(
+                          producto.imagenUrl,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          errorBuilder: (_, _, _) => const Center(
+                            child: Icon(
+                              Icons.broken_image_outlined,
+                              size: 48,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        producto.nombre,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        '\$${producto.precio.toStringAsFixed(0)} COP',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.buttonOrange,
                         ),
                       ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      producto.nombre,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      '\$${producto.precio.toStringAsFixed(0)} COP',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.buttonOrange,
-                      ),
-                    ),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: IconButton(
-                        tooltip: 'Agregar al carrito',
-                        visualDensity: VisualDensity.compact,
-                        onPressed: () {
-                          CartService.instance.add(producto);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                '${producto.nombre} agregado al carrito',
-                              ),
-                            ),
-                          );
-                        },
-                        icon: const Icon(Icons.add_shopping_cart),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
     );
   }
 
-  Widget _titulo(String t) => Padding(
+  Widget _titulo(String texto) => Padding(
     padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
     child: Text(
-      t,
+      texto,
       style: const TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.bold,
@@ -363,8 +343,8 @@ Future<void> _cargarProductosHome() async {
   );
 
   Widget _catItem(
-    String img,
-    String lbl,
+    String imagen,
+    String nombre,
     Color colorFondo,
     VoidCallback onTap,
   ) => GestureDetector(
@@ -381,40 +361,18 @@ Future<void> _cargarProductosHome() async {
           ),
           child: ClipOval(
             child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Image.asset(img, fit: BoxFit.contain),
+              padding: const EdgeInsets.all(8),
+              child: Image.asset(imagen, fit: BoxFit.contain),
             ),
           ),
         ),
         const SizedBox(height: 4),
         Text(
-          lbl,
+          nombre,
           style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500),
         ),
       ],
     ),
-  );
-
-  Widget _navIcon(IconData icon, int index) => IconButton(
-    icon: Icon(
-      icon,
-      color: _indiceIcono == index ? AppColors.barraHome : Colors.brown,
-    ),
-    onPressed: () {
-      setState(() => _indiceIcono = index);
-      final Widget? pagina = switch (index) {
-        1 => const Buscar(),
-        2 => const Pedidos(),
-        3 => const Perfil(),
-        _ => null,
-      };
-      if (pagina != null) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => pagina),
-        );
-      }
-    },
   );
 
   @override

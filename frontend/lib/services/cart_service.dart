@@ -22,12 +22,15 @@ class CartService extends ChangeNotifier {
 
   bool get isEmpty => _items.isEmpty;
 
-  void add(ProductoModel product) {
+  void add(ProductoModel product, {int quantity = 1}) {
+    if (quantity <= 0) {
+      throw RangeError.value(quantity, 'quantity', 'Must be greater than zero');
+    }
     final current = _items[product.id];
     if (current == null) {
-      _items[product.id] = CartLine(product: product, quantity: 1);
+      _items[product.id] = CartLine(product: product, quantity: quantity);
     } else {
-      current.quantity++;
+      current.quantity += quantity;
     }
     notifyListeners();
   }
@@ -50,10 +53,7 @@ class CartService extends ChangeNotifier {
 
   List<Map<String, dynamic>> toOrderItems() => _items.values
       .map(
-        (item) => {
-          'producto_id': item.product.id,
-          'cantidad': item.quantity,
-        },
+        (item) => {'producto_id': item.product.id, 'cantidad': item.quantity},
       )
       .toList();
 

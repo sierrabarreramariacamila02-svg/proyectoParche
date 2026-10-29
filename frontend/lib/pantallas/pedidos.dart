@@ -96,44 +96,42 @@ class _PedidosState extends State<Pedidos> {
               ),
             )
           : _cargando
-              ? const Center(child: CircularProgressIndicator())
-              : _error != null
-                  ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(_error!, textAlign: TextAlign.center),
-                            TextButton(
-                              onPressed: _cargarPedidos,
-                              child: const Text('Reintentar'),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  : _pedidos.isEmpty
-                      ? const Center(
-                          child: Text('Todavía no has realizado pedidos.'),
-                        )
-                      : RefreshIndicator(
-                          onRefresh: _cargarPedidos,
-                          child: ListView.builder(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: _pedidos.length,
-                            itemBuilder: (context, index) =>
-                                _pedidoCard(_pedidos[index]),
-                          ),
-                        ),
+          ? const Center(child: CircularProgressIndicator())
+          : _error != null
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(_error!, textAlign: TextAlign.center),
+                    TextButton(
+                      onPressed: _cargarPedidos,
+                      child: const Text('Reintentar'),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : _pedidos.isEmpty
+          ? const Center(child: Text('Todavía no has realizado pedidos.'))
+          : RefreshIndicator(
+              onRefresh: _cargarPedidos,
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: _pedidos.length,
+                itemBuilder: (context, index) => _pedidoCard(_pedidos[index]),
+              ),
+            ),
       bottomNavigationBar: const CustomerBottomNavigation(selectedIndex: 2),
     );
   }
 
   Widget _pedidoCard(Map<String, dynamic> pedido) {
-    final estado = (pedido['estado'] ?? 'pendiente')
-        .toString()
-        .replaceAll('_', ' ');
+    final estado = (pedido['estado'] ?? 'pendiente').toString().replaceAll(
+      '_',
+      ' ',
+    );
     final detalles = (pedido['detalle_pedido'] as List<dynamic>?) ?? [];
     final mesa = pedido['numero_mesa']?.toString();
 
@@ -157,8 +155,7 @@ class _PedidosState extends State<Pedidos> {
         ),
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         children: [
-          if (mesa != null)
-            _detailRow('Mesa', mesa),
+          if (mesa != null) _detailRow('Mesa', mesa),
           if ((pedido['direccion_entrega'] ?? '').toString().isNotEmpty)
             _detailRow('Dirección', pedido['direccion_entrega'].toString()),
           ...detalles.map((detalle) {
@@ -185,9 +182,7 @@ class _PedidosState extends State<Pedidos> {
         children: [
           Expanded(child: Text(label)),
           const SizedBox(width: 8),
-          Flexible(
-            child: Text(value, textAlign: TextAlign.end),
-          ),
+          Flexible(child: Text(value, textAlign: TextAlign.end)),
         ],
       ),
     );

@@ -10,8 +10,8 @@ class ApiConfig {
 
     // 2. Evaluaciones para dispositivos móviles / desktop
     if (Platform.isAndroid) {
-      // Emulador de Android
-      return 'http://10.0.2.2:3000/api';
+      // Usando tu IP local para el celular físico conectado por USB
+      return 'http://192.168.1.160:3000/api';
     } else if (Platform.isIOS) {
       // Simulador de iOS
       return 'http://localhost:3000/api';

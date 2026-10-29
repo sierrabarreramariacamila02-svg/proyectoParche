@@ -12,6 +12,23 @@ import 'pedidos.dart';
 class Carrito extends StatefulWidget {
   const Carrito({super.key});
 
+  static List<Map<String, dynamic>> itemsMemoria = [];
+
+  static void agregarItem(Map<String, dynamic> nuevoItem) {
+    int index = itemsMemoria.indexWhere((item) =>
+        item["nombre"] == nuevoItem["nombre"] &&
+        item["acompanamiento"] == nuevoItem["acompanamiento"] &&
+        item["bebida"] == nuevoItem["bebida"] &&
+        item["sinCebolla"] == nuevoItem["sinCebolla"] &&
+        item["sinLechuga"] == nuevoItem["sinLechuga"]);
+
+    if (index >= 0) {
+      itemsMemoria[index]["cant"] += nuevoItem["cant"];
+    } else {
+      itemsMemoria.add(nuevoItem);
+    }
+  }
+
   @override
   State<Carrito> createState() => _CarritoState();
 }
