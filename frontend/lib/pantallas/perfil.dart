@@ -289,4 +289,4 @@ class _PerfilState extends State<Perfil> {
       bottomNavigationBar: const CustomerBottomNavigation(selectedIndex: 3),
     );
   }
-}
+} 
