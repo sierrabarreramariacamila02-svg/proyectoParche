@@ -159,12 +159,14 @@ class _DomicilioPantallaState extends State<DomicilioPantalla> {
                 ),
                 const SizedBox(height: 20),
 
-                // Botón Confirmar Domicilio
+                // Botón Confirmar Domicilio (Modificado para enviar esDomicilio: true)
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.pushReplacement(
+                    Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const Pedidos()),
+                      MaterialPageRoute(
+                        builder: (_) => const Pedidos(esDomicilio: true),
+                      ),
                     );
                   },
                   style: ElevatedButton.styleFrom(

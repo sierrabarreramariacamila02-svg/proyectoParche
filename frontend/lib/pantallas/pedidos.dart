@@ -7,7 +7,18 @@ import 'package:elparchee/pantallas/carrito.dart';
 import 'package:elparchee/pantallas/notificaciones.dart';
 
 class Pedidos extends StatelessWidget {
-  const Pedidos({super.key});
+  final bool esReserva;
+  final bool esDomicilio;
+  final int? personasReserva;
+  final String? horaReserva;
+
+  const Pedidos({
+    super.key,
+    this.esReserva = false,
+    this.esDomicilio = false,
+    this.personasReserva,
+    this.horaReserva,
+  });
 
   static const Color rojo = AppColors.barraHome;
   static const Color naranja = AppColors.buttonOrange;
@@ -58,7 +69,6 @@ class Pedidos extends StatelessWidget {
             child: ListView(
               padding: const EdgeInsets.all(15),
               children: [
-                // Tarjeta de Pedido Confirmado
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
@@ -74,34 +84,88 @@ class Pedidos extends StatelessWidget {
                         child: Icon(Icons.check, color: Colors.white, size: 30),
                       ),
                       const SizedBox(height: 10),
-                      const Text("¡Pedido confirmado!", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: rojo)),
+                      Text(
+                        esReserva 
+                            ? "¡Reserva y Pedido Confirmados!" 
+                            : (esDomicilio ? "¡Pedido confirmado para domicilio!" : "¡Pedido confirmado!"),
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: rojo),
+                        textAlign: TextAlign.center,
+                      ),
                       const SizedBox(height: 5),
-                      const Text("Tu pedido #1234 ha sido recibido y está en proceso.", 
+                      Text(
+                        esReserva 
+                            ? "Tu reserva de mesa y pedido #1234 están listos para preparación."
+                            : (esDomicilio 
+                                ? "Tu pedido #1234 ha sido recibido y va en camino a tu casa." 
+                                : "Tu pedido #1234 ha sido recibido y se está preparando para recoger."), 
                         textAlign: TextAlign.center, 
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                        style: const TextStyle(fontSize: 12, color: Colors.grey),
                       ),
                       const SizedBox(height: 15),
+
+                      // Bloque Dinámico (Reserva, Domicilio o Recoger)
                       Container(
-                        padding: const EdgeInsets.all(10),
+                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: crema,
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.delivery_dining, color: naranja),
-                            SizedBox(width: 10),
-                            Text("Tiempo estimado de entrega\n30 - 45 min", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                          ],
-                        ),
+                        child: esReserva
+                            ? Column(
+                                children: [
+                                  const Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.table_restaurant, color: naranja),
+                                      SizedBox(width: 8),
+                                      Text("Detalles de tu Mesa:", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text("Personas: ${personasReserva ?? 2} | Hora: ${horaReserva ?? '5:00 PM'}", 
+                                      style: const TextStyle(fontSize: 12, color: Colors.black87)),
+                                  const SizedBox(height: 4),
+                                  const Text("📍 El Parche - Calle 3 #4-12, Tres Esquinas, Gigante, Huila", 
+                                      style: TextStyle(fontSize: 11, color: Colors.grey), textAlign: TextAlign.center),
+                                ],
+                              )
+                            : (esDomicilio
+                                ? const Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.delivery_dining, color: naranja, size: 28),
+                                      SizedBox(width: 10),
+                                      Text("Tipo: Entrega a Domicilio (A casa)\nTiempo estimado: 30 - 45 min", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                                    ],
+                                  )
+                                : const Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.store, color: naranja),
+                                      SizedBox(width: 10),
+                                      Text("Sede: Calle 3 #4-12, Tres Esquinas\nTiempo estimado: 15 - 20 min", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                                    ],
+                                  )),
                       ),
                       const SizedBox(height: 20),
 
-                      _buildPasoEstado("Pedido recibido", "12:10 p.m.", true, true),
-                      _buildPasoEstado("En preparación", "12:15 p.m.", true, true),
-                      _buildPasoEstado("En camino", "Pendiente", false, true),
-                      _buildPasoEstado("Entregado", "Pendiente", false, false),
+                      // Pasos dinámicos según el tipo de pedido
+                      if (esDomicilio) ...[
+                        _buildPasoEstado("Pedido recibido", "12:10 p.m.", true, true),
+                        _buildPasoEstado("En preparación", "12:15 p.m.", true, true),
+                        _buildPasoEstado("En camino a casa", "Pendiente", false, true),
+                        _buildPasoEstado("Entregado", "Pendiente", false, false),
+                      ] else if (esReserva) ...[
+                        _buildPasoEstado("Reserva y pedido recibido", "12:10 p.m.", true, true),
+                        _buildPasoEstado("En preparación", "12:15 p.m.", true, true),
+                        _buildPasoEstado("Mesa lista", "Pendiente", false, true),
+                        _buildPasoEstado("Atendido en mesa", "Pendiente", false, false),
+                      ] else ...[
+                        _buildPasoEstado("Pedido recibido", "12:10 p.m.", true, true),
+                        _buildPasoEstado("En preparación", "12:15 p.m.", true, true),
+                        _buildPasoEstado("Pedido listo para recoger", "Pendiente", false, true),
+                        _buildPaseoTienda("Entregado en tienda", "Pendiente", false, false),
+                      ],
 
                       const SizedBox(height: 20),
                       ElevatedButton(
@@ -123,7 +187,7 @@ class Pedidos extends StatelessWidget {
         ],
       ),
       
-      // Barra de navegación idéntica a las demás pantallas
+      // Barra de navegación inferior
       bottomNavigationBar: Container(
         color: AppColors.barraInferior,
         child: SafeArea(
@@ -166,7 +230,6 @@ class Pedidos extends StatelessWidget {
                           ),
                           const SizedBox(width: 50),
                           IconButton(
-                            // Ícono activo en Pedidos con el color principal de la barra
                             icon: const Icon(Icons.receipt_long_outlined, color: AppColors.barraHome),
                             onPressed: () {},
                           ),
@@ -279,5 +342,9 @@ class Pedidos extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  Widget _buildPaseoTienda(String titulo, String hora, bool completado, bool mostrarLinea) {
+    return _buildPasoEstado(titulo, hora, completado, mostrarLinea);
   }
 }

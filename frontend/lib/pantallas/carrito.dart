@@ -6,9 +6,27 @@ import 'package:elparchee/pantallas/pedidos.dart';
 import 'package:elparchee/pantallas/perfil.dart';
 import 'package:elparchee/pantallas/domicilio.dart';
 import 'package:elparchee/pantallas/notificaciones.dart';
+import 'package:elparchee/pantallas/detalle_producto.dart';
 
 class Carrito extends StatefulWidget {
   const Carrito({super.key});
+
+  static List<Map<String, dynamic>> itemsMemoria = [];
+
+  static void agregarItem(Map<String, dynamic> nuevoItem) {
+    int index = itemsMemoria.indexWhere((item) =>
+        item["nombre"] == nuevoItem["nombre"] &&
+        item["acompanamiento"] == nuevoItem["acompanamiento"] &&
+        item["bebida"] == nuevoItem["bebida"] &&
+        item["sinCebolla"] == nuevoItem["sinCebolla"] &&
+        item["sinLechuga"] == nuevoItem["sinLechuga"]);
+
+    if (index >= 0) {
+      itemsMemoria[index]["cant"] += nuevoItem["cant"];
+    } else {
+      itemsMemoria.add(nuevoItem);
+    }
+  }
 
   @override
   State<Carrito> createState() => _CarritoState();
@@ -19,35 +37,26 @@ class _CarritoState extends State<Carrito> {
   static const Color naranja = AppColors.buttonOrange;
   static const Color crema = AppColors.background;
 
-  int _indiceFiltro = 0;
-  bool _esDomicilio = true; // true = Domicilio, false = Recoger en tienda
+  String _tipoPedido = 'recoger';
 
-  final List<String> _filtros = [
-    'Productos destacados',
-    'Perros calientes y mas',
-    'Bebidas',
-  ];
-
-  final List<Map<String, dynamic>> items = [
-    {"nombre": "Perro Caliente Cargado", "precio": 28000, "cant": 1, "icono": Icons.lunch_dining},
-    {"nombre": "Classic Cheddar Burger", "precio": 13000, "cant": 2, "icono": Icons.fastfood},
-    {"nombre": "Combo Familiar (Special: 2x1)", "precio": 37000, "cant": 2, "icono": Icons.restaurant},
-  ];
+  bool _pedidoConfirmado = false; // Controla si se muestra el cuadro verde en recoger
+  bool _tieneReserva = false;
+  int _personasReserva = 2;
+  TimeOfDay _horaReserva = const TimeOfDay(hour: 17, minute: 0);
 
   int get subtotal =>
-      items.fold(0, (s, i) => s + (i["precio"] as int) * (i["cant"] as int));
+      Carrito.itemsMemoria.fold(0, (s, i) => s + (i["precio"] as int) * (i["cant"] as int));
   
-  int get costoDomicilio => _esDomicilio ? 8000 : 0;
+  int get costoDomicilio => _tipoPedido == 'domicilio' ? 8000 : 0;
   int get total => subtotal + costoDomicilio;
 
   String _fmt(int n) => n
       .toString()
       .replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+$)'), (m) => '${m[1]}.');
 
-  // Modal para la reserva de mesa corregido con StatefulBuilder
   void _mostrarModalReserva(BuildContext context) {
-    int personas = 2;
-    TimeOfDay horaReserva = const TimeOfDay(hour: 19, minute: 0);
+    int personasTemp = _personasReserva;
+    TimeOfDay horaTemp = _horaReserva;
 
     showDialog(
       context: context,
@@ -67,7 +76,7 @@ class _CarritoState extends State<Carrito> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("Dirección: Calle 3 #4-12, Gigante, Huila", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                  const Text("Dirección: Calle 3 #4-12, Tres Esquinas, Gigante, Huila", style: TextStyle(fontSize: 12, color: Colors.grey)),
                   const SizedBox(height: 15),
                   const Text("Número de personas:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                   Row(
@@ -76,15 +85,15 @@ class _CarritoState extends State<Carrito> {
                       IconButton(
                         icon: const Icon(Icons.remove_circle_outline, color: rojo),
                         onPressed: () {
-                          if (personas > 1) {
-                            setModalState(() => personas--);
+                          if (personasTemp > 1) {
+                            setModalState(() => personasTemp--);
                           }
                         },
                       ),
-                      Text("$personas personas", style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                      Text("$personasTemp personas", style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
                       IconButton(
                         icon: const Icon(Icons.add_circle_outline, color: rojo),
-                        onPressed: () => setModalState(() => personas++),
+                        onPressed: () => setModalState(() => personasTemp++),
                       ),
                     ],
                   ),
@@ -92,15 +101,15 @@ class _CarritoState extends State<Carrito> {
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     title: const Text("Hora de llegada:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                    subtitle: Text(horaReserva.format(context)),
+                    subtitle: Text(horaTemp.format(context)),
                     trailing: const Icon(Icons.access_time, color: naranja),
                     onTap: () async {
                       final time = await showTimePicker(
                         context: context,
-                        initialTime: horaReserva,
+                        initialTime: horaTemp,
                       );
                       if (time != null) {
-                        setModalState(() => horaReserva = time);
+                        setModalState(() => horaTemp = time);
                       }
                     },
                   ),
@@ -117,10 +126,15 @@ class _CarritoState extends State<Carrito> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                   ),
                   onPressed: () {
+                    setState(() {
+                      _tieneReserva = true;
+                      _personasReserva = personasTemp;
+                      _horaReserva = horaTemp;
+                    });
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text("¡Mesa reservada para $personas personas a las ${horaReserva.format(context)}!"),
+                      const SnackBar(
+                        content: Text("¡Reserva guardada con éxito!"),
                         backgroundColor: Colors.green,
                       ),
                     );
@@ -141,7 +155,6 @@ class _CarritoState extends State<Carrito> {
       backgroundColor: crema,
       body: Column(
         children: [
-          // Barra superior
           Container(
             padding: const EdgeInsets.fromLTRB(10, 50, 20, 15),
             decoration: const BoxDecoration(
@@ -158,19 +171,12 @@ class _CarritoState extends State<Carrito> {
                   children: [
                     IconButton(
                       onPressed: () => Navigator.pop(context),
-                      icon: const Icon(
-                        Icons.arrow_back,
-                        color: Colors.white,
-                      ),
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
                     ),
                     const SizedBox(width: 5),
                     const Text(
                       "Carrito",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -187,159 +193,279 @@ class _CarritoState extends State<Carrito> {
             ),
           ),
           
-          // Contenido principal
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(15),
-              children: [
-                for (int i = 0; i < items.length; i++) _tarjeta(i),
-                const SizedBox(height: 10),
-                
-                const Text("Tipo de pedido", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    // Opción: Recoger en tienda
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => setState(() => _esDomicilio = false),
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: !_esDomicilio ? naranja.withValues(alpha: 0.15) : Colors.white,
-                            borderRadius: BorderRadius.circular(15),
-                            border: Border.all(
-                              color: !_esDomicilio ? naranja : Colors.grey.shade300,
-                              width: 1.5,
+            child: Carrito.itemsMemoria.isEmpty
+                ? const Center(
+                    child: Text(
+                      "Tu carrito está vacío",
+                      style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.w500),
+                    ),
+                  )
+                : ListView(
+                    padding: const EdgeInsets.all(15),
+                    children: [
+                      for (int i = 0; i < Carrito.itemsMemoria.length; i++) _tarjeta(i),
+                      const SizedBox(height: 10),
+                      
+                      const Text("Tipo de pedido", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                      const SizedBox(height: 10),
+                      
+                      Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() {
+                                _tipoPedido = 'recoger';
+                                _pedidoConfirmado = false;
+                              }),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 6),
+                                decoration: BoxDecoration(
+                                  color: _tipoPedido == 'recoger' ? naranja.withValues(alpha: 0.15) : Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: _tipoPedido == 'recoger' ? naranja : Colors.grey.shade300,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      children: const [
+                                        Icon(Icons.store, color: Colors.brown, size: 26),
+                                        SizedBox(height: 6),
+                                        Text("Recoger", textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                        SizedBox(height: 2),
+                                        Text("En tienda", textAlign: TextAlign.center, style: TextStyle(fontSize: 11, color: Colors.grey)),
+                                      ],
+                                    ),
+                                    if (_tipoPedido == 'recoger')
+                                      const Positioned(
+                                        top: 0,
+                                        right: 0,
+                                        child: Icon(Icons.check_circle, color: naranja, size: 16),
+                                      ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
-                          child: Stack(
-                            children: [
-                              const Column(
-                                children: [
-                                  Icon(Icons.store, color: Colors.brown, size: 26),
-                                  SizedBox(height: 5),
-                                  Text("Recoger", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                                  Text("Listo en tienda", style: TextStyle(fontSize: 10, color: Colors.grey)),
-                                ],
-                              ),
-                              if (!_esDomicilio)
-                                const Positioned(
-                                  top: 0,
-                                  right: 0,
-                                  child: Icon(Icons.check_circle, color: naranja, size: 16),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() {
+                                _tipoPedido = 'reserva';
+                                _pedidoConfirmado = false;
+                              }),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 6),
+                                decoration: BoxDecoration(
+                                  color: _tipoPedido == 'reserva' ? naranja.withValues(alpha: 0.15) : Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: _tipoPedido == 'reserva' ? naranja : Colors.grey.shade300,
+                                    width: 1.5,
+                                  ),
                                 ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 15),
-                    // Opción: Domicilio
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => setState(() => _esDomicilio = true),
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: _esDomicilio ? naranja.withValues(alpha: 0.15) : Colors.white,
-                            borderRadius: BorderRadius.circular(15),
-                            border: Border.all(
-                              color: _esDomicilio ? naranja : Colors.grey.shade300,
-                              width: 1.5,
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      children: const [
+                                        Icon(Icons.table_restaurant, color: Colors.brown, size: 26),
+                                        SizedBox(height: 6),
+                                        Text("Reservar", textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                        SizedBox(height: 2),
+                                        Text("Mesa", textAlign: TextAlign.center, style: TextStyle(fontSize: 11, color: Colors.grey)),
+                                      ],
+                                    ),
+                                    if (_tipoPedido == 'reserva')
+                                      const Positioned(
+                                        top: 0,
+                                        right: 0,
+                                        child: Icon(Icons.check_circle, color: naranja, size: 16),
+                                      ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
-                          child: Stack(
-                            children: [
-                              const Column(
-                                children: [
-                                  Icon(Icons.delivery_dining, color: Colors.brown, size: 26),
-                                  SizedBox(height: 5),
-                                  Text("Domicilio", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                                  Text("Te lo llevamos", style: TextStyle(fontSize: 10, color: Colors.grey)),
-                                ],
-                              ),
-                              if (_esDomicilio)
-                                const Positioned(
-                                  top: 0,
-                                  right: 0,
-                                  child: Icon(Icons.check_circle, color: naranja, size: 16),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() {
+                                _tipoPedido = 'domicilio';
+                                _pedidoConfirmado = false;
+                              }),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 6),
+                                decoration: BoxDecoration(
+                                  color: _tipoPedido == 'domicilio' ? naranja.withValues(alpha: 0.15) : Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: _tipoPedido == 'domicilio' ? naranja : Colors.grey.shade300,
+                                    width: 1.5,
+                                  ),
                                 ),
-                            ],
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      children: const [
+                                        Icon(Icons.delivery_dining, color: Colors.brown, size: 26),
+                                        SizedBox(height: 6),
+                                        Text("Domicilio", textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                        SizedBox(height: 2),
+                                        Text("A casa", textAlign: TextAlign.center, style: TextStyle(fontSize: 11, color: Colors.grey)),
+                                      ],
+                                    ),
+                                    if (_tipoPedido == 'domicilio')
+                                      const Positioned(
+                                        top: 0,
+                                        right: 0,
+                                        child: Icon(Icons.check_circle, color: naranja, size: 16),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
 
-                // Sección adicional que aparece al elegir Recoger (Dirección del local y Reserva de mesa)
-                if (!_esDomicilio) ...[
-                  const SizedBox(height: 15),
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(15),
-                      boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Row(
-                          children: [
-                            Icon(Icons.location_on, color: rojo, size: 20),
-                            SizedBox(width: 6),
-                            Text("Sede de recogida:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          "El Parche - Calle 3 #4-12, Tres Esquinas, Gigante, Huila",
-                          style: TextStyle(fontSize: 12, color: Colors.black87),
-                        ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          "Horario: 5:00 PM - 11:00 PM | Tiempo prep: 15 - 20 min",
-                          style: TextStyle(fontSize: 10, color: Colors.grey),
-                        ),
-                        const Divider(height: 16),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            OutlinedButton.icon(
-                              onPressed: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text("Abriendo ubicación en Google Maps...")),
-                                );
-                              },
-                              icon: const Icon(Icons.map_outlined, size: 16, color: rojo),
-                              label: const Text("Ver mapa", style: TextStyle(fontSize: 12, color: rojo)),
-                              style: OutlinedButton.styleFrom(
-                                side: const BorderSide(color: rojo),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      if (_tipoPedido != 'domicilio') ...[
+                        const SizedBox(height: 15),
+                        Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(15),
+                            boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Row(
+                                children: [
+                                  Icon(Icons.location_on, color: rojo, size: 20),
+                                  SizedBox(width: 6),
+                                  Text("Lugar:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                                ],
                               ),
-                            ),
-                            ElevatedButton.icon(
-                              onPressed: () => _mostrarModalReserva(context),
-                              icon: const Icon(Icons.table_restaurant, size: 16, color: Colors.white),
-                              label: const Text("Reservar Mesa", style: TextStyle(fontSize: 12, color: Colors.white)),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: naranja,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              const SizedBox(height: 4),
+                              const Text(
+                                "El Parche - Calle 3 #4-12, Tres Esquinas, Gigante, Huila",
+                                style: TextStyle(fontSize: 12, color: Colors.black87),
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 4),
+                              const Text(
+                                "Horario: 5:00 PM - 11:00 PM | Tiempo prep: 15 - 20 min",
+                                style: TextStyle(fontSize: 10, color: Colors.grey),
+                              ),
+                              
+                              // Si es Recoger y ya se confirmó, muestra el cuadro verde. Si no, muestra el botón para confirmar.
+                              if (_tipoPedido == 'recoger') ...[
+                                if (_pedidoConfirmado) ...[
+                                  const SizedBox(height: 10),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFEBF7ED),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: const Row(
+                                      children: [
+                                        Icon(Icons.check_circle, color: Color(0xFF4CAF50), size: 18),
+                                        SizedBox(width: 8),
+                                        Text(
+                                          "Pedido confirmado",
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Color(0xFF2E7D32),
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ] else ...[
+                                  const Divider(height: 18),
+                                  Center(
+                                    child: ElevatedButton.icon(
+                                      onPressed: () {
+                                        setState(() {
+                                          _pedidoConfirmado = true;
+                                        });
+                                      },
+                                      icon: const Icon(Icons.check_circle_outline, size: 16, color: Colors.white),
+                                      label: const Text(
+                                        "Confirmar pedido",
+                                        style: TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.bold),
+                                      ),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: naranja,
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ] else ...[
+                                // Modo Reserva
+                                if (_tieneReserva) ...[
+                                  const SizedBox(height: 10),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFEBF7ED),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.check_circle, color: Color(0xFF4CAF50), size: 18),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          "Mesa reservada: $_personasReserva pers. a las ${_horaReserva.format(context)}",
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Color(0xFF2E7D32),
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                                const Divider(height: 18),
+                                Center(
+                                  child: ElevatedButton.icon(
+                                    onPressed: () => _mostrarModalReserva(context),
+                                    icon: const Icon(Icons.table_restaurant, size: 16, color: Colors.white),
+                                    label: Text(
+                                      _tieneReserva ? "Modificar Reserva" : "Reservar Mesa",
+                                      style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.bold),
+                                    ),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: naranja,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
                         ),
                       ],
-                    ),
+                    ],
                   ),
-                ],
-              ],
-            ),
           ),
           
-          // Sección inferior de totales y pago
           Container(
             padding: const EdgeInsets.all(20),
             decoration: const BoxDecoration(
@@ -362,10 +488,10 @@ class _CarritoState extends State<Carrito> {
                   children: [
                     const Text("Domicilio", style: TextStyle(color: Colors.grey)),
                     Text(
-                      _esDomicilio ? "\$${_fmt(costoDomicilio)}" : "GRATIS",
+                      _tipoPedido == 'domicilio' ? "\$${_fmt(costoDomicilio)}" : "\$0",
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: _esDomicilio ? Colors.black : Colors.green,
+                        color: _tipoPedido == 'domicilio' ? Colors.black : Colors.green,
                       ),
                     ),
                   ],
@@ -381,28 +507,51 @@ class _CarritoState extends State<Carrito> {
                 ),
                 const SizedBox(height: 15),
                 ElevatedButton(
-                  onPressed: () {
-                    if (_esDomicilio) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const DomicilioPantalla()),
-                      );
-                    } else {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const Pedidos()),
-                      );
-                    }
-                  },
+                  onPressed: Carrito.itemsMemoria.isEmpty
+                      ? null
+                      : () {
+                          if (_tipoPedido == 'domicilio') {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const DomicilioPantalla()),
+                            );
+                          } else if (_tipoPedido == 'reserva') {
+                            if (!_tieneReserva) {
+                              _mostrarModalReserva(context);
+                            } else {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => Pedidos(
+                                    esReserva: true,
+                                    personasReserva: _personasReserva,
+                                    horaReserva: _horaReserva.format(context),
+                                  ),
+                                ),
+                              );
+                            }
+                          } else {
+                            // Botón inferior para recoger
+                            setState(() {
+                              _pedidoConfirmado = true;
+                            });
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const Pedidos(esReserva: false),
+                              ),
+                            );
+                          }
+                        },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: naranja,
                     foregroundColor: Colors.white,
                     minimumSize: const Size(double.infinity, 45),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
                   ),
-                  child: Text(
-                    _esDomicilio ? "Continuar con domicilio" : "Confirmar pedido para recoger",
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  child: const Text(
+                    "Confirmar pedido",
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
@@ -411,120 +560,76 @@ class _CarritoState extends State<Carrito> {
         ],
       ),
       
-      // Barra de navegación inferior
       bottomNavigationBar: Container(
         color: AppColors.barraInferior,
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.only(top: 12, bottom: 8, left: 16, right: 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  height: 30,
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            child: SizedBox(
+              height: 40,
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.home_outlined, color: Colors.brown),
-                            onPressed: () {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(builder: (_) => const Productos()),
-                              );
-                            },
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.search, color: Colors.brown),
-                            onPressed: () {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(builder: (_) => const Buscar()),
-                              );
-                            },
-                          ),
-                          const SizedBox(width: 50),
-                          IconButton(
-                            icon: const Icon(Icons.receipt_long_outlined, color: Colors.brown),
-                            onPressed: () {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(builder: (_) => const Pedidos()),
-                              );
-                            },
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.person_outline, color: Colors.brown),
-                            onPressed: () {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(builder: (_) => const Perfil()),
-                              );
-                            },
-                          ),
-                        ],
+                      IconButton(
+                        icon: const Icon(Icons.home_outlined, color: Colors.brown),
+                        onPressed: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (_) => const Productos()),
+                          );
+                        },
                       ),
-                      Positioned(
-                        top: -24,
-                        child: CircleAvatar(
-                          radius: 28,
-                          backgroundColor: AppColors.buttonOrange,
-                          child: IconButton(
-                            icon: const Icon(
-                              Icons.shopping_cart,
-                              color: Colors.white,
-                              size: 28,
-                            ),
-                            onPressed: () {},
-                          ),
-                        ),
+                      IconButton(
+                        icon: const Icon(Icons.search, color: Colors.brown),
+                        onPressed: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (_) => const Buscar()),
+                          );
+                        },
+                      ),
+                      const SizedBox(width: 50),
+                      IconButton(
+                        icon: const Icon(Icons.receipt_long_outlined, color: Colors.brown),
+                        onPressed: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (_) => const Pedidos()),
+                          );
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.person_outline, color: Colors.brown),
+                        onPressed: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (_) => const Perfil()),
+                          );
+                        },
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.barraInferior,
-                    borderRadius: BorderRadius.circular(25),
-                  ),
-                  child: Row(
-                    children: List.generate(
-                      _filtros.length,
-                      (i) => Expanded(
-                        child: GestureDetector(
-                          onTap: () => setState(() => _indiceFiltro = i),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            decoration: BoxDecoration(
-                              color: _indiceFiltro == i
-                                  ? AppColors.buttonOrange
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(25),
-                            ),
-                            child: Text(
-                              _filtros[i],
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: _indiceFiltro == i
-                                    ? Colors.black
-                                    : Colors.black87,
-                              ),
-                            ),
-                          ),
+                  Positioned(
+                    top: -24,
+                    child: CircleAvatar(
+                      radius: 28,
+                      backgroundColor: AppColors.buttonOrange,
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.shopping_cart,
+                          color: Colors.white,
+                          size: 28,
                         ),
+                        onPressed: () {},
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -533,73 +638,129 @@ class _CarritoState extends State<Carrito> {
   }
 
   Widget _tarjeta(int i) {
-    final item = items[i];
+    final item = Carrito.itemsMemoria[i];
     final int cant = item["cant"];
     final int precio = item["precio"];
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 5)],
+
+    return Dismissible(
+      key: Key('${item["nombre"]}_$i'),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: Colors.red.shade700,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Icon(Icons.delete, color: Colors.white, size: 20),
+            SizedBox(width: 5),
+            Text("Eliminar", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ],
+        ),
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 70,
-            height: 70,
-            decoration: BoxDecoration(
-                color: const Color.fromARGB(255, 242, 234, 216),
-                borderRadius: BorderRadius.circular(8)),
-            child: Icon(item["icono"], color: Colors.deepOrange, size: 36),
+      onDismissed: (direction) {
+        setState(() {
+          Carrito.itemsMemoria.removeAt(i);
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Producto eliminado del carrito"),
+            duration: Duration(seconds: 1),
           ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(item["nombre"], style: const TextStyle(fontWeight: FontWeight.bold)),
-                Text("${_fmt(precio)} COP x$cant",
-                    style: const TextStyle(fontSize: 11, color: Colors.grey)),
-                Text("\$${_fmt(precio * cant)}",
-                    style: const TextStyle(color: rojo, fontWeight: FontWeight.bold)),
-              ],
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 5)],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 70,
+              height: 70,
+              decoration: BoxDecoration(
+                  color: const Color.fromARGB(255, 242, 234, 216),
+                  borderRadius: BorderRadius.circular(8)),
+              child: Icon(item["icono"] ?? Icons.fastfood, color: Colors.deepOrange, size: 36),
             ),
-          ),
-          Column(
-            children: [
-              Row(
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _boton(Icons.remove, () {
-                    if (cant > 1) setState(() => item["cant"] = cant - 1);
-                  }),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
-                    child: Text("$cant"),
-                  ),
-                  _boton(Icons.add, () => setState(() => item["cant"] = item["cant"] + 1)),
+                  Text(item["nombre"], style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text("${_fmt(precio)} COP x$cant",
+                      style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                  if (item["acompanamiento"] != null)
+                    Text("+ ${item["acompanamiento"]}",
+                        style: const TextStyle(fontSize: 10, color: Colors.brown)),
+                  if (item["bebida"] != null)
+                    Text("+ ${item["bebida"]}",
+                        style: const TextStyle(fontSize: 10, color: Colors.brown)),
+                  Text("\$${_fmt(precio * cant)}",
+                      style: const TextStyle(color: rojo, fontWeight: FontWeight.bold)),
                 ],
               ),
-              TextButton.icon(
-                onPressed: () => setState(() => items.removeAt(i)),
-                icon: const Icon(Icons.delete_outline, size: 14, color: Colors.black54),
-                label: const Text("Eliminar",
-                    style: TextStyle(fontSize: 11, color: Colors.black54)),
-              ),
-            ],
-          ),
-        ],
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TextButton(
+                  onPressed: () async {
+                    final resultado = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ProductDetailScreen(
+                          title: "Detalle del producto",
+                          imageUrl: item["imageUrl"] ?? "assets/images/ha.jpg",
+                          price: "\$${_fmt(item["rawPrice"]?.toInt() ?? precio)} COP",
+                          name: item["nombre"],
+                          description: item["description"] ?? "Deliciosa preparación.",
+                          rawPrice: (item["rawPrice"] ?? precio).toDouble(),
+                          initialAcompanamiento: item["acompanamiento"],
+                          initialBebida: item["bebida"],
+                          initialSinCebolla: item["sinCebolla"] ?? false,
+                          initialSinLechuga: item["sinLechuga"] ?? false,
+                          initialCantidad: cant,
+                          onAgregarAlCarrito: (nuevoItem) {
+                            setState(() {
+                              Carrito.itemsMemoria[i] = nuevoItem;
+                            });
+                          },
+                        ),
+                      ),
+                    );
+
+                    if (resultado != null) {
+                      setState(() {
+                        Carrito.itemsMemoria[i] = resultado;
+                      });
+                    }
+                  },
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Text("Ver",
+                          style: TextStyle(fontSize: 12, color: Colors.brown, fontWeight: FontWeight.bold)),
+                      SizedBox(width: 4),
+                      Icon(Icons.arrow_forward_ios, size: 10, color: Colors.brown),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
-
-  Widget _boton(IconData icono, VoidCallback onTap) => InkWell(
-        onTap: onTap,
-        child: CircleAvatar(
-          radius: 10,
-          backgroundColor: naranja,
-          child: Icon(icono, size: 14, color: Colors.white),
-        ),
-      );
 }

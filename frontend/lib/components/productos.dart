@@ -7,7 +7,8 @@ import 'package:elparchee/pantallas/menuHamburguesas.dart';
 import 'package:elparchee/pantallas/menuOtros.dart';
 import 'package:elparchee/pantallas/menuPerro.dart';
 import 'package:elparchee/pantallas/menuSalchipapa.dart';
-import 'package:elparchee/pantallas/notificaciones.dart'; // <-- Importado
+import 'package:elparchee/pantallas/notificaciones.dart';
+import 'package:elparchee/pantallas/detalle_producto.dart'; 
 import 'package:elparchee/models/producto_model.dart';
 import 'package:elparchee/services/producto_service.dart';
 import 'package:flutter/material.dart';
@@ -93,6 +94,7 @@ class _ProductosState extends State<Productos> {
     }
   }
 
+<<<<<<< Updated upstream
   List<ProductoModel> get _productosFiltrados {
     if (_indiceFiltro == 0) {
       return _listaProductos;
@@ -108,6 +110,26 @@ class _ProductosState extends State<Productos> {
                 p.categoria.toLowerCase().contains('otro'),
           )
           .toList();
+=======
+  Future<void> _cargarProductosHome() async {
+    setState(() {
+      _isLoading = true;
+      _errorCarga = null;
+    });
+    try {
+      final lista = await DestacadoService.obtener();
+      if (!mounted) return;
+      setState(() {
+        _listaDestacados = lista.map((d) => d.toProducto()).toList();
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorCarga = e.toString().replaceFirst('Exception: ', '');
+      });
+>>>>>>> Stashed changes
     }
   }
 
@@ -185,30 +207,46 @@ class _ProductosState extends State<Productos> {
                     if (lbl == 'Perros calientes') {
                       Navigator.push(
                         context,
+<<<<<<< Updated upstream
                         MaterialPageRoute(
                           builder: (context) => const MenuPerro(),
                         ),
+=======
+                        MaterialPageRoute(builder: (_) => const MenuPerro()),
+>>>>>>> Stashed changes
                       );
                     } else if (lbl == 'Hamburguesas') {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
+<<<<<<< Updated upstream
                           builder: (context) => const MenuHamburguesas(),
+=======
+                          builder: (_) => const MenuHamburguesas(),
+>>>>>>> Stashed changes
                         ),
                       );
                     } else if (lbl == 'Salchipapas') {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
+<<<<<<< Updated upstream
                           builder: (context) => const SalchipapasMenu(),
+=======
+                          builder: (_) => const SalchipapasMenu(),
+>>>>>>> Stashed changes
                         ),
                       );
                     } else if (lbl == 'Otros') {
                       Navigator.push(
                         context,
+<<<<<<< Updated upstream
                         MaterialPageRoute(
                           builder: (context) => const MenuOtros(),
                         ),
+=======
+                        MaterialPageRoute(builder: (_) => const MenuOtros()),
+>>>>>>> Stashed changes
                       );
                     }
                   },
@@ -264,6 +302,7 @@ class _ProductosState extends State<Productos> {
               left: 16,
               right: 16,
             ),
+<<<<<<< Updated upstream
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -272,6 +311,16 @@ class _ProductosState extends State<Productos> {
                   child: Stack(
                     clipBehavior: Clip.none,
                     alignment: Alignment.center,
+=======
+            child: SizedBox(
+              height: 30,
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+>>>>>>> Stashed changes
                     children: [
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -307,6 +356,7 @@ class _ProductosState extends State<Productos> {
                       ),
                     ],
                   ),
+<<<<<<< Updated upstream
                 ),
                 const SizedBox(height: 12),
                 Container(
@@ -344,6 +394,25 @@ class _ProductosState extends State<Productos> {
                             ),
                           ),
                         ),
+=======
+                  Positioned(
+                    top: -24,
+                    child: CircleAvatar(
+                      radius: 28,
+                      backgroundColor: AppColors.buttonOrange,
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.shopping_cart_outlined,
+                          color: Colors.white,
+                          size: 28,
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const Carrito()),
+                          );
+                        },
+>>>>>>> Stashed changes
                       ),
                     ),
                   ),
@@ -369,58 +438,75 @@ class _ProductosState extends State<Productos> {
       itemCount: productos.length,
       itemBuilder: (_, i) {
         final producto = productos[i];
-        return Card(
-          clipBehavior: Clip.antiAlias,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: producto.imagenUrl.isEmpty
-                    ? const Center(
-                        child: Icon(
-                          Icons.fastfood,
-                          size: 48,
-                          color: Colors.grey,
-                        ),
-                      )
-                    : Image.network(
-                        producto.imagenUrl,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        errorBuilder: (_, _, _) => const Center(
+        return InkWell(
+          onTap: () {
+            // Navega hacia la pantalla de detalle del producto al tocarlo
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ProductDetailScreen(
+                  title: 'Detalle del producto',
+                  imageUrl: producto.imagenUrl,
+                  price: '\$${producto.precio.toStringAsFixed(0)} COP',
+                  name: producto.nombre,
+                  description: 'Deliciosa preparación elaborada con ingredientes frescos y de la mejor calidad para disfrutar al máximo.',
+                ),
+              ),
+            );
+          },
+          child: Card(
+            clipBehavior: Clip.antiAlias,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: producto.imagenUrl.isEmpty
+                      ? const Center(
                           child: Icon(
-                            Icons.broken_image_outlined,
+                            Icons.fastfood,
                             size: 48,
                             color: Colors.grey,
                           ),
+                        )
+                      : Image.network(
+                          producto.imagenUrl,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          errorBuilder: (_, __, ___) => const Center(
+                            child: Icon(
+                              Icons.broken_image_outlined,
+                              size: 48,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        producto.nombre,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        '\$${producto.precio.toStringAsFixed(0)} COP',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.buttonOrange,
                         ),
                       ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      producto.nombre,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      '\$${producto.precio.toStringAsFixed(0)} COP',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.buttonOrange,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
