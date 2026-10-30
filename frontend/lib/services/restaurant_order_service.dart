@@ -12,10 +12,7 @@ class RestaurantOrderService {
     if (token.isEmpty) {
       throw Exception('La sesión expiró. Inicia sesión nuevamente.');
     }
-    return {
-      ...ApiConfig.headers,
-      'Authorization': 'Bearer $token',
-    };
+    return {...ApiConfig.headers, 'Authorization': 'Bearer $token'};
   }
 
   Future<dynamic> _request(
@@ -62,7 +59,9 @@ class RestaurantOrderService {
       final message = responseBody is Map<String, dynamic>
           ? responseBody['error']?.toString()
           : null;
-      throw Exception(message ?? 'Error del servidor (${response.statusCode}).');
+      throw Exception(
+        message ?? 'Error del servidor (${response.statusCode}).',
+      );
     }
 
     return responseBody;
@@ -71,7 +70,9 @@ class RestaurantOrderService {
   Future<List<Map<String, dynamic>>> listarProductos() async {
     final response = await _request('GET', '/productos');
     if (response is! List) {
-      throw Exception('La respuesta de productos no tiene el formato esperado.');
+      throw Exception(
+        'La respuesta de productos no tiene el formato esperado.',
+      );
     }
     return response
         .map((item) => Map<String, dynamic>.from(item as Map))
@@ -123,6 +124,10 @@ class RestaurantOrderService {
     required String tipoPedido,
     required List<Map<String, dynamic>> productos,
     String? direccionEntrega,
+    String? nombreReceptor,
+    String? telefonoReceptor,
+    String? correoContacto,
+    String? metodoPago,
   }) async {
     final response = await _request(
       'POST',
@@ -130,7 +135,11 @@ class RestaurantOrderService {
       body: {
         'tipo_pedido': tipoPedido,
         'productos': productos,
-        if (direccionEntrega != null) 'direccion_entrega': direccionEntrega,
+        'direccion_entrega': ?direccionEntrega,
+        'nombre_receptor': ?nombreReceptor,
+        'telefono_receptor': ?telefonoReceptor,
+        'correo_contacto': ?correoContacto,
+        'metodo_pago': ?metodoPago,
       },
     );
     if (response is! Map<String, dynamic>) {
@@ -141,6 +150,38 @@ class RestaurantOrderService {
 
   Future<List<Map<String, dynamic>>> listarPedidosCliente() async {
     return _listarPedidos('/pedidos/mis-pedidos');
+  }
+
+  Future<Map<String, dynamic>?> consultarPedidoPorContacto(
+    String contacto,
+  ) async {
+    final valor = contacto.trim();
+    if (valor.isEmpty) {
+      throw ArgumentError.value(contacto, 'contacto', 'No puede estar vacío');
+    }
+
+    final esCorreo = valor.contains('@');
+    final normalizado = esCorreo
+        ? valor.toLowerCase()
+        : valor.replaceAll(RegExp(r'\D'), '');
+    if (normalizado.isEmpty) return null;
+
+    final pedidos = await listarPedidosCliente();
+    for (final pedido in pedidos) {
+      if (pedido['tipo_pedido'] != 'domicilio') continue;
+
+      final datoPedido =
+          pedido[esCorreo ? 'correo_contacto' : 'telefono_receptor']
+              ?.toString()
+              .trim();
+      if (datoPedido == null || datoPedido.isEmpty) continue;
+
+      final datoNormalizado = esCorreo
+          ? datoPedido.toLowerCase()
+          : datoPedido.replaceAll(RegExp(r'\D'), '');
+      if (datoNormalizado == normalizado) return pedido;
+    }
+    return null;
   }
 
   Future<void> actualizarEstado(int pedidoId, String estado) async {

@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../app_colors.dart';
 import '../components/customer_bottom_navigation.dart';
 import '../services/restaurant_order_service.dart';
+import 'seguimientopedido.dart';
 
 class Pedidos extends StatefulWidget {
   const Pedidos({super.key});
@@ -68,6 +69,13 @@ class _PedidosState extends State<Pedidos> {
     }
   }
 
+  void _abrirSeguimiento([dynamic pedidoId]) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => SeguimientoPedido(pedidoId: pedidoId)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -77,6 +85,11 @@ class _PedidosState extends State<Pedidos> {
         backgroundColor: AppColors.barraHome,
         foregroundColor: Colors.white,
         actions: [
+          IconButton(
+            tooltip: 'Rastrear domicilio',
+            onPressed: () => _abrirSeguimiento(),
+            icon: const Icon(Icons.my_location),
+          ),
           if (_esUsuario)
             IconButton(
               tooltip: 'Actualizar pedidos',
@@ -134,6 +147,8 @@ class _PedidosState extends State<Pedidos> {
     );
     final detalles = (pedido['detalle_pedido'] as List<dynamic>?) ?? [];
     final mesa = pedido['numero_mesa']?.toString();
+    final esDomicilioActivo =
+        pedido['tipo_pedido'] == 'domicilio' && pedido['estado'] != 'entregado';
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -168,6 +183,15 @@ class _PedidosState extends State<Pedidos> {
               '\$${(item['subtotal'] as num?)?.toStringAsFixed(0) ?? '0'}',
             );
           }),
+          if (esDomicilioActivo)
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                icon: const Icon(Icons.delivery_dining),
+                label: const Text('Seguir mi domicilio'),
+                onPressed: () => _abrirSeguimiento(pedido['id']),
+              ),
+            ),
         ],
       ),
     );
