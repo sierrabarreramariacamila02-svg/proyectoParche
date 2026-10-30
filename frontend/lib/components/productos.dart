@@ -1,9 +1,4 @@
 import 'package:elparchee/app_colors.dart';
-<<<<<<< Updated upstream
-import 'package:elparchee/components/customer_bottom_navigation.dart';
-=======
-import 'package:elparchee/components/categoria_menu_page.dart';
->>>>>>> Stashed changes
 import 'package:elparchee/models/producto_model.dart';
 import 'package:elparchee/pantallas/carrito.dart'; // O la ruta de tu pantalla de carrito
 import 'package:elparchee/pantallas/detalle_producto.dart';
@@ -115,7 +110,8 @@ class _ProductosState extends State<Productos> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => _DetalleCategoriaScreen(tituloCategoria: nombreCategoria),
+        builder: (_) =>
+            _DetalleCategoriaScreen(tituloCategoria: nombreCategoria),
       ),
     );
   }
@@ -229,7 +225,7 @@ class _ProductosState extends State<Productos> {
             else if (_listaDestacados.isEmpty)
               const Center(
                 child: Padding(
-                  padding: const EdgeInsets.all(24),
+                  padding: EdgeInsets.all(24),
                   child: Text('No hay productos destacados disponibles.'),
                 ),
               )
@@ -247,7 +243,9 @@ class _ProductosState extends State<Productos> {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => const Carrito()), // Reemplaza 'Carrito' con el nombre de tu clase de carrito si es diferente
+            MaterialPageRoute(
+              builder: (_) => const Carrito(),
+            ), // Reemplaza 'Carrito' con el nombre de tu clase de carrito si es diferente
           );
         },
         child: const Icon(Icons.shopping_cart, color: Colors.white),
@@ -277,7 +275,9 @@ class _ProductosState extends State<Productos> {
                   // Opcional: acción o pantalla de búsqueda
                 },
               ),
-              const SizedBox(width: 40), // Espacio para el botón flotante del carrito
+              const SizedBox(
+                width: 40,
+              ), // Espacio para el botón flotante del carrito
               // Icono Pedidos
               IconButton(
                 icon: const Icon(Icons.receipt_long, color: Colors.brown),
@@ -451,7 +451,6 @@ class _ProductosState extends State<Productos> {
     _controller.dispose();
     super.dispose();
   }
-<<<<<<< Updated upstream
 }
 
 // ----------------------------------------------------------------------
@@ -464,7 +463,8 @@ class _DetalleCategoriaScreen extends StatefulWidget {
   const _DetalleCategoriaScreen({required this.tituloCategoria});
 
   @override
-  State<_DetalleCategoriaScreen> createState() => _DetalleCategoriaScreenState();
+  State<_DetalleCategoriaScreen> createState() =>
+      _DetalleCategoriaScreenState();
 }
 
 class _DetalleCategoriaScreenState extends State<_DetalleCategoriaScreen> {
@@ -474,7 +474,9 @@ class _DetalleCategoriaScreenState extends State<_DetalleCategoriaScreen> {
   @override
   void initState() {
     super.initState();
-    _futureProductos = _productoService.obtenerProductos(categoria: widget.tituloCategoria);
+    _futureProductos = _productoService.obtenerProductos(
+      categoria: widget.tituloCategoria,
+    );
   }
 
   @override
@@ -485,7 +487,10 @@ class _DetalleCategoriaScreenState extends State<_DetalleCategoriaScreen> {
         backgroundColor: AppColors.barraHome,
         title: Text(
           widget.tituloCategoria,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
       body: FutureBuilder<List<ProductoModel>>(
@@ -496,7 +501,9 @@ class _DetalleCategoriaScreenState extends State<_DetalleCategoriaScreen> {
           } else if (snapshot.hasError) {
             return Center(child: Text('Error al cargar: ${snapshot.error}'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No hay productos en esta categoría'));
+            return const Center(
+              child: Text('No hay productos en esta categoría'),
+            );
           }
 
           final productos = snapshot.data!;
@@ -573,7 +580,9 @@ class _DetalleCategoriaScreenState extends State<_DetalleCategoriaScreen> {
                               producto.nombre,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             Text(
                               '\$${producto.precio.toStringAsFixed(0)} COP',
@@ -595,6 +604,5 @@ class _DetalleCategoriaScreenState extends State<_DetalleCategoriaScreen> {
       ),
     );
   }
-=======
->>>>>>> Stashed changes
 }
+
