@@ -1,12 +1,9 @@
+dotenv.config();
 
 import dotenv from 'dotenv';
-dotenv.config();
 import express from 'express';
 import cors from 'cors';
 import { logError } from './utils/logger.js';
-import { connectaDB } from './config/supabase.js';
-
-// Importación de todas las rutas del backend de El Parche
 import authRoutes from './routes/auth.js';
 import usuarioRoutes from './routes/usuario.js';
 import productoRoutes from './routes/producto.js';
@@ -19,18 +16,9 @@ import calificacionRoutes from './routes/calificacion.js';
 import mensajesRoutes from './routes/mensajes.js';
 import chatBotRoutes from './routes/chatBot.js';
 import recuperarRoutes from './routes/recuperar.js';
+import bannerRoutes from './routes/banners.js';
+import destacadoRoutes from './routes/destacado.js';
 
-
-
- 
-
-connectaDB();
-
-
-
-connectaDB();
-
- 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -62,6 +50,8 @@ app.use('/api/calificaciones', calificacionRoutes);
 app.use('/api/mensajes', mensajesRoutes);
 app.use('/api/chatbot', chatBotRoutes);
 app.use('/api/recuperar', recuperarRoutes);
+app.use('/api/banners', bannerRoutes);
+app.use('/api/destacados', destacadoRoutes);
 
 // Ruta base de comprobación
 app.get('/', (req, res) => {

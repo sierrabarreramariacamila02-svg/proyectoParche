@@ -1,13 +1,27 @@
 import 'package:elparchee/app_colors.dart';
-import 'package:elparchee/pantallas/carrito.dart';
-import 'package:elparchee/pantallas/menuHamburguesas.dart';
-import 'package:elparchee/pantallas/menuOtros.dart';
-import 'package:elparchee/pantallas/menuPerro.dart';
-import 'package:elparchee/pantallas/menuSalchipapa.dart';
+<<<<<<< Updated upstream
+import 'package:elparchee/components/customer_bottom_navigation.dart';
+=======
+import 'package:elparchee/components/categoria_menu_page.dart';
+>>>>>>> Stashed changes
+import 'package:elparchee/models/producto_model.dart';
+import 'package:elparchee/pantallas/carrito.dart'; // O la ruta de tu pantalla de carrito
+import 'package:elparchee/pantallas/detalle_producto.dart';
+import 'package:elparchee/pantallas/notificaciones.dart';
+import 'package:elparchee/pantallas/pedidos.dart'; // Asegúrate de tener esta importación
+import 'package:elparchee/pantallas/perfil.dart'; // Asegúrate de tener esta importación
+import 'package:elparchee/services/cart_service.dart';
+import 'package:elparchee/services/destacado_service.dart';
+import 'package:elparchee/services/producto_service.dart'; // 👈 Asegúrate de tener tu servicio de productos importado
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'admin_drawer.dart';
 
 class Productos extends StatefulWidget {
-  const Productos({super.key});
+  final bool isAdmin;
+
+  const Productos({super.key, this.isAdmin = false});
 
   @override
   State<Productos> createState() => _ProductosState();
@@ -15,30 +29,20 @@ class Productos extends StatefulWidget {
 
 class _ProductosState extends State<Productos> {
   final PageController _controller = PageController();
-  int paginaActual = 0;
-  int _indiceIcono = 0;
-  int _indiceFiltro = 0;
+  int _paginaActual = 0;
+  List<ProductoModel> _listaDestacados = [];
+  bool _isLoading = true;
+  String? _errorCarga;
+  String _nombreUsuario = 'username';
+  String _correoUsuario = '';
 
-  final List<String> imagenes = [
+  final List<String> _imagenes = [
     'assets/images/promo1.png',
     'assets/images/promo2.png',
     'assets/images/promo3.png',
   ];
 
-  final List<String> platos = [
-    'assets/images/plato1.png',
-    'assets/images/plato2.png',
-    'assets/images/plato3.png',
-    'assets/images/plato4.png',
-  ];
-
-  final List<String> _filtros = [
-    'Productos destacados',
-    'Perros calientes y mas',
-    'Bebidas',
-  ];
-
-  final List<Map<String, dynamic>> _categorias = [
+  final List<Map<String, Object>> _categorias = [
     {
       'img': 'assets/images/hamburguesa.png',
       'lbl': 'Hamburguesas',
@@ -62,22 +66,88 @@ class _ProductosState extends State<Productos> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    DestacadoService.cambios.addListener(_alCambiarDestacados);
+    _cargarProductosHome();
+    if (widget.isAdmin) _cargarDatosAdmin();
+  }
+
+  Future<void> _cargarDatosAdmin() async {
+    final preferencias = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _nombreUsuario = preferencias.getString('user_name') ?? 'Administrador';
+      _correoUsuario = preferencias.getString('user_email') ?? '';
+    });
+  }
+
+  void _alCambiarDestacados() {
+    if (mounted) _cargarProductosHome();
+  }
+
+  Future<void> _cargarProductosHome() async {
+    setState(() {
+      _isLoading = true;
+      _errorCarga = null;
+    });
+    try {
+      final lista = await DestacadoService.obtener();
+      if (!mounted) return;
+      setState(() {
+        _listaDestacados = lista
+            .map((destacado) => destacado.toProducto())
+            .toList();
+        _isLoading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorCarga = error.toString().replaceFirst('Exception: ', '');
+      });
+    }
+  }
+
+  // 🛠️ MODIFICADO: Ahora en lugar de abrir una página genérica de categoría vacía,
+  // consultamos los productos de esa categoría y los mostramos con la misma estructura interactiva.
+  void _abrirCategoria(String nombreCategoria) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => _DetalleCategoriaScreen(tituloCategoria: nombreCategoria),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFAF3E0),
       appBar: AppBar(
         backgroundColor: AppColors.barraHome,
-        title: const Text(
-          'Hola username!',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        title: Text(
+          widget.isAdmin ? 'Hola, $_nombreUsuario' : 'Hola username!',
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_none, color: Colors.white),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const Notificaciones()),
+              );
+            },
           ),
         ],
       ),
+      drawer: widget.isAdmin
+          ? AdminDrawer(adminName: _nombreUsuario, adminEmail: _correoUsuario)
+          : null,
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -87,13 +157,13 @@ class _ProductosState extends State<Productos> {
               height: 200,
               child: PageView.builder(
                 controller: _controller,
-                itemCount: imagenes.length,
-                onPageChanged: (i) => setState(() => paginaActual = i),
-                itemBuilder: (_, i) => Container(
+                itemCount: _imagenes.length,
+                onPageChanged: (index) => setState(() => _paginaActual = index),
+                itemBuilder: (_, index) => Container(
                   margin: const EdgeInsets.symmetric(horizontal: 10),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(45),
-                    child: Image.asset(imagenes[i], fit: BoxFit.cover),
+                    child: Image.asset(_imagenes[index], fit: BoxFit.cover),
                   ),
                 ),
               ),
@@ -102,14 +172,14 @@ class _ProductosState extends State<Productos> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
-                imagenes.length,
-                (i) => AnimatedContainer(
+                _imagenes.length,
+                (index) => AnimatedContainer(
                   duration: const Duration(milliseconds: 400),
                   margin: const EdgeInsets.symmetric(horizontal: 3),
-                  width: paginaActual == i ? 18 : 8,
+                  width: _paginaActual == index ? 18 : 8,
                   height: 10,
                   decoration: BoxDecoration(
-                    color: paginaActual == i
+                    color: _paginaActual == index
                         ? AppColors.barraHome
                         : Colors.grey.shade400,
                     borderRadius: BorderRadius.circular(4),
@@ -120,208 +190,220 @@ class _ProductosState extends State<Productos> {
             _titulo('Menú.'),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: _categorias.map((c) {
-                final lbl = c['lbl'] as String;
+              children: _categorias.map((categoria) {
+                final nombre = categoria['lbl']! as String;
                 return _catItem(
-                  c['img'] as String,
-                  lbl,
-                  c['color'] as Color,
-                  () {
-                    if (lbl == 'Perros calientes') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const MenuPerro(),
-                        ),
-                      );
-                    } else if (lbl == 'Hamburguesas') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const MenuHamburguesas(),
-                        ),
-                      );
-                    } else if (lbl == 'Salchipapas') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SalchipapasMenu(),
-                        ),
-                      );
-                    } else if (lbl == 'Otros') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const MenuOtros(),
-                        ),
-                      );
-                    }
-                  },
+                  categoria['img']! as String,
+                  nombre,
+                  categoria['color']! as Color,
+                  () => _abrirCategoria(nombre),
                 );
               }).toList(),
             ),
-            _titulo('Platos destacados.'),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 0.8,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
-              ),
-              itemCount: platos.length,
-              itemBuilder: (_, i) => Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+            _titulo('Productos destacados'),
+            if (_isLoading)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(32),
+                  child: CircularProgressIndicator(),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(12),
-                        ),
-                        child: Image.asset(
-                          platos[i],
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                        ),
-                      ),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Producto',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            '12,000 COP',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: AppColors.buttonOrange,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
-      bottomNavigationBar: Container(
-        color: AppColors.barraInferior,
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.only(
-              top: 12,
-              bottom: 8,
-              left: 16,
-              right: 16,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  height: 30,
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    alignment: Alignment.center,
+              )
+            else if (_errorCarga != null)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          _navIcon(Icons.home_outlined, 0),
-                          _navIcon(Icons.search, 1),
-                          const SizedBox(width: 50),
-                          _navIcon(Icons.receipt_long_outlined, 2),
-                          _navIcon(Icons.person_outline, 3),
-                        ],
+                      Text(
+                        'No se pudieron cargar los productos: $_errorCarga',
+                        textAlign: TextAlign.center,
                       ),
-                      Positioned(
-                        top: -24,
-                        child: CircleAvatar(
-                          radius: 28,
-                          backgroundColor: AppColors.buttonOrange,
-                          child: IconButton(
-                            icon: const Icon(
-                              Icons.shopping_cart_outlined,
-                              color: Colors.white,
-                              size: 28,
-                            ),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const Carrito(),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
+                      TextButton(
+                        onPressed: _cargarProductosHome,
+                        child: const Text('Reintentar'),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 12),
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.barraInferior,
-                    borderRadius: BorderRadius.circular(25),
-                  ),
-                  child: Row(
-                    children: List.generate(
-                      _filtros.length,
-                      (i) => Expanded(
-                        child: GestureDetector(
-                          onTap: () => setState(() => _indiceFiltro = i),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            decoration: BoxDecoration(
-                              color: _indiceFiltro == i
-                                  ? AppColors.buttonOrange
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(25),
-                            ),
-                            child: Text(
-                              _filtros[i],
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: _indiceFiltro == i
-                                    ? Colors.black
-                                    : Colors.black87,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+              )
+            else if (_listaDestacados.isEmpty)
+              const Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Text('No hay productos destacados disponibles.'),
                 ),
-              ],
-            ),
+              )
+            else
+              _buildProductGrid(_listaDestacados),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+      // Botón flotante central del carrito funcional
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: AppColors.buttonOrange,
+        elevation: 4.0,
+        shape: const CircleBorder(),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const Carrito()), // Reemplaza 'Carrito' con el nombre de tu clase de carrito si es diferente
+          );
+        },
+        child: const Icon(Icons.shopping_cart, color: Colors.white),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      // Barra de navegación inferior con iconos funcionales
+      bottomNavigationBar: BottomAppBar(
+        color: const Color(0xFFF2D6BD),
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 8.0,
+        child: SizedBox(
+          height: 60,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              // Icono Home (ya estás aquí, puedes dejarlo vacio o recargar)
+              IconButton(
+                icon: const Icon(Icons.home, color: AppColors.barraHome),
+                onPressed: () {
+                  // Ya estás en la pantalla principal
+                },
+              ),
+              // Icono Búsqueda
+              IconButton(
+                icon: const Icon(Icons.search, color: Colors.brown),
+                onPressed: () {
+                  // Opcional: acción o pantalla de búsqueda
+                },
+              ),
+              const SizedBox(width: 40), // Espacio para el botón flotante del carrito
+              // Icono Pedidos
+              IconButton(
+                icon: const Icon(Icons.receipt_long, color: Colors.brown),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const Pedidos()),
+                  );
+                },
+              ),
+              // Icono Perfil
+              IconButton(
+                icon: const Icon(Icons.person_outline, color: Colors.brown),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const Perfil()),
+                  );
+                },
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _titulo(String t) => Padding(
+  Widget _buildProductGrid(List<ProductoModel> productos) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 0.72,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+      ),
+      itemCount: productos.length,
+      itemBuilder: (_, index) {
+        final producto = productos[index];
+        return InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ProductDetailScreen(
+                  title: 'Detalle del producto',
+                  imageUrl: producto.imagenUrl,
+                  price: '\$${producto.precio.toStringAsFixed(0)} COP',
+                  name: producto.nombre,
+                  description: producto.descripcion,
+                  rawPrice: producto.precio,
+                  onAgregarAlCarrito: (item) {
+                    CartService.instance.add(
+                      producto,
+                      quantity: item['cant'] as int? ?? 1,
+                    );
+                  },
+                ),
+              ),
+            );
+          },
+          child: Card(
+            clipBehavior: Clip.antiAlias,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: producto.imagenUrl.isEmpty
+                      ? const Center(
+                          child: Icon(
+                            Icons.fastfood,
+                            size: 48,
+                            color: Colors.grey,
+                          ),
+                        )
+                      : Image.network(
+                          producto.imagenUrl,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          errorBuilder: (_, _, _) => const Center(
+                            child: Icon(
+                              Icons.broken_image_outlined,
+                              size: 48,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        producto.nombre,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        '\$${producto.precio.toStringAsFixed(0)} COP',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.buttonOrange,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _titulo(String texto) => Padding(
     padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
     child: Text(
-      t,
+      texto,
       style: const TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.bold,
@@ -331,8 +413,8 @@ class _ProductosState extends State<Productos> {
   );
 
   Widget _catItem(
-    String img,
-    String lbl,
+    String imagen,
+    String nombre,
     Color colorFondo,
     VoidCallback onTap,
   ) => GestureDetector(
@@ -349,31 +431,170 @@ class _ProductosState extends State<Productos> {
           ),
           child: ClipOval(
             child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Image.asset(img, fit: BoxFit.contain),
+              padding: const EdgeInsets.all(8),
+              child: Image.asset(imagen, fit: BoxFit.contain),
             ),
           ),
         ),
         const SizedBox(height: 4),
         Text(
-          lbl,
+          nombre,
           style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500),
         ),
       ],
     ),
   );
 
-  Widget _navIcon(IconData icon, int index) => IconButton(
-    icon: Icon(
-      icon,
-      color: _indiceIcono == index ? AppColors.barraHome : Colors.brown,
-    ),
-    onPressed: () => setState(() => _indiceIcono = index),
-  );
-
   @override
   void dispose() {
+    DestacadoService.cambios.removeListener(_alCambiarDestacados);
     _controller.dispose();
     super.dispose();
   }
+<<<<<<< Updated upstream
+}
+
+// ----------------------------------------------------------------------
+// Widget interno para mostrar los productos de la categoría seleccionada
+// con la misma estructura y diseño de detalle que la primera imagen.
+// ----------------------------------------------------------------------
+class _DetalleCategoriaScreen extends StatefulWidget {
+  final String tituloCategoria;
+
+  const _DetalleCategoriaScreen({required this.tituloCategoria});
+
+  @override
+  State<_DetalleCategoriaScreen> createState() => _DetalleCategoriaScreenState();
+}
+
+class _DetalleCategoriaScreenState extends State<_DetalleCategoriaScreen> {
+  final ProductoService _productoService = ProductoService();
+  late Future<List<ProductoModel>> _futureProductos;
+
+  @override
+  void initState() {
+    super.initState();
+    _futureProductos = _productoService.obtenerProductos(categoria: widget.tituloCategoria);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFFAF3E0),
+      appBar: AppBar(
+        backgroundColor: AppColors.barraHome,
+        title: Text(
+          widget.tituloCategoria,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+      ),
+      body: FutureBuilder<List<ProductoModel>>(
+        future: _futureProductos,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error al cargar: ${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('No hay productos en esta categoría'));
+          }
+
+          final productos = snapshot.data!;
+
+          return GridView.builder(
+            padding: const EdgeInsets.all(16),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 0.72,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+            ),
+            itemCount: productos.length,
+            itemBuilder: (_, index) {
+              final producto = productos[index];
+              return InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ProductDetailScreen(
+                        title: widget.tituloCategoria,
+                        imageUrl: producto.imagenUrl,
+                        price: '\$${producto.precio.toStringAsFixed(0)} COP',
+                        name: producto.nombre,
+                        description: producto.descripcion,
+                        rawPrice: producto.precio,
+                        onAgregarAlCarrito: (item) {
+                          CartService.instance.add(
+                            producto,
+                            quantity: item['cant'] as int? ?? 1,
+                          );
+                        },
+                      ),
+                    ),
+                  );
+                },
+                child: Card(
+                  clipBehavior: Clip.antiAlias,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: producto.imagenUrl.isEmpty
+                            ? const Center(
+                                child: Icon(
+                                  Icons.fastfood,
+                                  size: 48,
+                                  color: Colors.grey,
+                                ),
+                              )
+                            : Image.network(
+                                producto.imagenUrl,
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                errorBuilder: (_, _, _) => const Center(
+                                  child: Icon(
+                                    Icons.broken_image_outlined,
+                                    size: 48,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              producto.nombre,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              '\$${producto.precio.toStringAsFixed(0)} COP',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppColors.buttonOrange,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+=======
+>>>>>>> Stashed changes
 }

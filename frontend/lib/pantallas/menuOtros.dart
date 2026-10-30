@@ -1,6 +1,8 @@
 import 'package:elparchee/app_colors.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // CAMBIO 1: import nuevo (barra de estado)
+import 'package:flutter/services.dart';
+import 'package:elparchee/services/producto_service.dart';
+import 'package:elparchee/components/menu_helpers.dart'; // CAMBIO 1: import nuevo (barra de estado)
 
 // CAMBIO 2: constantes nuevas con los colores que ya usabas en esta pantalla
 const Color _wine = Color(0xFF7A1C1C);
@@ -14,13 +16,39 @@ class MenuOtros extends StatefulWidget {
 }
 
 class _MenuOtrosState extends State<MenuOtros> {
-  final List<Map<String, dynamic>> items = [
-    {'title': 'Gaseosa Mediana', 'desc': 'Bebida fría 500ml', 'price': '\$3,000', 'qty': 1},
-    {'title': 'Papas Fritas Medianas', 'desc': 'Porción crujiente con sal', 'price': '\$5,000', 'qty': 1},
-    {'title': 'Aros de Cebolla', 'desc': 'Apanados y dorados', 'price': '\$5,000', 'qty': 1},
-    {'title': 'Nuggets de Pollo', 'desc': '6 piezas con salsa', 'price': '\$7,000', 'qty': 1},
-    {'title': 'Aros Especiales', 'desc': 'Con queso cheddar y tocino', 'price': '\$6,000', 'qty': 1},
-  ];
+  final ProductoService _productoService = ProductoService();
+ List<Map<String, dynamic>> items = [];
+bool _cargando = true;
+String? _error;
+
+@override
+void initState() {
+  super.initState();
+  _cargarProductos();
+}
+
+Future<void> _cargarProductos() async {
+  try {
+    final productos = await _productoService.obtenerProductos(categoria: 'Otros');
+    if (!mounted) return;
+    setState(() {
+      items = productos.map((p) => {
+        'title': p.nombre,
+        'desc': p.descripcion,
+        'price': formatearPrecio(p.precio),
+        'qty': 1,
+        'imagen': p.imagenUrl,
+      }).toList();
+      _cargando = false;
+    });
+  } catch (e) {
+    if (!mounted) return;
+    setState(() {
+      _error = e.toString();
+      _cargando = false;
+    });
+  }
+}
 
   // CAMBIO 3: estado nuevo para el buscador
   String _query = '';
@@ -55,8 +83,12 @@ class _MenuOtrosState extends State<MenuOtros> {
 
             // Lista de productos
             Expanded(
-              child: filtered.isEmpty
-                  ? const Center(child: Text('No encontramos ese producto'))
+              child: _cargando
+    ? const Center(child: CircularProgressIndicator(color: Color(0xFF7A1C1C)))
+    : _error != null
+        ? Center(child: Text(_error!))
+        : filtered.isEmpty
+            ? const Center(child: Text('No hay productos todavía'))
                   : ListView.builder(
                       // CAMBIO 8: padding propio de la lista + espacio abajo
                       // para el botón flotante "Ver mi Pedido".
@@ -73,7 +105,7 @@ class _MenuOtrosState extends State<MenuOtros> {
                           decoration: BoxDecoration(color: AppColors.barraInferior, borderRadius: BorderRadius.circular(15), boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 4))]),
                           child: Row(
                             children: [
-                              const Icon(Icons.fastfood, size: 45, color: Colors.orange),
+                             ImagenProducto(url: item['imagen'] ?? '', icono: Icons.fastfood, size: 45),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; 
+import 'package:intl/intl.dart'; // 👈 Importante para formatear el precio limpio
 import 'package:elparchee/app_colors.dart';
+import '../services/producto_service.dart'; // 👈 Tu servicio
+import '../models/producto_model.dart';       // 👈 Tu modelo
 
 class MenuHamburguesas extends StatefulWidget {
   const MenuHamburguesas({super.key});
@@ -10,164 +13,177 @@ class MenuHamburguesas extends StatefulWidget {
 }
 
 class _MenuHamburguesasState extends State<MenuHamburguesas> {
-  final List<Map<String, dynamic>> items = [
-    {
-      'title': 'Clásica con Queso',
-      'desc': 'Carne angus, cheddar, lechuga',
-      'price': '\$14,000',
-      'qty': 1,
-    },
-    {
-      'title': 'Hamburguesa Doble Tocino',
-      'desc': 'Carne angus, cheddar, lechuga',
-      'price': '\$17,000',
-      'qty': 1,
-    },
-    {
-      'title': 'Hamburguesa de Pollo Crispy',
-      'desc': 'Carne de pollo, queso, lechuga',
-      'price': '\$12,000',
-      'qty': 1,
-    },
-  ];
+  // 1. Instanciamos el servicio y declaramos el Future para la lista
+  final ProductoService _productoService = ProductoService();
+  late Future<List<ProductoModel>> _futureHamburguesas;
 
- 
   String _query = '';
 
   @override
+  void initState() {
+    super.initState();
+    // 2. Cargamos las hamburguesas filtrando exactamente por la categoría del panel admin
+    _futureHamburguesas = _productoService.obtenerProductos(categoria: 'Hamburguesas');
+  }
+
+  @override
   Widget build(BuildContext context) {
-  
-    final filtered = items
-        .where((e) => (e['title'] as String)
-            .toLowerCase()
-            .contains(_query.trim().toLowerCase()))
-        .toList();
+    final formatoMoneda = NumberFormat('#,###', 'es_CO');
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-    
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
         backgroundColor: AppColors.background,
-      
         body: Column(
           children: [
-           
             _MenuHeader(
               title: 'Hamburguesas',
               onBack: () => Navigator.pop(context),
               onSearchChanged: (text) => setState(() => _query = text),
             ),
             Expanded(
-              child: filtered.isEmpty
-                  ? const Center(child: Text('No encontramos esa hamburguesa'))
-                  : ListView.builder(
-                    
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
-                      itemCount: filtered.length,
-                      itemBuilder: (context, i) {
-                        
-                        final item = filtered[i];
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppColors.barraInferior,
-                            borderRadius: BorderRadius.circular(15),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Colors.black12,
-                                blurRadius: 4,
-                                offset: Offset(0, 4),
-                              )
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.fastfood,
-                                  size: 50, color: Colors.orange),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      item['title'],
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 15,
-                                      ),
+              // 3. Usamos FutureBuilder para manejar la carga de datos del servidor y Cloudinary
+              child: FutureBuilder<List<ProductoModel>>(
+                future: _futureHamburguesas,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return const Center(child: Text('No hay hamburguesas registradas'));
+                  }
+
+                  // Obtenemos los productos y filtramos por la barra de búsqueda si el usuario escribe
+                  final productos = snapshot.data!;
+                  final filtered = productos
+                      .where((e) => e.nombre
+                          .toLowerCase()
+                          .contains(_query.trim().toLowerCase()))
+                      .toList();
+
+                  if (filtered.isEmpty) {
+                    return const Center(child: Text('No encontramos esa hamburguesa'));
+                  }
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
+                    itemCount: filtered.length,
+                    itemBuilder: (context, i) {
+                      final item = filtered[i];
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.barraInferior,
+                          borderRadius: BorderRadius.circular(15),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Colors.black12,
+                              blurRadius: 4,
+                              offset: Offset(0, 4),
+                            )
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            // 4. Imagen dinámica desde Cloudinary con respaldo si no tiene
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: item.imagenUrl.isNotEmpty
+                                  ? Image.network(
+                                      item.imagenUrl,
+                                      width: 60,
+                                      height: 60,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) =>
+                                          const Icon(Icons.fastfood, size: 40, color: Colors.orange),
+                                    )
+                                  : const Icon(Icons.fastfood, size: 50, color: Colors.orange),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item.nombre,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
                                     ),
-                                    Text(
-                                      item['desc'],
-                                      style: const TextStyle(
-                                        color: Colors.black54,
-                                        fontSize: 11,
-                                      ),
+                                  ),
+                                  Text(
+                                    item.descripcion,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: Colors.black54,
+                                      fontSize: 11,
                                     ),
-                                    const SizedBox(height: 8),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          item['price'],
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            color: Color(0xFF7A1C1C),
-                                            fontSize: 15,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      // 5. Precio formateado visualmente con puntos (ej: $ 14.000)
+                                      Text(
+                                        '\$ ${formatoMoneda.format(item.precio)}',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF7A1C1C),
+                                          fontSize: 15,
+                                        ),
+                                      ),
+                                      Row(
+                                        children: [
+                                          IconButton(
+                                            icon: const Icon(Icons.remove,
+                                                size: 18),
+                                            onPressed: () {},
                                           ),
-                                        ),
-                                        Row(
-                                          children: [
-                                            IconButton(
-                                              icon: const Icon(Icons.remove,
-                                                  size: 18),
-                                              onPressed: () => setState(() {
-                                                if (item['qty'] > 1) {
-                                                  item['qty']--;
-                                                }
-                                              }),
+                                          const Text(
+                                            '1',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
                                             ),
-                                            Text(
-                                              '${item['qty']}',
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(Icons.add,
+                                                size: 18),
+                                            onPressed: () {},
+                                          ),
+                                          ElevatedButton(
+                                            onPressed: () {},
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor:
+                                                  const Color(0xFF7A1C1C),
+                                              shadowColor: Colors.black12,
+                                              elevation: 4,
+                                            ),
+                                            child: const Text(
+                                              'Añadir',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 12,
                                               ),
                                             ),
-                                            IconButton(
-                                              icon: const Icon(Icons.add,
-                                                  size: 18),
-                                              onPressed: () => setState(
-                                                  () => item['qty']++),
-                                            ),
-                                            ElevatedButton(
-                                              onPressed: () {},
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor:
-                                                    const Color(0xFF7A1C1C),
-                                                shadowColor: Colors.black12,
-                                                elevation: 4,
-                                              ),
-                                              child: const Text(
-                                                'Añadir',
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 12,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ],
         ),
@@ -188,7 +204,7 @@ class _MenuHamburguesasState extends State<MenuHamburguesas> {
   }
 }
 
-
+// Clases de Header y Botones se mantienen exactamente igual abajo...
 class _MenuHeader extends StatelessWidget {
   const _MenuHeader({
     required this.title,
@@ -208,7 +224,6 @@ class _MenuHeader extends StatelessWidget {
     final topInset = MediaQuery.of(context).padding.top;
 
     return Padding(
-     
       padding: const EdgeInsets.only(bottom: _overlap),
       child: Stack(
         clipBehavior: Clip.none,

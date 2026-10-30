@@ -1,5 +1,7 @@
-import 'package:elparchee/pantallas/bienvenidos.dart';
+import 'package:elparchee/pantallas/inicioSesion.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:elparchee/services/role_navigation.dart';
 import 'package:elparchee/services/user_service.dart';
 
 class Verificacion extends StatefulWidget {
@@ -37,7 +39,9 @@ class _VerificacionScreenState extends State<Verificacion> {
   Future<void> _verificarCodigo() async {
     if (!_acceptTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Debes aceptar los términos y condiciones')),
+        const SnackBar(
+          content: Text('Debes aceptar los términos y condiciones'),
+        ),
       );
       return;
     }
@@ -61,17 +65,50 @@ class _VerificacionScreenState extends State<Verificacion> {
     setState(() => _isLoading = true);
 
     try {
-      await UserService().verificarCuenta(email, codigo);
+      final respuesta = await UserService().verificarCuenta(email, codigo);
+      final usuario = Map<String, dynamic>.from(respuesta['usuario'] ?? {});
+      final token = (respuesta['token'] ?? '').toString();
+      if (token.isEmpty || usuario.isEmpty) {
+        throw Exception('La verificación no devolvió los datos de sesión.');
+      }
+
+      final rol = (usuario['rol'] ?? 'usuario').toString().toLowerCase();
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('jwt_token', token);
+      await prefs.setString('user_role', rol);
+      await prefs.setString('user_name', (usuario['nombre'] ?? '').toString());
+      await prefs.setString(
+        'user_email',
+        (usuario['email'] ?? email).toString(),
+      );
 
       if (!mounted) return;
+
+      if (rol == 'pendiente') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Tu cuenta está pendiente de aprobación por el administrador.',
+            ),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const Iniciosesion()),
+          (_) => false,
+        );
+        return;
+      }
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Cuenta verificada correctamente')),
       );
 
-      Navigator.pushReplacement(
+      Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => const Bienvenidos()),
+        MaterialPageRoute(builder: (_) => pantallaParaRol(rol)),
+        (_) => false,
       );
     } catch (e) {
       if (!mounted) return;

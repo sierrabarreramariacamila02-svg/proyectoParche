@@ -15,7 +15,10 @@ class AdminUserService {
   String _mensajeError(http.Response response) {
     try {
       final data = jsonDecode(response.body);
-      return (data['error'] ?? data['message'] ?? 'Error del servidor (código ${response.statusCode})').toString();
+      return (data['error'] ??
+              data['message'] ??
+              'Error del servidor (código ${response.statusCode})')
+          .toString();
     } catch (_) {
       return 'Error de conexión o respuesta no válida (código ${response.statusCode}).';
     }
@@ -31,10 +34,7 @@ class AdminUserService {
     final url = Uri.parse('${ApiConfig.baseUrl}/usuarios');
     final response = await http.get(
       url,
-      headers: {
-        ...ApiConfig.headers,
-        'Authorization': 'Bearer $token',
-      },
+      headers: {...ApiConfig.headers, 'Authorization': 'Bearer $token'},
     );
 
     if (response.statusCode == 200) {
@@ -44,6 +44,29 @@ class AdminUserService {
     } else {
       throw Exception(_mensajeError(response));
     }
+  }
+
+  Future<bool> crearUsuario({
+    required String nombre,
+    required String email,
+    required String rol,
+  }) async {
+    final token = await _obtenerToken();
+    if (token == null || token.isEmpty) {
+      throw Exception('No hay sesión activa.');
+    }
+
+    final response = await http.post(
+      Uri.parse('${ApiConfig.baseUrl}/usuarios'),
+      headers: {...ApiConfig.headers, 'Authorization': '******'},
+      body: jsonEncode({'nombre': nombre, 'email': email, 'rol': rol}),
+    );
+
+    if (response.statusCode != 201) {
+      throw Exception(_mensajeError(response));
+    }
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    return data['existentePromovido'] == true;
   }
 
   // Cambiar el rol o aprobar a un usuario en estado 'pendiente'
@@ -56,10 +79,7 @@ class AdminUserService {
     final url = Uri.parse('${ApiConfig.baseUrl}/usuarios/$userId/rol');
     final response = await http.put(
       url,
-      headers: {
-        ...ApiConfig.headers,
-        'Authorization': 'Bearer $token',
-      },
+      headers: {...ApiConfig.headers, 'Authorization': 'Bearer $token'},
       body: jsonEncode({'rol': nuevoRol}),
     );
 
@@ -78,10 +98,7 @@ class AdminUserService {
     final url = Uri.parse('${ApiConfig.baseUrl}/usuarios/$userId');
     final response = await http.delete(
       url,
-      headers: {
-        ...ApiConfig.headers,
-        'Authorization': 'Bearer $token',
-      },
+      headers: {...ApiConfig.headers, 'Authorization': 'Bearer $token'},
     );
 
     if (response.statusCode != 200) {

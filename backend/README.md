@@ -33,6 +33,13 @@ El proyecto utiliza una arquitectura moderna basada en un servidor backend API R
 *   **Módulo de Meseros y Domiciliarios:** Asignación de entregas y seguimiento de atenciones en mesa.
 *   **Calificaciones y Mensajería:** Sistema de retroalimentación de usuarios y chat interno de soporte/conversaciones.
 
+### Flujo de pedidos de mesa entre mesero y cocina
+
+* El mesero autenticado crea un pedido con `POST /api/pedidos`, enviando `tipo_pedido: "mesa"`, `numero_mesa` y `productos` (cada producto incluye `producto_id` y `cantidad`). El backend calcula los precios desde el catálogo y registra los detalles y el pedido de cocina.
+* Cocina consulta los pedidos con `GET /api/pedidos`. Los estados se actualizan con `PUT /api/pedidos/:id/estado`: `pendiente` → `en_preparacion` → `listo`.
+* El mesero consulta sus pedidos con `GET /api/pedidos/mis-pedidos`; cuando cocina marca un pedido como `listo`, la pantalla del mesero lo detecta y muestra una notificación en la aplicación. Tras la entrega, el mesero puede marcarlo como `entregado`.
+* La aplicación actualiza ambas pantallas consultando el backend cada cinco segundos mientras están abiertas.
+
 ---
 
 ## 🛠️ Instalación y Configuración
@@ -47,6 +54,13 @@ El proyecto utiliza una arquitectura moderna basada en un servidor backend API R
 
 ## 2. Ejecutar al servidor
 ** npm run dev
+
+## 3. Preparar la gestión de usuarios administrativos
+
+Antes de usar la creación, edición o eliminación de usuarios desde el panel, ejecuta
+`migrations/202610270001_add_admin_managed_users.sql` en el SQL Editor de Supabase.
+Esta migración añade la marca que separa las cuentas creadas/gestionadas desde el
+panel de los registros normales.
 
 ---
 

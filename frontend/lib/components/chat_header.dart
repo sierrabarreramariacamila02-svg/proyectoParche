@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:elparchee/app_colors.dart';
 
 class ChatHeader extends StatefulWidget {
   final VoidCallback onCerrar;
@@ -15,14 +16,14 @@ class _ChatHeaderState extends State<ChatHeader> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: const BoxDecoration(
-        color: Colors.orange,
+        color: AppColors.barraHome,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Row(
         children: [
           const CircleAvatar(
             backgroundColor: Colors.white,
-            child: Icon(Icons.smart_toy, color: Colors.orange),
+            child: Icon(Icons.auto_awesome),
           ),
           const SizedBox(width: 12),
           const Expanded(

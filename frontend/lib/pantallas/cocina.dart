@@ -1,57 +1,70 @@
-import 'package:elparchee/pantallas/cocina2.dart';
 import 'package:flutter/material.dart';
 
-class Cocina extends StatefulWidget {
-  const Cocina({super.key});
+class PedidosEnCocinaScreen extends StatelessWidget {
+  const PedidosEnCocinaScreen({Key? key}) : super(key: key);
 
-  @override
-  State<Cocina> createState() => _CocinaState();
-}
-
-class _CocinaState extends State<Cocina> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 250, 243, 230),
+      backgroundColor: const Color(0xFFFDFBF7),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF6B1D0F),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {},
+        ),
+        title: const Text(
+          'Pedidos en cocina',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+      ),
       body: Column(
         children: [
-          // Encabezado rojo
-          Container(
-            padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
-            color: const Color.fromARGB(255, 139, 18, 18),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const [
-                Text("Pedidos pendientes!",
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold)),
-                Icon(Icons.refresh, color: Colors.white),
-              ],
-            ),
-          ),
-          // Chips de estado
+          // Filtros superiores
           Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(12.0),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _chip("nuevos (12)", Colors.orange),
-                const SizedBox(width: 8),
-                _chip("en preparación (8)", Colors.grey.shade300),
-                const SizedBox(width: 8),
-                _chip("listos (7)", Colors.grey.shade300),
+                _buildFilterChip('Pendientes', '3', true),
+                _buildFilterChip('En preparación', '2', false),
+                _buildFilterChip('Listos', '1', false),
               ],
             ),
           ),
           // Lista de pedidos
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 15),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               children: [
-                _pedidoCard(context, "120"),
-                const SizedBox(height: 15),
-                _pedidoCard(context, "121"),
+                _buildOrderCard(
+                  'Pedido #025',
+                  'Mesa #5  •  Andrés R.',
+                  '10:35 a. m.',
+                  'Pendiente',
+                  Colors.amber.shade700,
+                  Colors.amber.shade100,
+                  ['• Hamburguesa clásica x2', '• Perro caliente x1', '• Salchipapa x1'],
+                ),
+                _buildOrderCard(
+                  'Pedido #026',
+                  'Mesa #3  •  Valentina G.',
+                  '10:42 a. m.',
+                  'En preparación',
+                  const Color(0xFFD35400),
+                  Colors.orange.shade100,
+                  ['• Hamburguesa clásica x1', '• Papas a la francesa x1'],
+                ),
+                _buildOrderCard(
+                  'Pedido #027',
+                  'Mesa #7  •  Andrés R.',
+                  '10:50 a. m.',
+                  'Pendiente',
+                  Colors.amber.shade700,
+                  Colors.amber.shade100,
+                  ['• Gaseosa 400 ml x1', '• Salchipapa x1'],
+                ),
               ],
             ),
           ),
@@ -60,20 +73,51 @@ class _CocinaState extends State<Cocina> {
     );
   }
 
-  Widget _chip(String texto, Color color) {
-    return Chip(
-      label: Text(texto, style: const TextStyle(fontSize: 12)),
-      backgroundColor: color,
+  Widget _buildFilterChip(String label, String count, bool isSelected) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: isSelected ? const Color(0xFFD35400) : Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? Colors.white : const Color(0xFFD35400),
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
+          ),
+          const SizedBox(width: 6),
+          CircleAvatar(
+            radius: 10,
+            backgroundColor: isSelected ? Colors.white : const Color(0xFFD35400),
+            child: Text(
+              count,
+              style: TextStyle(
+                color: isSelected ? const Color(0xFFD35400) : Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _pedidoCard(BuildContext context, String numero) {
+  Widget _buildOrderCard(String title, String subtitle, String time, String status, Color statusColor, Color statusBg, List<String> items) {
     return Container(
-      padding: const EdgeInsets.all(15),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 5)],
+        boxShadow: [
+          BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 4, spreadRadius: 1),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -81,63 +125,38 @@ class _CocinaState extends State<Cocina> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("#$numero",
-                  style:
-                      const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  const SizedBox(height: 2),
+                  Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                  Text(time, style: const TextStyle(color: Colors.grey, fontSize: 11)),
+                ],
+              ),
               Row(
-                children: const [
-                  Text("Prep Time: 09:12 min",
-                      style: TextStyle(color: Colors.red, fontSize: 12)),
-                  Icon(Icons.chevron_right),
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: statusBg,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(status, style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 11)),
+                  ),
+                  const SizedBox(width: 4),
+                  const Icon(Icons.chevron_right, color: Colors.grey),
                 ],
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          _item("Combo Familiar", 0.9),
-          _item("Salchipapas", 0.5),
-          _item("Salchipapas", 0.3),
-          const SizedBox(height: 10),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const Cocina2()),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text("Iniciar Preparación"),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _item(String nombre, double progreso) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
-      child: Row(
-        children: [
-          const Icon(Icons.fastfood, size: 18, color: Colors.orange),
-          const SizedBox(width: 8),
-          Expanded(child: Text(nombre, style: const TextStyle(fontSize: 13))),
-          SizedBox(
-            width: 80,
-            child: LinearProgressIndicator(
-              value: progreso,
-              color: Colors.red,
-              backgroundColor: Colors.grey.shade300,
-            ),
-          ),
+          const Divider(height: 16),
+          ...items.map((item) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2.0),
+                child: Text(item, style: const TextStyle(fontSize: 13, color: Colors.black87)),
+              )),
         ],
       ),
     );
   }
 }
-    

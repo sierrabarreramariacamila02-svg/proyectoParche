@@ -23,32 +23,30 @@ class _RecuperacionCuentaState extends State<RecuperacionCuenta> {
     super.dispose();
   }
 
-  
-    Future<void> _enviarCodigo() async {
-      final dato = _controlador.text.trim();
-      if (dato.isEmpty) {
-        setState(() => _error = 'Ingresa tu correo o teléfono');
-        return;
-      }
-      setState(() => _error = null);
-
-      try {
-        await UserService().solicitarRecuperacion(dato);
-
-        if (!mounted) return;
-
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => ConfirmacionCodigo(destino: dato)),
-        );
-      } catch (e) {
-        if (!mounted) return;
-        setState(() {
-          _error = e.toString().replaceAll('Exception: ', '');
-        });
-      }
+  Future<void> _enviarCodigo() async {
+    final dato = _controlador.text.trim();
+    if (dato.isEmpty) {
+      setState(() => _error = 'Ingresa tu correo o teléfono');
+      return;
     }
-  
+    setState(() => _error = null);
+
+    try {
+      await UserService().solicitarRecuperacion(dato);
+
+      if (!mounted) return;
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => ConfirmacionCodigo(destino: dato)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.toString().replaceAll('Exception: ', '');
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -95,7 +93,7 @@ class _RecuperacionCuentaState extends State<RecuperacionCuenta> {
                       child: Image.asset(
                         'assets/images/Logo_el_parche.png',
                         height: 110,
-                        errorBuilder: (_, __, ___) => const Icon(
+                        errorBuilder: (_, _, _) => const Icon(
                           Icons.fastfood,
                           size: 100,
                           color: _naranja,
@@ -113,11 +111,18 @@ class _RecuperacionCuentaState extends State<RecuperacionCuenta> {
                       fontSize: 34,
                       fontWeight: FontWeight.w900,
                       height: 1.1,
+                      shadows: [
+                        Shadow(
+                          offset: Offset(2, 2),
+                          blurRadius: 15,
+                          color: Colors.black38,
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    'Ingresa el correo o número de teléfono con el que te '
+                    'Ingresa el correo con el que te '
                     'registraste y te enviaremos un código para recuperar '
                     'tu cuenta.',
                     textAlign: TextAlign.center,
@@ -128,7 +133,7 @@ class _RecuperacionCuentaState extends State<RecuperacionCuenta> {
                     controller: _controlador,
                     keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
-                      hintText: 'Correo o teléfono',
+                      hintText: 'Tu Correo',
                       errorText: _error,
                       prefixIcon: const Icon(
                         Icons.mail_outline,
@@ -137,11 +142,16 @@ class _RecuperacionCuentaState extends State<RecuperacionCuenta> {
                       filled: true,
                       fillColor: _crema,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
-                        borderSide: const BorderSide(color: _boton),
+                        borderRadius: BorderRadius.circular(
+                          24,
+                        ), 
+                        borderSide: const BorderSide(
+                          color: _naranja,
+                        ), 
                       ),
                     ),
                   ),
+
                   const SizedBox(height: 20),
                   SizedBox(
                     width: 220,
@@ -178,7 +188,7 @@ class _RecuperacionCuentaState extends State<RecuperacionCuenta> {
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 12,
-                              color: Colors.black87,
+                              color: Colors.black26,
                             ),
                           ),
                         ),

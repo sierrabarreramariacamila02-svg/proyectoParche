@@ -32,4 +32,4 @@ export const verificarRol = (...rolesPermitidos) => {
 };
 
 // Solo deja pasar si el usuario tiene rol admin (panel administrador)
-export const verificarAdmin = verificarRol('admin');
+export const verificarAdmin = verificarRol('admin', 'administrador');

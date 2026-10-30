@@ -1,10 +1,18 @@
+<<<<<<< HEAD
 import 'package:elparchee/components/productos.dart';
 import 'package:elparchee/pages/admin_product_list_page.dart';
+=======
+import 'package:elparchee/models/user_model.dart';
+>>>>>>> aa4bb6e5081e214d6bcbbc98c3a51f692fab2779
 import 'package:elparchee/pantallas/recuperacioncuenta.dart';
 import 'package:elparchee/pantallas/registro.dart';
+import 'package:elparchee/services/role_navigation.dart';
 import 'package:elparchee/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class Iniciosesion extends StatefulWidget {
   const Iniciosesion({super.key});
@@ -16,8 +24,57 @@ class Iniciosesion extends StatefulWidget {
 class _IniciosesionState extends State<Iniciosesion> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+<<<<<<< HEAD
   final UserService _userService = UserService();
   bool _cargando = false;
+=======
+  bool _cargando = false; // Declarada por si acaso faltaba en tu clase
+
+  Future<void> _guardarSesionYNavegar(Map<String, dynamic> respuesta) async {
+    final String token = (respuesta['token'] ?? '').toString();
+    final Map<String, dynamic> usuarioJson = Map<String, dynamic>.from(
+      respuesta['usuario'] ?? <String, dynamic>{},
+    );
+    final UserModel usuario = UserModel.fromJson(usuarioJson);
+
+    final String rol = (usuarioJson['rol'] ?? 'usuario')
+        .toString()
+        .toLowerCase();
+
+    // Guardar la sesión correctamente usando la variable 'respuesta' y el objeto 'usuario'
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('jwt_token', token);
+    await prefs.setString('user_role', rol);
+    await prefs.setString('user_name', usuario.nombre);
+    await prefs.setString('user_email', usuario.email);
+
+    if (!mounted) return;
+
+    // Validación si la cuenta se encuentra pendiente de aprobación
+    if (rol == 'pendiente') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Tu cuenta está pendiente de aprobación por el administrador.',
+          ),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return; // Detiene la navegación si no está aprobado
+    }
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('¡Bienvenido, ${usuario.nombre}!')));
+
+    if (!mounted) return;
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => pantallaParaRol(rol)),
+    );
+  }
+>>>>>>> aa4bb6e5081e214d6bcbbc98c3a51f692fab2779
 
   Future<void> _login() async {
     final email = _emailController.text.trim();
@@ -69,6 +126,7 @@ class _IniciosesionState extends State<Iniciosesion> {
     }
   }
 
+<<<<<<< HEAD
   void _mostrarMensaje(String mensaje, {required Color color}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -83,6 +141,53 @@ class _IniciosesionState extends State<Iniciosesion> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+=======
+  // ==========================================
+  // NUEVO: Función para iniciar sesión con Google
+  // ==========================================
+  Future<void> _loginConGoogle() async {
+    setState(() => _cargando = true);
+
+    try {
+      await GoogleSignIn().signOut();
+      // 1. Abrir la ventana emergente de Google
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+      if (googleUser == null) {
+        // El usuario canceló el inicio de sesión
+        if (mounted) setState(() => _cargando = false);
+        return;
+      }
+
+      final String email = googleUser.email;
+      final String name = googleUser.displayName ?? 'Usuario';
+
+      // 2. Enviar los datos al nuevo endpoint de tu backend
+      // Recuerda cambiar la IP según tu entorno (10.0.2.2 para emulador Android o tu IP local)
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:3000/api/auth/google'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'name': name}),
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> respuesta = jsonDecode(response.body);
+
+        // 3. Reutilizamos tu método existente para guardar sesión y navegar según el rol
+        await _guardarSesionYNavegar(respuesta);
+      } else {
+        final errorData = jsonDecode(response.body);
+        throw Exception(errorData['error'] ?? 'Error al autenticar con Google');
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+      );
+    } finally {
+      if (mounted) setState(() => _cargando = false);
+    }
+>>>>>>> aa4bb6e5081e214d6bcbbc98c3a51f692fab2779
   }
 
   @override
@@ -116,23 +221,24 @@ class _IniciosesionState extends State<Iniciosesion> {
                         ),
                       ),
                     ),
-                    Transform.translate(offset: const Offset(0, -25)),
+                    const SizedBox(height: 25),
+                    Transform.translate(offset: const Offset(0, 20)),
                     const Text(
                       '¡BIENVENIDO!',
                       style: TextStyle(
-                        fontSize: 34,
+                        fontSize: 40,
                         fontWeight: FontWeight.w900,
                         color: Color(0xFFD35400),
                         shadows: [
                           Shadow(
                             offset: Offset(2, 2),
-                            blurRadius: 3,
+                            blurRadius: 15,
                             color: Colors.black26,
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     const Text(
                       'Inicia sesion para continuar',
                       style: TextStyle(
@@ -143,17 +249,17 @@ class _IniciosesionState extends State<Iniciosesion> {
                     ),
                     const SizedBox(height: 16),
                     Material(
-                      elevation: 4,
+                      elevation: 5,
                       borderRadius: const BorderRadius.all(Radius.circular(30)),
                       child: _Input(
-                        hint: 'Email/Usuario',
+                        hint: 'Correo',
                         icon: Icons.email_outlined,
                         controller: _emailController,
                       ),
                     ),
                     const SizedBox(height: 14),
                     Material(
-                      elevation: 4,
+                      elevation: 5,
                       borderRadius: const BorderRadius.all(Radius.circular(30)),
                       child: _Input(
                         hint: 'Contraseña',
@@ -240,11 +346,45 @@ class _IniciosesionState extends State<Iniciosesion> {
                     ),
                     const SizedBox(height: 20),
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _Social(
-                          child: Image.asset(
-                            'assets/images/google.png',
-                            height: 30,
+                        GestureDetector(
+                          onTap: _cargando ? null : _loginConGoogle,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(30),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black38,
+                                  blurRadius: 5,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Image.asset(
+                                  'assets/images/google.png',
+                                  height: 30,
+                                ),
+                                const SizedBox(width: 12),
+                                const Text(
+                                  'Google',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],
@@ -324,7 +464,13 @@ class _Input extends StatelessWidget {
       child: TextField(
         controller: controller,
         obscureText: pass,
+        textAlignVertical: TextAlignVertical.center,
         decoration: InputDecoration(
+          isDense: true,
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 16.0,
+            horizontal: 16.0,
+          ),
           hintText: hint,
           hintStyle: const TextStyle(
             color: Colors.black87,
@@ -333,33 +479,6 @@ class _Input extends StatelessWidget {
           border: InputBorder.none,
           prefixIcon: Icon(icon, color: const Color(0xFFB94E0C)),
         ),
-      ),
-    );
-  }
-}
-
-class _Social extends StatelessWidget {
-  final Widget child;
-
-  const _Social({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        height: 52,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 4,
-              offset: Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Center(child: child),
       ),
     );
   }

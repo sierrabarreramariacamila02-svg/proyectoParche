@@ -73,7 +73,7 @@ class AdminImageSelector extends StatelessWidget {
               onTap: () => Navigator.pop(ctx, ImageSource.gallery),
             ),
             ListTile(
-              leading: const Icon(Icons.camera_alt, color: _brand),
+              leading: const Icon(Icons.camera_alt, color: AppColors.barraHome),
               title: const Text('Tomar con la cámara'),
               onTap: () => Navigator.pop(ctx, ImageSource.camera),
             ),
