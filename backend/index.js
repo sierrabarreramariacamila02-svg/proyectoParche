@@ -21,6 +21,7 @@ import chatBotRoutes from './routes/chatBot.js';
 import recuperarRoutes from './routes/recuperar.js';
 import bannerRoutes from './routes/banners.js';
 import destacadoRoutes from './routes/destacado.js';
+import inventarioRoutes from './routes/inventario.js';
 
 dotenv.config();
 
@@ -67,6 +68,7 @@ app.use('/api/chatbot', chatBotRoutes);
 app.use('/api/recuperar', recuperarRoutes);
 app.use('/api/banners', bannerRoutes);
 app.use('/api/destacados', destacadoRoutes);
+app.use('/api/inventario', inventarioRoutes);
 
 // 🚀 Endpoint de prueba para enviar notificaciones push a través de Firebase Admin
 app.post('/api/notificaciones/test', async (req, res) => {

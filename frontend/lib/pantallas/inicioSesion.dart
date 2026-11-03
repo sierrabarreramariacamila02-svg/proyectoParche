@@ -166,7 +166,7 @@ class _IniciosesionState extends State<Iniciosesion> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 25),
+                    const SizedBox(height: 20),
                     Transform.translate(
                       offset: const Offset(0, 20),
                       child: const Text(
@@ -185,7 +185,7 @@ class _IniciosesionState extends State<Iniciosesion> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 3),
+                    const SizedBox(height: 20),
                     const Text(
                       'Inicia sesion para continuar',
                       style: TextStyle(

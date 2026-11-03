@@ -1,4 +1,5 @@
 import 'package:elparchee/components/admin_banner_list_page.dart';
+import 'package:elparchee/components/inventario.dart';
 import 'package:elparchee/pantallas/inicioSesion.dart';
 import 'package:elparchee/services/adminUserListPage.dart';
 import 'package:elparchee/services/admin_destacado_page.dart';
@@ -31,12 +32,15 @@ class AdminDrawer extends StatelessWidget {
   }
 
   void _openHome(BuildContext context) {
-    Navigator.pop(context);
-    Navigator.pushNamedAndRemoveUntil(
-      context,
-      '/administracion',
-      (route) => false,
-    );
+    final navigator = Navigator.of(context);
+    navigator.pop();
+    navigator.pushNamedAndRemoveUntil('/administracion', (route) => false);
+  }
+
+  void _openPage(BuildContext context, Widget page) {
+    final navigator = Navigator.of(context);
+    navigator.pop();
+    navigator.push(MaterialPageRoute(builder: (_) => page));
   }
 
   @override
@@ -77,47 +81,20 @@ class AdminDrawer extends StatelessWidget {
                   _openHome(context);
                 }),
                 _item(Icons.store, 'Administrar productos', () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const AdminProductListPage(),
-                    ),
-                  );
+                  _openPage(context, const AdminProductListPage());
                 }),
-
+                _item(Icons.inventory_2_outlined, 'Inventario', () {
+                  _openPage(context, const InventarioScreen());
+                }),
                 _item(Icons.star_outline, 'Platos destacados', () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const AdminDestacadosPage(),
-                    ),
-                  );
+                  _openPage(context, const AdminDestacadosPage());
                 }),
-
-                // --- 2. OPCIÓN DE BANNERS / PROMOCIONES CONECTADA ---
                 _item(Icons.image_outlined, 'Banners y Promociones', () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const AdminBannerListPage(),
-                    ),
-                  );
+                  _openPage(context, const AdminBannerListPage());
                 }),
-
                 _item(Icons.people_alt_outlined, 'Usuarios', () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const AdminUserListPage(),
-                    ),
-                  );
+                  _openPage(context, const AdminUserListPage());
                 }),
-
-              
               ],
             ),
           ),

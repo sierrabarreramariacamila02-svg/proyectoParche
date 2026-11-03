@@ -24,7 +24,9 @@ class ProfileService {
         'Authorization': 'Bearer ${await _token()}',
       },
     );
-    return _decode(response);
+    final body = _decode(response);
+    final profile = body['usuario'];
+    return profile is Map<String, dynamic> ? profile : body;
   }
 
   Future<Map<String, dynamic>> actualizarPerfil({
