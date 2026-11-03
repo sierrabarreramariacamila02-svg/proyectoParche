@@ -5,8 +5,6 @@ import 'package:elparchee/services/role_navigation.dart';
 import 'package:elparchee/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class Iniciosesion extends StatefulWidget {
@@ -19,20 +17,21 @@ class Iniciosesion extends StatefulWidget {
 class _IniciosesionState extends State<Iniciosesion> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  bool _cargando = false; // Declarada por si acaso faltaba en tu clase
+  final UserService _userService = UserService();
+  bool _cargando = false;
 
   Future<void> _guardarSesionYNavegar(Map<String, dynamic> respuesta) async {
     final String token = (respuesta['token'] ?? '').toString();
-    final Map<String, dynamic> usuarioJson = Map<String, dynamic>.from(
-      respuesta['usuario'] ?? <String, dynamic>{},
-    );
+    final usuarioRespuesta = respuesta['usuario'];
+    if (token.isEmpty || usuarioRespuesta is! Map<String, dynamic>) {
+      throw Exception('La respuesta del servidor no incluye la sesión activa.');
+    }
+
+    final Map<String, dynamic> usuarioJson = usuarioRespuesta;
     final UserModel usuario = UserModel.fromJson(usuarioJson);
 
-    final String rol = (usuarioJson['rol'] ?? 'usuario')
-        .toString()
-        .toLowerCase();
+    final String rol = usuario.rol.toLowerCase();
 
-    // Guardar la sesión correctamente usando la variable 'respuesta' y el objeto 'usuario'
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('jwt_token', token);
     await prefs.setString('user_role', rol);
@@ -51,14 +50,12 @@ class _IniciosesionState extends State<Iniciosesion> {
           backgroundColor: Colors.orange,
         ),
       );
-      return; // Detiene la navegación si no está aprobado
+      return;
     }
 
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text('¡Bienvenido, ${usuario.nombre}!')));
-
-    if (!mounted) return;
 
     Navigator.pushReplacement(
       context,
@@ -68,72 +65,70 @@ class _IniciosesionState extends State<Iniciosesion> {
 
   Future<void> _login() async {
     final email = _emailController.text.trim();
-    final password = _passwordController.text;
+    final password = _passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ingresa tu email y contraseña')),
-      );
+      _mostrarMensaje('Ingresa tu email y contraseña.', color: Colors.orange);
       return;
     }
 
     setState(() => _cargando = true);
 
     try {
-      final respuesta = await UserService().loginUsuario(email, password);
-      await _guardarSesionYNavegar(respuesta);
+      final response = await _userService.loginUsuario(email, password);
+      await _guardarSesionYNavegar(response);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+      _mostrarMensaje(
+        e.toString().replaceAll('Exception: ', ''),
+        color: Colors.red,
       );
     } finally {
-      if (mounted) setState(() => _cargando = false);
+      if (mounted) {
+        setState(() => _cargando = false);
+      }
     }
   }
 
-  // ==========================================
-  // NUEVO: Función para iniciar sesión con Google
-  // ==========================================
+  void _mostrarMensaje(String mensaje, {required Color color}) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(mensaje), backgroundColor: color));
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loginConGoogle() async {
     setState(() => _cargando = true);
 
     try {
-      await GoogleSignIn().signOut();
-      // 1. Abrir la ventana emergente de Google
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      final googleSignIn = GoogleSignIn();
+      await googleSignIn.signOut();
+      final googleUser = await googleSignIn.signIn();
 
       if (googleUser == null) {
-        // El usuario canceló el inicio de sesión
-        if (mounted) setState(() => _cargando = false);
         return;
       }
 
-      final String email = googleUser.email;
-      final String name = googleUser.displayName ?? 'Usuario';
-
-      // 2. Enviar los datos al nuevo endpoint de tu backend
-      // Recuerda cambiar la IP según tu entorno (10.0.2.2 para emulador Android o tu IP local)
-      final response = await http.post(
-        Uri.parse('http://10.0.2.2:3000/api/auth/google'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'name': name}),
-      );
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> respuesta = jsonDecode(response.body);
-
-        // 3. Reutilizamos tu método existente para guardar sesión y navegar según el rol
-        await _guardarSesionYNavegar(respuesta);
-      } else {
-        final errorData = jsonDecode(response.body);
-        throw Exception(errorData['error'] ?? 'Error al autenticar con Google');
+      final idToken = (await googleUser.authentication).idToken;
+      if (idToken == null || idToken.isEmpty) {
+        throw Exception('Google no devolvió un token de autenticación.');
       }
+
+      final respuesta = await _userService.autenticarConGoogleBackend(idToken);
+      await _guardarSesionYNavegar(respuesta);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+        SnackBar(
+          content: Text(e.toString().replaceFirst('Exception: ', '')),
+          backgroundColor: Colors.red,
+        ),
       );
     } finally {
       if (mounted) setState(() => _cargando = false);
@@ -172,20 +167,22 @@ class _IniciosesionState extends State<Iniciosesion> {
                       ),
                     ),
                     const SizedBox(height: 25),
-                    Transform.translate(offset: const Offset(0, 20)),
-                    const Text(
-                      '¡BIENVENIDO!',
-                      style: TextStyle(
-                        fontSize: 40,
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xFFD35400),
-                        shadows: [
-                          Shadow(
-                            offset: Offset(2, 2),
-                            blurRadius: 15,
-                            color: Colors.black26,
-                          ),
-                        ],
+                    Transform.translate(
+                      offset: const Offset(0, 20),
+                      child: const Text(
+                        '¡BIENVENIDO!',
+                        style: TextStyle(
+                          fontSize: 40,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFFD35400),
+                          shadows: [
+                            Shadow(
+                              offset: Offset(2, 2),
+                              blurRadius: 15,
+                              color: Colors.black26,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 3),
@@ -253,14 +250,23 @@ class _IniciosesionState extends State<Iniciosesion> {
                             borderRadius: BorderRadius.circular(20),
                           ),
                         ),
-                        child: const Text(
-                          'Iniciar sesión',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        child: _cargando
+                            ? const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2.5,
+                                ),
+                              )
+                            : const Text(
+                                'Iniciar sesión',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                       ),
                     ),
                     const SizedBox(height: 22),
