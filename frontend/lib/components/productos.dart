@@ -1,9 +1,5 @@
 import 'package:elparchee/app_colors.dart';
-<<<<<<< Updated upstream
 import 'package:elparchee/components/customer_bottom_navigation.dart';
-=======
-import 'package:elparchee/components/categoria_menu_page.dart';
->>>>>>> Stashed changes
 import 'package:elparchee/models/producto_model.dart';
 import 'package:elparchee/pantallas/carrito.dart'; // O la ruta de tu pantalla de carrito
 import 'package:elparchee/pantallas/detalle_producto.dart';
@@ -451,7 +447,6 @@ class _ProductosState extends State<Productos> {
     _controller.dispose();
     super.dispose();
   }
-<<<<<<< Updated upstream
 }
 
 // ----------------------------------------------------------------------
@@ -595,6 +590,4 @@ class _DetalleCategoriaScreenState extends State<_DetalleCategoriaScreen> {
       ),
     );
   }
-=======
->>>>>>> Stashed changes
 }

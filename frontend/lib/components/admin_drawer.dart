@@ -1,13 +1,9 @@
 import 'package:elparchee/components/admin_banner_list_page.dart';
+import 'package:elparchee/pantallas/inicioSesion.dart';
 import 'package:elparchee/services/adminUserListPage.dart';
 import 'package:elparchee/services/admin_destacado_page.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../pages/menu_page.dart';
-import '../pantallas/inicioSesion.dart';
-import '../pantallas/cocina_pedidos.dart';
-import '../pantallas/domicilio.dart';
-import '../pantallas/mesero1.dart';
 import 'package:elparchee/app_colors.dart';
 import '../pages/admin_product_list_page.dart';
 
@@ -32,11 +28,6 @@ class AdminDrawer extends StatelessWidget {
       MaterialPageRoute(builder: (_) => const Iniciosesion()),
       (route) => false,
     );
-  }
-
-  void _openModule(BuildContext context, Widget module) {
-    Navigator.pop(context);
-    Navigator.push(context, MaterialPageRoute(builder: (_) => module));
   }
 
   void _openHome(BuildContext context) {
@@ -126,30 +117,7 @@ class AdminDrawer extends StatelessWidget {
                   );
                 }),
 
-                const Divider(),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                  child: Text(
-                    'MÓDULOS OPERATIVOS',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Colors.black54,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                _item(Icons.receipt_long_outlined, 'Pedidos y cocina', () {
-                  _openModule(context, const Cocina());
-                }),
-                _item(Icons.table_restaurant_outlined, 'Mesero y mesas', () {
-                  _openModule(context, const GestionMesas(adminMode: true));
-                }),
-                _item(Icons.delivery_dining, 'Domicilios', () {
-                  _openModule(context, const DomicilioPantalla());
-                }),
-                const Divider(),
-                _item(Icons.menu_book_outlined, 'Ver carta', () {
-                  _openModule(context, const MenuPage());
-                }),
+              
               ],
             ),
           ),
