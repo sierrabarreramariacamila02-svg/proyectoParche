@@ -15,12 +15,14 @@ class Carrito extends StatefulWidget {
   static List<Map<String, dynamic>> itemsMemoria = [];
 
   static void agregarItem(Map<String, dynamic> nuevoItem) {
-    int index = itemsMemoria.indexWhere((item) =>
-        item["nombre"] == nuevoItem["nombre"] &&
-        item["acompanamiento"] == nuevoItem["acompanamiento"] &&
-        item["bebida"] == nuevoItem["bebida"] &&
-        item["sinCebolla"] == nuevoItem["sinCebolla"] &&
-        item["sinLechuga"] == nuevoItem["sinLechuga"]);
+    int index = itemsMemoria.indexWhere(
+      (item) =>
+          item["nombre"] == nuevoItem["nombre"] &&
+          item["acompanamiento"] == nuevoItem["acompanamiento"] &&
+          item["bebida"] == nuevoItem["bebida"] &&
+          item["sinCebolla"] == nuevoItem["sinCebolla"] &&
+          item["sinLechuga"] == nuevoItem["sinLechuga"],
+    );
 
     if (index >= 0) {
       itemsMemoria[index]["cant"] += nuevoItem["cant"];
@@ -47,13 +49,14 @@ class _CarritoState extends State<Carrito> {
       return;
     }
 
-    final creado = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => const DomicilioPantalla()),
-    );
+    final creado = await Navigator.of(
+      context,
+    ).push<bool>(MaterialPageRoute(builder: (_) => const DomicilioPantalla()));
     if (creado == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pedido enviado. Puedes ver su estado en Mis pedidos.')),
-      );
+      // Pedido enviado: lo llevamos a Mis pedidos para que pueda seguirlo
+      await Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const Pedidos()));
     }
   }
 
@@ -66,9 +69,9 @@ class _CarritoState extends State<Carrito> {
       );
       CartService.instance.clear();
       if (!mounted) return;
-      await Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const Pedidos()),
-      );
+      await Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const Pedidos()));
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -82,11 +85,9 @@ class _CarritoState extends State<Carrito> {
     }
   }
 
-  String _formatearPrecio(double precio) =>
-      precio.toStringAsFixed(0).replaceAllMapped(
-        RegExp(r'\B(?=(\d{3})+(?!\d))'),
-        (match) => '.',
-      );
+  String _formatearPrecio(double precio) => precio
+      .toStringAsFixed(0)
+      .replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (match) => '.');
 
   @override
   Widget build(BuildContext context) {
@@ -110,7 +111,11 @@ class _CarritoState extends State<Carrito> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.shopping_cart_outlined, size: 64, color: Colors.black38),
+                    const Icon(
+                      Icons.shopping_cart_outlined,
+                      size: 64,
+                      color: Colors.black38,
+                    ),
                     const SizedBox(height: 12),
                     const Text('Tu carrito está vacío'),
                     const SizedBox(height: 12),
@@ -138,7 +143,10 @@ class _CarritoState extends State<Carrito> {
                     const SizedBox(height: 12),
                     const Text(
                       'Tipo de entrega',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     SegmentedButton<bool>(
@@ -169,11 +177,7 @@ class _CarritoState extends State<Carrito> {
                   child: Column(
                     children: [
                       _totalRow('Subtotal', cart.subtotal),
-                      _totalRow(
-                        'Domicilio',
-                        delivery,
-                        gratis: delivery == 0,
-                      ),
+                      _totalRow('Domicilio', delivery, gratis: delivery == 0),
                       const Divider(),
                       _totalRow('Total', total, destacado: true),
                       const SizedBox(height: 10),
@@ -186,7 +190,14 @@ class _CarritoState extends State<Carrito> {
                             foregroundColor: Colors.white,
                           ),
                           child: _procesando
-                              ? const CircularProgressIndicator()
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
                               : Text(
                                   _recogerEnTienda
                                       ? 'Confirmar pedido para recoger'
@@ -225,18 +236,14 @@ class _CarritoState extends State<Carrito> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               IconButton(
-                onPressed: () => CartService.instance.setQuantity(
-                  product.id,
-                  quantity - 1,
-                ),
+                onPressed: () =>
+                    CartService.instance.setQuantity(product.id, quantity - 1),
                 icon: const Icon(Icons.remove_circle_outline),
               ),
               Text('$quantity'),
               IconButton(
-                onPressed: () => CartService.instance.setQuantity(
-                  product.id,
-                  quantity + 1,
-                ),
+                onPressed: () =>
+                    CartService.instance.setQuantity(product.id, quantity + 1),
                 icon: const Icon(Icons.add_circle_outline),
               ),
             ],
@@ -246,7 +253,12 @@ class _CarritoState extends State<Carrito> {
     );
   }
 
-  Widget _totalRow(String label, double value, {bool destacado = false, bool gratis = false}) {
+  Widget _totalRow(
+    String label,
+    double value, {
+    bool destacado = false,
+    bool gratis = false,
+  }) {
     final style = TextStyle(
       fontWeight: destacado ? FontWeight.bold : FontWeight.normal,
       fontSize: destacado ? 17 : 14,
@@ -258,7 +270,10 @@ class _CarritoState extends State<Carrito> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: style),
-          Text(gratis ? 'GRATIS' : '\$${_formatearPrecio(value)} COP', style: style),
+          Text(
+            gratis ? 'GRATIS' : '\$${_formatearPrecio(value)} COP',
+            style: style,
+          ),
         ],
       ),
     );
