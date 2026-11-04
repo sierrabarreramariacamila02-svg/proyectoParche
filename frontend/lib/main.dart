@@ -6,19 +6,46 @@ import 'package:elparchee/pantallas/verificacion.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'; // 🚀 IMPORTACIÓN DE SUPABASE
 
-// 1. Manejador de notificaciones en segundo plano
+// 1. Definir el canal de notificaciones locales (Debe coincidir con el AndroidManifest)
+const AndroidNotificationChannel channel = AndroidNotificationChannel(
+  'high_importance_channel',
+  'Notificaciones Importantes',
+  description: 'Este canal se usa para alertas de pedidos y promociones.',
+  importance: Importance.high,
+);
+
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
+
+// 2. Manejador de notificaciones en segundo plano
+@pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
   print("Mensaje recibido en segundo plano: ${message.messageId}");
 }
 
 void main() async {
-  // 2. Asegurar la inicialización y Firebase
+  // 3. Asegurar la inicialización y Firebase
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
 
+  // 🚀 INICIALIZAR SUPABASE ANTES DE CORRER LA APLICACIÓN
+  await Supabase.initialize(
+    url: 'TU_SUPABASE_URL', // Reemplaza con tu URL de Supabase
+    anonKey: 'TU_SUPABASE_ANON_KEY', // Reemplaza con tu Anon Key de Supabase
+  );
+
   // Registrar el manejador de segundo plano
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+  // 4. Inicializar el canal de notificaciones locales en Android
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(channel);
 
   runApp(const MainApp());
 }
@@ -37,7 +64,7 @@ class _MainAppState extends State<MainApp> {
     _setupNotifications();
   }
 
-  // 3. Configurar permisos y escucha de notificaciones
+  // 5. Configurar permisos, suscripción a temas y escucha de notificaciones
   void _setupNotifications() async {
     FirebaseMessaging messaging = FirebaseMessaging.instance;
 
@@ -53,12 +80,34 @@ class _MainAppState extends State<MainApp> {
     String? token = await messaging.getToken();
     print("FCM Token: $token");
 
-    // Escuchar mensajes en primer plano
+    // 🚀 NUEVO: Suscribir automáticamente al usuario al tema de promociones
+    try {
+      await messaging.subscribeToTopic('promociones');
+      print("¡Suscrito exitosamente al tema 'promociones'!");
+    } catch (e) {
+      print("Error al suscribirse al tema de promociones: $e");
+    }
+
+    // Escuchar mensajes en primer plano y mostrarlos visualmente
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       print('¡Notificación recibida en primer plano!');
-      if (message.notification != null) {
-        print('Título: ${message.notification?.title}');
-        print('Cuerpo: ${message.notification?.body}');
+      RemoteNotification? notification = message.notification;
+      AndroidNotification? android = message.notification?.android;
+
+      if (notification != null && android != null) {
+        flutterLocalNotificationsPlugin.show(
+          notification.hashCode,
+          notification.title,
+          notification.body,
+          NotificationDetails(
+            android: AndroidNotificationDetails(
+              channel.id,
+              channel.name,
+              channelDescription: channel.description,
+              icon: '@mipmap/ic_launcher', // Icono de la app
+            ),
+          ),
+        );
       }
     });
   }
@@ -79,8 +128,7 @@ class _MainAppState extends State<MainApp> {
         '/bienvenidos': (context) => const Bienvenidos(),
         // Rutas añadidas para que coincidan con las opciones de tu DrawerContent:
         '/inicio': (context) => const Inicio(),
-        '/platos': (context) =>
-            const Productos(), // O cámbialo por su pantalla respectiva cuando la crees
+        '/platos': (context) => const Productos(),
         '/carrito': (context) => const Productos(),
         '/pedidos': (context) => const Productos(),
         '/domicilios': (context) => const Productos(),
