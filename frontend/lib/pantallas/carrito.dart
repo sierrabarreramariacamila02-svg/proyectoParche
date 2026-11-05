@@ -213,6 +213,8 @@ class _CarritoState extends State<Carrito> {
           );
         },
       ),
+      floatingActionButton: const CustomerCartButton(selectedIndex: 4),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: const CustomerBottomNavigation(selectedIndex: 4),
     );
   }

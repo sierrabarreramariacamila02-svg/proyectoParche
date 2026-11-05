@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:elparchee/app_colors.dart';
 
 class Notificaciones extends StatefulWidget {
@@ -13,8 +14,9 @@ class _NotificacionesState extends State<Notificaciones> {
   static const Color naranja = AppColors.buttonOrange;
   static const Color crema = Color(0xFFFAF3E0);
 
-  // Lista simulada de notificaciones
-  final List<Map<String, dynamic>> _listaNotificaciones = [
+  // Lista de notificaciones con el tipo de dato correcto en Dart
+
+  final _listaNotificaciones = [
     {
       'id': '1',
       'titulo': '¡Tu pedido va en camino!',
@@ -52,6 +54,37 @@ class _NotificacionesState extends State<Notificaciones> {
       'icono': Icons.star_outline,
     },
   ];
+  @override
+  void initState() {
+    super.initState();
+    
+    // Escuchar notificaciones en primer plano y agregarlas dinámicamente
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      if (message.notification != null) {
+        final titulo = message.notification!.title ?? 'Nueva notificación';
+        final cuerpo = message.notification!.body ?? '';
+        final tipo = message.data['tipo'] ?? 'sistema'; 
+
+        IconData iconoApp = Icons.notifications;
+        if (tipo == 'pedido') iconoApp = Icons.delivery_dining;
+        if (tipo == 'promo') iconoApp = Icons.local_offer;
+        if (tipo == 'admin_modulo') iconoApp = Icons.admin_panel_settings;
+        if (tipo == 'pago') iconoApp = Icons.payment;
+
+        setState(() {
+          _listaNotificaciones.insert(0, {
+            'id': DateTime.now().millisecondsSinceEpoch.toString(),
+            'titulo': titulo,
+            'mensaje': cuerpo,
+            'hora': 'Hace un momento',
+            'tipo': tipo,
+            'leido': false,
+            'icono': iconoApp,
+          });
+        });
+      }
+    });
+  }
 
   void _marcarTodasComoLeidas() {
     setState(() {
@@ -77,11 +110,12 @@ class _NotificacionesState extends State<Notificaciones> {
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         actions: [
-          IconButton(
-            tooltip: 'Marcar todas como leídas',
-            icon: const Icon(Icons.done_all, color: Colors.white),
-            onPressed: _marcarTodasComoLeidas,
-          ),
+          if (_listaNotificaciones.isNotEmpty)
+            IconButton(
+              tooltip: 'Marcar todas como leídas',
+              icon: const Icon(Icons.done_all, color: Colors.white),
+              onPressed: _marcarTodasComoLeidas,
+            ),
         ],
       ),
       body: _listaNotificaciones.isEmpty
@@ -115,10 +149,10 @@ class _NotificacionesState extends State<Notificaciones> {
                     margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: esLeida ? Colors.white.withOpacity(0.85) : Colors.white,
+                      color: esLeida ? Colors.white : Colors.white,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: esLeida ? Colors.transparent : naranja.withOpacity(0.5),
+                        color: esLeida ? Colors.transparent : naranja,
                         width: 1.5,
                       ),
                       boxShadow: const [
@@ -136,7 +170,7 @@ class _NotificacionesState extends State<Notificaciones> {
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: esLeida ? Colors.grey.shade200 : naranja.withOpacity(0.2),
+                            color: esLeida ? Colors.grey.shade200 : naranja,
                             shape: BoxShape.circle,
                           ),
                           child: Icon(

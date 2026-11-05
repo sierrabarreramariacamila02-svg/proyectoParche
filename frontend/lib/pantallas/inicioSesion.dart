@@ -1,11 +1,11 @@
-import 'package:elparchee/components/productos.dart';
-import 'package:elparchee/pages/admin_product_list_page.dart';
+import 'package:elparchee/models/user_model.dart';
 import 'package:elparchee/pantallas/recuperacioncuenta.dart';
 import 'package:elparchee/pantallas/registro.dart';
+import 'package:elparchee/services/role_navigation.dart';
 import 'package:elparchee/services/user_service.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Iniciosesion extends StatefulWidget {
   const Iniciosesion({super.key});
@@ -21,6 +21,52 @@ class _IniciosesionState extends State<Iniciosesion> {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   bool _cargando = false;
 
+  Future<void> _guardarSesionYNavegar(Map<String, dynamic> respuesta) async {
+    final String token = (respuesta['token'] ?? '').toString();
+    final Map<String, dynamic> usuarioJson = Map<String, dynamic>.from(
+      respuesta['usuario'] ?? <String, dynamic>{},
+    );
+
+    if (usuarioJson.isEmpty) {
+      throw Exception('La respuesta del servidor no incluye la sesión activa.');
+    }
+
+    final UserModel usuario = UserModel.fromJson(usuarioJson);
+    final String rol = (usuarioJson['rol'] ?? 'usuario').toString().toLowerCase();
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('jwt_token', token);
+    await prefs.setString('user_role', rol);
+    await prefs.setString('user_rol', rol);
+    await prefs.setString('user_name', usuario.nombre);
+    await prefs.setString('user_email', usuario.email);
+
+    if (!mounted) return;
+
+    if (rol == 'pendiente') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Tu cuenta está pendiente de aprobación por el administrador.',
+          ),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('¡Bienvenido, ${usuario.nombre}!')),
+    );
+
+    if (!mounted) return;
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => pantallaParaRol(rol)),
+    );
+  }
+
   Future<void> _login() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
@@ -34,41 +80,7 @@ class _IniciosesionState extends State<Iniciosesion> {
 
     try {
       final response = await _userService.loginUsuario(email, password);
-      final token = response['token']?.toString();
-      final usuario = response['usuario'];
-
-      if (token == null || token.isEmpty || usuario == null) {
-        throw Exception(
-          'La respuesta del servidor no incluye la sesión activa.',
-        );
-      }
-
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('jwt_token', token);
-      await prefs.setString(
-        'user_name',
-        usuario['nombre']?.toString() ?? 'Usuario',
-      );
-      await prefs.setString(
-        'user_email',
-        usuario['email']?.toString() ?? email,
-      );
-      await prefs.setString(
-        'user_rol',
-        usuario['rol']?.toString() ?? 'usuario',
-      );
-
-      if (!mounted) return;
-
-      final rol = (usuario['rol'] ?? '').toString().toLowerCase();
-      final destino = rol == 'admin' || rol == 'administrador'
-          ? const AdminProductListPage()
-          : const Productos();
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => destino),
-      );
+      await _guardarSesionYNavegar(response);
     } catch (e) {
       if (!mounted) return;
       _mostrarMensaje(
@@ -88,57 +100,21 @@ class _IniciosesionState extends State<Iniciosesion> {
     setState(() => _cargando = true);
 
     try {
-      final googleUser = await _googleSignIn.signIn();
-
-      if (googleUser == null) {
+      final googleAccount = await _googleSignIn.signIn();
+      if (googleAccount == null) {
         if (!mounted) return;
         _mostrarMensaje('Inicio de sesión con Google cancelado.', color: Colors.orange);
         return;
       }
 
-      final googleAuth = await googleUser.authentication;
+      final googleAuth = await googleAccount.authentication;
       final idToken = googleAuth.idToken;
-
       if (idToken == null || idToken.isEmpty) {
-        throw Exception('No se pudo obtener el token de Google.');
+        throw Exception('No se pudo obtener el token de autenticación de Google.');
       }
 
       final response = await _userService.autenticarConGoogleBackend(idToken);
-      final token = response['token']?.toString();
-      final usuario = response['usuario'];
-
-      if (token == null || token.isEmpty || usuario == null) {
-        throw Exception(
-          'La respuesta del servidor no incluye la sesión activa.',
-        );
-      }
-
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('jwt_token', token);
-      await prefs.setString(
-        'user_name',
-        usuario['nombre']?.toString() ?? 'Usuario',
-      );
-      await prefs.setString(
-        'user_email',
-        usuario['email']?.toString() ?? googleUser.email,
-      );
-      await prefs.setString(
-        'user_rol',
-        usuario['rol']?.toString() ?? 'usuario',
-      );
-
-      if (!mounted) return;
-
-      final rol = (usuario['rol'] ?? '').toString().toLowerCase();
-      final destino = rol == 'admin' || rol == 'administrador'
-          ? const AdminProductListPage()
-          : const Productos();
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => destino),
-      );
+      await _guardarSesionYNavegar(response);
     } catch (e) {
       if (!mounted) return;
       _mostrarMensaje(
@@ -153,9 +129,12 @@ class _IniciosesionState extends State<Iniciosesion> {
   }
 
   void _mostrarMensaje(String mensaje, {required Color color}) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(mensaje), backgroundColor: color));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(mensaje),
+        backgroundColor: color,
+      ),
+    );
   }
 
   @override
@@ -196,24 +175,26 @@ class _IniciosesionState extends State<Iniciosesion> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 25),
-                    Transform.translate(offset: const Offset(0, 20)),
-                    const Text(
-                      '¡BIENVENIDO!',
-                      style: TextStyle(
-                        fontSize: 40,
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xFFD35400),
-                        shadows: [
-                          Shadow(
-                            offset: Offset(2, 2),
-                            blurRadius: 15,
-                            color: Colors.black26,
-                          ),
-                        ],
+                    const SizedBox(height: 20),
+                    Transform.translate(
+                      offset: const Offset(0, 20),
+                      child: const Text(
+                        '¡BIENVENIDO!',
+                        style: TextStyle(
+                          fontSize: 40,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFFD35400),
+                          shadows: [
+                            Shadow(
+                              offset: Offset(2, 2),
+                              blurRadius: 15,
+                              color: Colors.black26,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 3),
+                    const SizedBox(height: 20),
                     const Text(
                       'Inicia sesion para continuar',
                       style: TextStyle(

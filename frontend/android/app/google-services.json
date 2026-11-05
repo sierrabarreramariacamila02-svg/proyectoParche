@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1019899287750",
+    "project_id": "el-parche-508111",
+    "storage_bucket": "el-parche-508111.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1019899287750:android:885e57d6e4b80d594b1fc7",
+        "android_client_info": {
+          "package_name": "com.example.elparchee"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1019899287750-nq15fegk865o24f27j6hns9appjs3rf2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDPs_zWWDqipU78XZavEBconWBJmQXkwOY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1019899287750-nq15fegk865o24f27j6hns9appjs3rf2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

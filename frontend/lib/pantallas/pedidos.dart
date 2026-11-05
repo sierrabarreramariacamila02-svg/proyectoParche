@@ -32,8 +32,8 @@ class _PedidosState extends State<Pedidos> {
   Future<void> _inicializar() async {
     final preferences = await SharedPreferences.getInstance();
     if (!mounted) return;
-    _esUsuario =
-        (preferences.getString('user_role') ?? '').toLowerCase() == 'usuario';
+    final rol = (preferences.getString('user_role') ?? '').toLowerCase().trim();
+    _esUsuario = rol == 'usuario' || rol == 'cliente';
     if (!_esUsuario) {
       setState(() => _cargando = false);
       return;
@@ -136,6 +136,8 @@ class _PedidosState extends State<Pedidos> {
                 itemBuilder: (context, index) => _pedidoCard(_pedidos[index]),
               ),
             ),
+      floatingActionButton: const CustomerCartButton(selectedIndex: 2),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: const CustomerBottomNavigation(selectedIndex: 2),
     );
   }
