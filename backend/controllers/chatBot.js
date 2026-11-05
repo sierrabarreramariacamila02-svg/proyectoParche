@@ -1,17 +1,12 @@
 import Groq from "groq-sdk";
 import { supabase } from "../config/supabase.js"; // Ruta a tu cliente de Supabase existente
 
-//const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-
 export const chatParche = async (req, res) => {
   try {
-
     const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-
-    const { mensaje, sesionId, usuarioId } = req.body;
-
-    if (!mensaje || !mensaje.trim()) {
+    const { message, sesionId, usuarioId } = req.body;
+    if (!message || !message.trim()) {
       return res.status(400).json({ message: "Debes enviar un mensaje." });
     }
 
@@ -20,7 +15,7 @@ export const chatParche = async (req, res) => {
 
     // 1. Obtener la carta desde tu tabla 'productos' en Supabase
     const { data: productos, error: errorProductos } = await supabase
-      .from("producto")
+      .from("productos")
       .select("id,nombre, descripcion, precio, categoria");
 
     if (errorProductos) {
@@ -59,7 +54,7 @@ REGLAS DE ATENCION:
       model: "openai/gpt-oss-20b",
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: mensaje }
+        { role: "user", content: message }
       ],
       temperature: 0.3,
       max_tokens: 500,
@@ -67,13 +62,13 @@ REGLAS DE ATENCION:
 
     const respuestaTexto = completion.choices[0]?.message?.content || "No pude generar una respuesta.";
 
-    // 4. Guardar ambos mensajes (pregunta y respuesta) en la tabla 'mensajes_chat' de Supabase
+    // 4. Guardar ambos mensajes (pregunta y respuesta) en la tabla 'mensajes_chat' de Supabase usando la columna 'mensaje'
     const registrosAInsertar = [
       {
         sesion_id: idSesionValido,
         usuario_id: usuarioId || null,
         emisor: "user",
-        mensaje: mensaje.trim()
+        mensaje: message.trim()
       },
       {
         sesion_id: idSesionValido,
@@ -89,11 +84,11 @@ REGLAS DE ATENCION:
 
     if (errorInsert) {
       console.error("Error guardando el historial en Supabase:", errorInsert.message);
-      // No frenamos la respuesta al cliente aunque falle el guardado en BD
     }
 
     return res.status(200).json({
       respuesta: respuestaTexto,
+      message: respuestaTexto,
       sesionId: idSesionValido
     });
 
