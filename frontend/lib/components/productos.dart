@@ -1,6 +1,7 @@
 import 'package:elparchee/app_colors.dart';
 import 'package:elparchee/components/customer_bottom_navigation.dart';
 import 'package:elparchee/models/producto_model.dart';
+import 'package:elparchee/pantallas/carrito.dart';
 import 'package:elparchee/pantallas/detalle_producto.dart';
 import 'package:elparchee/pantallas/notificaciones.dart';
 import 'package:elparchee/services/cart_service.dart';
@@ -114,7 +115,8 @@ class _ProductosState extends State<Productos> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => _DetalleCategoriaScreen(tituloCategoria: nombreCategoria),
+        builder: (_) =>
+            _DetalleCategoriaScreen(tituloCategoria: nombreCategoria),
       ),
     );
   }
@@ -238,19 +240,23 @@ class _ProductosState extends State<Productos> {
           ],
         ),
       ),
-      
-      // 🛠️ BOTÓN FLOTANTE AGREGADO: Al presionarlo abre el modal del Chat Bot con IA
+
+      // 🛒 BOTÓN FLOTANTE DEL CARRITO EN EL CENTRO
       floatingActionButton: FloatingActionButton(
-        onPressed: () => mostrarChatElParche(context),
-        backgroundColor: const Color(0xFF7B1113), // Color guinda/vino corporativo
-        child: const Icon(
-          Icons.chat_bubble_outline,
-          color: Colors.white,
-        ),
+        onPressed: () {
+          // TODO: Agrega aquí la navegación a tu pantalla o modal de carrito
+           Navigator.push(context, MaterialPageRoute(builder: (_) => const Carrito()));
+        },
+        backgroundColor:
+            AppColors.buttonOrange, // El color naranja de tu diseño
+        elevation: 4,
+        shape: const CircleBorder(),
+        child: const Icon(Icons.shopping_cart, color: Colors.white),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: const CustomerBottomNavigation(selectedIndex: 0),
+
+     
     );
   }
 
@@ -408,7 +414,8 @@ class _DetalleCategoriaScreen extends StatefulWidget {
   const _DetalleCategoriaScreen({required this.tituloCategoria});
 
   @override
-  State<_DetalleCategoriaScreen> createState() => _DetalleCategoriaScreenState();
+  State<_DetalleCategoriaScreen> createState() =>
+      _DetalleCategoriaScreenState();
 }
 
 class _DetalleCategoriaScreenState extends State<_DetalleCategoriaScreen> {
@@ -418,7 +425,9 @@ class _DetalleCategoriaScreenState extends State<_DetalleCategoriaScreen> {
   @override
   void initState() {
     super.initState();
-    _futureProductos = _productoService.obtenerProductos(categoria: widget.tituloCategoria);
+    _futureProductos = _productoService.obtenerProductos(
+      categoria: widget.tituloCategoria,
+    );
   }
 
   @override
@@ -429,7 +438,10 @@ class _DetalleCategoriaScreenState extends State<_DetalleCategoriaScreen> {
         backgroundColor: AppColors.barraHome,
         title: Text(
           widget.tituloCategoria,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
       body: FutureBuilder<List<ProductoModel>>(
@@ -440,7 +452,9 @@ class _DetalleCategoriaScreenState extends State<_DetalleCategoriaScreen> {
           } else if (snapshot.hasError) {
             return Center(child: Text('Error al cargar: ${snapshot.error}'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No hay productos en esta categoría'));
+            return const Center(
+              child: Text('No hay productos en esta categoría'),
+            );
           }
 
           final productos = snapshot.data!;
@@ -517,7 +531,9 @@ class _DetalleCategoriaScreenState extends State<_DetalleCategoriaScreen> {
                               producto.nombre,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             Text(
                               '\$${producto.precio.toStringAsFixed(0)} COP',
