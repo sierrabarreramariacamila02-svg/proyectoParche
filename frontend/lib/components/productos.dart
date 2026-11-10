@@ -1,16 +1,14 @@
 import 'package:elparchee/app_colors.dart';
+import 'package:elparchee/components/customer_bottom_navigation.dart';
 import 'package:elparchee/models/producto_model.dart';
-import 'package:elparchee/pantallas/carrito.dart';
 import 'package:elparchee/pantallas/detalle_producto.dart';
 import 'package:elparchee/pantallas/notificaciones.dart';
-import 'package:elparchee/pantallas/pedidos.dart';
-import 'package:elparchee/pantallas/perfil.dart';
 import 'package:elparchee/services/cart_service.dart';
 import 'package:elparchee/services/destacado_service.dart';
 import 'package:elparchee/services/producto_service.dart';
+import 'package:elparchee/components/chat_elparche_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-// 👈 Importación del chat con IA
 
 import 'admin_drawer.dart';
 
@@ -137,6 +135,11 @@ class _ProductosState extends State<Productos> {
         ),
         actions: [
           IconButton(
+            tooltip: 'Chat El Parche',
+            icon: const Icon(Icons.chat_bubble_outline, color: Colors.white),
+            onPressed: () => mostrarChatElParche(context),
+          ),
+          IconButton(
             icon: const Icon(Icons.notifications_none, color: Colors.white),
             onPressed: () {
               Navigator.push(
@@ -242,70 +245,9 @@ class _ProductosState extends State<Productos> {
         ),
       ),
 
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.buttonOrange,
-        elevation: 4.0,
-        shape: const CircleBorder(),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const Carrito()),
-          );
-        },
-        child: const Icon(Icons.shopping_cart, color: Colors.white),
-      ),
+      floatingActionButton: const CustomerCartButton(selectedIndex: 0),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      // Barra de navegación inferior con iconos funcionales
-      bottomNavigationBar: BottomAppBar(
-        color: const Color(0xFFF2D6BD),
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 8.0,
-        child: SizedBox(
-          height: 60,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              // Icono Home (ya estás aquí, puedes dejarlo vacio o recargar)
-              IconButton(
-                icon: const Icon(Icons.home, color: AppColors.barraHome),
-                onPressed: () {
-                  // Ya estás en la pantalla principal
-                },
-              ),
-              // Icono Búsqueda
-              IconButton(
-                icon: const Icon(Icons.search, color: Colors.brown),
-                onPressed: () {
-                  // Opcional: acción o pantalla de búsqueda
-                },
-              ),
-              const SizedBox(
-                width: 40,
-              ), // Espacio para el botón flotante del carrito
-              // Icono Pedidos
-              IconButton(
-                icon: const Icon(Icons.receipt_long, color: Colors.brown),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const Pedidos()),
-                  );
-                },
-              ),
-              // Icono Perfil
-              IconButton(
-                icon: const Icon(Icons.person_outline, color: Colors.brown),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const Perfil()),
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
+      bottomNavigationBar: const CustomerBottomNavigation(selectedIndex: 0),
     );
   }
 

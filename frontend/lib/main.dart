@@ -8,6 +8,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'; // 🚀 IMPORTACIÓN DE SUPABASE
+import 'firebase_options.dart';
 
 // 1. Definir el canal de notificaciones locales (Debe coincidir con el AndroidManifest)
 const AndroidNotificationChannel channel = AndroidNotificationChannel(
@@ -30,12 +31,13 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 void main() async {
   // 3. Asegurar la inicialización y Firebase
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // 🚀 INICIALIZAR SUPABASE ANTES DE CORRER LA APLICACIÓN
   await Supabase.initialize(
     url: 'TU_SUPABASE_URL', // Reemplaza con tu URL de Supabase
-    anonKey: 'TU_SUPABASE_ANON_KEY', // Reemplaza con tu Anon Key de Supabase
+    publishableKey:
+        'TU_SUPABASE_ANON_KEY', // Reemplaza con tu Anon Key de Supabase
   );
 
   // Registrar el manejador de segundo plano
@@ -44,16 +46,17 @@ void main() async {
   // 4. Inicializar el canal de notificaciones locales en Android
   await flutterLocalNotificationsPlugin
       .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>()
+        AndroidFlutterLocalNotificationsPlugin
+      >()
       ?.createNotificationChannel(channel);
 
   runApp(const MainApp());
 }
 
 class MainApp extends StatefulWidget {
-  const MainApp({super.key, this.enableNotifications = true});
+  final bool initializeNotifications;
 
-  final bool enableNotifications;
+  const MainApp({super.key, this.initializeNotifications = true});
 
   @override
   State<MainApp> createState() => _MainAppState();
@@ -63,7 +66,7 @@ class _MainAppState extends State<MainApp> {
   @override
   void initState() {
     super.initState();
-    if (widget.enableNotifications) {
+    if (widget.initializeNotifications) {
       _setupNotifications();
     }
   }
