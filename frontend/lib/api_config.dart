@@ -6,7 +6,7 @@ class ApiConfig {
 
   static const String _remoteUrl = 'https://el-parche.onrender.com/api';
   static const int _port = 3000;
-  static const String? _lanIp = '192.168.1.160';
+  static const String _lanIp = '192.168.1.160';
 
   static String get baseUrl {
     if (useRemote) {
@@ -16,9 +16,7 @@ class ApiConfig {
       return 'http://localhost:$_port/api';
     }
     if (Platform.isAndroid) {
-      return _lanIp == null
-          ? 'http://10.0.2.2:$_port/api'
-          : 'http://$_lanIp:$_port/api';
+      return 'http://$_lanIp:$_port/api';
     }
     if (Platform.isIOS) {
       return 'http://localhost:3000/api';

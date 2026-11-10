@@ -1,15 +1,16 @@
 import 'package:elparchee/app_colors.dart';
-import 'package:elparchee/components/customer_bottom_navigation.dart';
 import 'package:elparchee/models/producto_model.dart';
 import 'package:elparchee/pantallas/carrito.dart';
 import 'package:elparchee/pantallas/detalle_producto.dart';
 import 'package:elparchee/pantallas/notificaciones.dart';
+import 'package:elparchee/pantallas/pedidos.dart';
+import 'package:elparchee/pantallas/perfil.dart';
 import 'package:elparchee/services/cart_service.dart';
 import 'package:elparchee/services/destacado_service.dart';
 import 'package:elparchee/services/producto_service.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:elparchee/components/chat_elparche_modal.dart'; // 👈 Importación del chat con IA
+// 👈 Importación del chat con IA
 
 import 'admin_drawer.dart';
 

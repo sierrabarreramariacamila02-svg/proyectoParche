@@ -51,7 +51,9 @@ void main() async {
 }
 
 class MainApp extends StatefulWidget {
-  const MainApp({super.key});
+  const MainApp({super.key, this.enableNotifications = true});
+
+  final bool enableNotifications;
 
   @override
   State<MainApp> createState() => _MainAppState();
@@ -61,7 +63,9 @@ class _MainAppState extends State<MainApp> {
   @override
   void initState() {
     super.initState();
-    _setupNotifications();
+    if (widget.enableNotifications) {
+      _setupNotifications();
+    }
   }
 
   // 5. Configurar permisos, suscripción a temas y escucha de notificaciones

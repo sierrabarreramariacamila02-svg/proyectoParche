@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   testWidgets('Main app builds', (WidgetTester tester) async {
-    await tester.pumpWidget(const MainApp());
+    await tester.pumpWidget(const MainApp(enableNotifications: false));
 
     expect(find.byType(MaterialApp), findsOneWidget);
   });
