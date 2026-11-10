@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:geolocator/geolocator.dart';
 
 import '../app_colors.dart';
 import '../pantallas/metodopagoselector.dart';
@@ -27,10 +28,11 @@ class _DomicilioPantallaState extends State<DomicilioPantalla> {
   final _barrio = TextEditingController();
   final _indicaciones = TextEditingController();
   final MapController _mapController = MapController();
-  LatLng _ubicacion = const LatLng(2.1994, -75.6297);
+
+  LatLng _ubicacion = const LatLng(2.1994, -75.6297); // Garzón, Huila
   String _metodoPago = 'Efectivo';
-  bool _seleccionarEnMapa = false;
   bool _enviando = false;
+  bool _obteniendoUbicacion = false;
 
   @override
   void dispose() {
@@ -48,13 +50,67 @@ class _DomicilioPantallaState extends State<DomicilioPantalla> {
     super.dispose();
   }
 
+  // 📍 Función para obtener la ubicación GPS actual
+  Future<void> _obtenerUbicacionGPS() async {
+    setState(() => _obteniendoUbicacion = true);
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        _mostrarError('Por favor activa el GPS de tu dispositivo.');
+        setState(() => _obteniendoUbicacion = false);
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          _mostrarError('Los permisos de ubicación fueron denegados.');
+          setState(() => _obteniendoUbicacion = false);
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        _mostrarError(
+          'Los permisos de ubicación están denegados permanentemente.',
+        );
+        setState(() => _obteniendoUbicacion = false);
+        return;
+      }
+
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      LatLng nuevaPosicion = LatLng(position.latitude, position.longitude);
+
+      setState(() {
+        _ubicacion = nuevaPosicion;
+        _obteniendoUbicacion = false;
+      });
+
+      _mapController.move(nuevaPosicion, 17.0);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('¡Ubicación actual obtenida con éxito!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      setState(() => _obteniendoUbicacion = false);
+      _mostrarError('No se pudo obtener la ubicación: $e');
+    }
+  }
+
   String get _direccionCompleta => [
     _direccion.text.trim(),
     _barrio.text.trim().isEmpty ? null : 'Barrio ${_barrio.text.trim()}',
     _indicaciones.text.trim().isEmpty
         ? null
         : 'Indicaciones: ${_indicaciones.text.trim()}',
-    'Coordenadas: ${_ubicacion.latitude.toStringAsFixed(6)}, ${_ubicacion.longitude.toStringAsFixed(6)}',
+    'GPS: https://www.google.com/maps/search/?api=1&query=${_ubicacion.latitude},${_ubicacion.longitude}',
   ].whereType<String>().join(', ');
 
   Future<void> _confirmarDomicilio() async {
@@ -198,19 +254,41 @@ class _DomicilioPantallaState extends State<DomicilioPantalla> {
               maxLines: 2,
               obligatorio: false,
             ),
-            OutlinedButton.icon(
-              onPressed: () =>
-                  setState(() => _seleccionarEnMapa = !_seleccionarEnMapa),
-              icon: Icon(_seleccionarEnMapa ? Icons.check : Icons.map_outlined),
-              label: Text(
-                _seleccionarEnMapa
-                    ? 'Toca el mapa para elegir la ubicación'
-                    : 'Elegir ubicación en el mapa',
+
+            // Botón para enviar la ubicación actual por GPS
+            SizedBox(
+              height: 48,
+              child: ElevatedButton.icon(
+                onPressed: _obteniendoUbicacion ? null : _obtenerUbicacionGPS,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green.shade700,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                icon: _obteniendoUbicacion
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Icon(Icons.share_location),
+                label: Text(
+                  _obteniendoUbicacion
+                      ? 'Obteniendo GPS...'
+                      : 'Enviar mi ubicación actual',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
+
             SizedBox(
-              height: 210,
+              height: 220,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(14),
                 child: FlutterMap(
@@ -219,10 +297,8 @@ class _DomicilioPantallaState extends State<DomicilioPantalla> {
                     initialCenter: _ubicacion,
                     initialZoom: 15,
                     onTap: (_, point) {
-                      if (!_seleccionarEnMapa) return;
                       setState(() {
                         _ubicacion = point;
-                        _seleccionarEnMapa = false;
                       });
                     },
                   ),
@@ -236,12 +312,12 @@ class _DomicilioPantallaState extends State<DomicilioPantalla> {
                       markers: [
                         Marker(
                           point: _ubicacion,
-                          width: 42,
-                          height: 42,
+                          width: 45,
+                          height: 45,
                           child: const Icon(
                             Icons.location_pin,
                             color: Colors.red,
-                            size: 40,
+                            size: 45,
                           ),
                         ),
                       ],
@@ -251,6 +327,7 @@ class _DomicilioPantallaState extends State<DomicilioPantalla> {
               ),
             ),
             const SizedBox(height: 16),
+
             MetodoPagoSelector(
               seleccionado: _metodoPago,
               onChanged: (m) => setState(() => _metodoPago = m),
