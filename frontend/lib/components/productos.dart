@@ -1,13 +1,15 @@
 import 'package:elparchee/app_colors.dart';
 import 'package:elparchee/components/customer_bottom_navigation.dart';
 import 'package:elparchee/models/producto_model.dart';
+import 'package:elparchee/pantallas/carrito.dart';
 import 'package:elparchee/pantallas/detalle_producto.dart';
 import 'package:elparchee/pantallas/notificaciones.dart';
 import 'package:elparchee/services/cart_service.dart';
 import 'package:elparchee/services/destacado_service.dart';
-import 'package:elparchee/services/producto_service.dart'; // 👈 Asegúrate de tener tu servicio de productos importado
+import 'package:elparchee/services/producto_service.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:elparchee/components/chat_elparche_modal.dart'; // 👈 Importación del chat con IA
 
 import 'admin_drawer.dart';
 
@@ -109,8 +111,6 @@ class _ProductosState extends State<Productos> {
     }
   }
 
-  // 🛠️ MODIFICADO: Ahora en lugar de abrir una página genérica de categoría vacía,
-  // consultamos los productos de esa categoría y los mostramos con la misma estructura interactiva.
   void _abrirCategoria(String nombreCategoria) {
     Navigator.push(
       context,
@@ -230,7 +230,7 @@ class _ProductosState extends State<Productos> {
             else if (_listaDestacados.isEmpty)
               Center(
                 child: Padding(
-                  padding: const EdgeInsets.all(24),
+                  padding: EdgeInsets.all(24),
                   child: Text('No hay productos destacados disponibles.'),
                 ),
               )
@@ -240,9 +240,23 @@ class _ProductosState extends State<Productos> {
           ],
         ),
       ),
-      floatingActionButton: const CustomerCartButton(selectedIndex: 0),
+
+      // 🛒 BOTÓN FLOTANTE DEL CARRITO EN EL CENTRO
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // TODO: Agrega aquí la navegación a tu pantalla o modal de carrito
+           Navigator.push(context, MaterialPageRoute(builder: (_) => const Carrito()));
+        },
+        backgroundColor:
+            AppColors.buttonOrange, // El color naranja de tu diseño
+        elevation: 4,
+        shape: const CircleBorder(),
+        child: const Icon(Icons.shopping_cart, color: Colors.white),
+      ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: const CustomerBottomNavigation(selectedIndex: 0),
+
+     
     );
   }
 
@@ -394,10 +408,6 @@ class _ProductosState extends State<Productos> {
   }
 }
 
-// ----------------------------------------------------------------------
-// Widget interno para mostrar los productos de la categoría seleccionada
-// con la misma estructura y diseño de detalle que la primera imagen.
-// ----------------------------------------------------------------------
 class _DetalleCategoriaScreen extends StatefulWidget {
   final String tituloCategoria;
 
