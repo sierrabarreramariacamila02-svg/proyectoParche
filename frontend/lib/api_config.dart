@@ -2,27 +2,32 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 class ApiConfig {
+  static const bool useRemote = true;
+
+  static const String _remoteUrl = 'https://el-parche.onrender.com/api';
+  static const int _port = 3000;
+  static const String? _lanIp = '192.168.1.160';
+
   static String get baseUrl {
-    // 1. Evaluar Web primero para evitar que Platform.isX genere un error en JS
+    if (useRemote) {
+      return _remoteUrl;
+    }
     if (kIsWeb) {
-      return 'http://localhost:3000/api';
+      return 'http://localhost:$_port/api';
     }
-
-    // 2. Evaluaciones para dispositivos móviles / desktop
     if (Platform.isAndroid) {
-      // Usando tu IP Local actualizada para el celular físico
-      return 'http://192.168.1.174:3000/api';
-    } else if (Platform.isIOS) {
-      // Simulador de iOS
+      return _lanIp == null
+          ? 'http://10.0.2.2:$_port/api'
+          : 'http://$_lanIp:$_port/api';
+    }
+    if (Platform.isIOS) {
       return 'http://localhost:3000/api';
     }
-
-    // Fallback para macOS, Windows, Linux, etc.
-    return 'http://localhost:3000/api';
+    return 'http://localhost:$_port/api';
   }
 
-  static const Map<String, String> headers = {
+  static Map<String, String> get headers => {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
+    'accept': 'application/json',
   };
 }

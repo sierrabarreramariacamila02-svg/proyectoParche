@@ -2,18 +2,8 @@
 import 'package:elparchee/components/chat_header.dart';
 import 'package:elparchee/components/chat_input_field.dart';
 import 'package:flutter/material.dart';
-
-class _ProductoInfo {
-  final String nombre;
-  final String descripcion;
-  final int precio;
-
-  const _ProductoInfo({
-    required this.nombre,
-    required this.descripcion,
-    required this.precio,
-  });
-}
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 void mostrarChatElParche(BuildContext context) {
   showModalBottomSheet(
@@ -34,33 +24,15 @@ class ChatElParcheModal extends StatefulWidget {
 class _ChatElParcheModalState extends State<ChatElParcheModal> {
   final TextEditingController _controlador = TextEditingController();
   final ScrollController _scroll = ScrollController();
+  bool _cargando = false;
 
-  final List<_ProductoInfo> _productos = const [
-    _ProductoInfo(
-      nombre: 'Hamburguesa',
-      descripcion: 'Hamburguesa artesanal con queso y salsa especial.',
-      precio: 18000,
-    ),
-    _ProductoInfo(
-      nombre: 'Perro caliente',
-      descripcion: 'Perro caliente con papa, salsa y queso.',
-      precio: 14000,
-    ),
-    _ProductoInfo(
-      nombre: 'Salchipapa',
-      descripcion: 'Salchipapa con queso, salsas y tocineta.',
-      precio: 16000,
-    ),
-    _ProductoInfo(
-      nombre: 'Bebida',
-      descripcion: 'Bebida fría de sabores para acompañar.',
-      precio: 5000,
-    ),
-  ];
+  // Ajusta la IP según tu entorno (10.0.2.2 para emulador Android)
+  final String _apiUrl = "http://10.0.2.2:3000/api/chatBot";
+  final String _sesionId = "sesion_usuario_123";
 
   final List<Mensaje> _mensajes = [
     const Mensaje(
-      texto: '¡Hola! Soy el asistente de El Parche. Pregúntame por productos, precios u horarios.',
+      texto: '¡Hola! Soy el asistente de El Parche. ¿En qué te puedo ayudar hoy?',
       esUsuario: false,
     ),
   ];
@@ -72,53 +44,56 @@ class _ChatElParcheModalState extends State<ChatElParcheModal> {
     super.dispose();
   }
 
-  String _responder(String entrada) {
-    final texto = entrada.toLowerCase();
-
-    for (final producto in _productos) {
-      if (texto.contains(producto.nombre.toLowerCase())) {
-        return '${producto.nombre}: ${producto.descripcion}. Precio: \$${producto.precio}.';
-      }
-    }
-
-    if (texto.contains('hola') || texto.contains('buenas')) {
-      return '¡Hola! ¿En qué te puedo ayudar?';
-    }
-
-    if (texto.contains('producto') || texto.contains('menu') || texto.contains('carta')) {
-      return 'Tenemos:\n${_productos.map((p) => '• ${p.nombre}').join('\n')}';
-    }
-
-    if (texto.contains('precio') || texto.contains('cuesta') || texto.contains('valor')) {
-      return _productos.map((p) => '${p.nombre}: \$${p.precio}').join('\n');
-    }
-
-    if (texto.contains('horario') || texto.contains('abierto')) {
-      return 'Atendemos de lunes a sábado, de 8:00 a.m. a 8:00 p.m.';
-    }
-
-    if (texto.contains('gracias')) {
-      return '¡Con gusto! 😊';
-    }
-
-    return 'No te entendí bien. Prueba con "productos", "precios" u "horario".';
-  }
-
-  void _enviar() {
+  Future<void> _enviar() async {
     final texto = _controlador.text.trim();
-    if (texto.isEmpty) return;
+    if (texto.isEmpty || _cargando) return;
 
-    setState(() => _mensajes.add(Mensaje(texto: texto, esUsuario: true)));
+    setState(() {
+      _mensajes.add(Mensaje(texto: texto, esUsuario: true));
+      _cargando = true;
+    });
+
     _controlador.clear();
     _bajar();
 
-    Future.delayed(const Duration(milliseconds: 600), () {
-      if (!mounted) return;
+    try {
+      final response = await http.post(
+        Uri.parse(_apiUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'message': texto,
+          'sesionId': _sesionId,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final respuestaIA = data['response'] ?? data['reply'] ?? data['message'] ?? 'Sin respuesta';
+
+        setState(() {
+          _mensajes.add(Mensaje(texto: respuestaIA, esUsuario: false));
+        });
+      } else {
+        setState(() {
+          _mensajes.add(const Mensaje(
+            texto: 'Lo siento, hubo un error en el servidor.',
+            esUsuario: false,
+          ));
+        });
+      }
+    } catch (e) {
       setState(() {
-        _mensajes.add(Mensaje(texto: _responder(texto), esUsuario: false));
+        _mensajes.add(const Mensaje(
+          texto: 'Error de conexión con el backend.',
+          esUsuario: false,
+        ));
+      });
+    } finally {
+      setState(() {
+        _cargando = false;
       });
       _bajar();
-    });
+    }
   }
 
   void _bajar() {
@@ -135,25 +110,42 @@ class _ChatElParcheModalState extends State<ChatElParcheModal> {
 
   @override
   Widget build(BuildContext context) {
+    const Color fondoCrema = Color(0xFFFDFBF7); 
+
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
-        height: MediaQuery.of(context).size.height * 0.75,
+        height: MediaQuery.of(context).size.height * 0.82,
         decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          color: fondoCrema,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
+        clipBehavior: Clip.antiAlias,
         child: Column(
           children: [
-            ChatHeader(onCerrar: () => Navigator.pop(context)),
+            // Aquí integramณ์ tu componente ChatHeader respetando tu onCerrar
+            ChatHeader(
+              onCerrar: () => Navigator.pop(context),
+            ),
+            // Cuerpo del chat con los mensajes
             Expanded(
               child: ListView.builder(
                 controller: _scroll,
-                padding: const EdgeInsets.symmetric(vertical: 8),
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
                 itemCount: _mensajes.length,
                 itemBuilder: (_, index) => ChatBurbuja(mensaje: _mensajes[index]),
               ),
             ),
+            if (_cargando)
+              const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.orange),
+                ),
+              ),
+            // Tu componente de input de texto inferior
             ChatInputField(
               controlador: _controlador,
               onEnviar: _enviar,

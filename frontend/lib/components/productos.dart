@@ -1,16 +1,15 @@
 import 'package:elparchee/app_colors.dart';
 import 'package:elparchee/components/customer_bottom_navigation.dart';
 import 'package:elparchee/models/producto_model.dart';
-import 'package:elparchee/pantallas/carrito.dart'; // O la ruta de tu pantalla de carrito
+import 'package:elparchee/pantallas/carrito.dart';
 import 'package:elparchee/pantallas/detalle_producto.dart';
 import 'package:elparchee/pantallas/notificaciones.dart';
-import 'package:elparchee/pantallas/pedidos.dart'; // Asegúrate de tener esta importación
-import 'package:elparchee/pantallas/perfil.dart'; // Asegúrate de tener esta importación
 import 'package:elparchee/services/cart_service.dart';
 import 'package:elparchee/services/destacado_service.dart';
-import 'package:elparchee/services/producto_service.dart'; // 👈 Asegúrate de tener tu servicio de productos importado
+import 'package:elparchee/services/producto_service.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:elparchee/components/chat_elparche_modal.dart'; // 👈 Importación del chat con IA
 
 import 'admin_drawer.dart';
 
@@ -29,6 +28,7 @@ class _ProductosState extends State<Productos> {
   List<ProductoModel> _listaDestacados = [];
   bool _isLoading = true;
   String? _errorCarga;
+  bool _esAdmin = false;
   String _nombreUsuario = 'username';
   String _correoUsuario = '';
 
@@ -66,14 +66,20 @@ class _ProductosState extends State<Productos> {
     super.initState();
     DestacadoService.cambios.addListener(_alCambiarDestacados);
     _cargarProductosHome();
-    if (widget.isAdmin) _cargarDatosAdmin();
+    _cargarDatosUsuario();
   }
 
-  Future<void> _cargarDatosAdmin() async {
+  Future<void> _cargarDatosUsuario() async {
     final preferencias = await SharedPreferences.getInstance();
     if (!mounted) return;
+    final rol = (preferencias.getString('user_role') ?? '')
+        .toLowerCase()
+        .trim();
     setState(() {
-      _nombreUsuario = preferencias.getString('user_name') ?? 'Administrador';
+      _esAdmin = rol == 'admin' || rol == 'administrador';
+      _nombreUsuario =
+          preferencias.getString('user_name') ??
+          (_esAdmin ? 'Administrador' : 'username');
       _correoUsuario = preferencias.getString('user_email') ?? '';
     });
   }
@@ -105,8 +111,6 @@ class _ProductosState extends State<Productos> {
     }
   }
 
-  // 🛠️ MODIFICADO: Ahora en lugar de abrir una página genérica de categoría vacía,
-  // consultamos los productos de esa categoría y los mostramos con la misma estructura interactiva.
   void _abrirCategoria(String nombreCategoria) {
     Navigator.push(
       context,
@@ -124,7 +128,7 @@ class _ProductosState extends State<Productos> {
       appBar: AppBar(
         backgroundColor: AppColors.barraHome,
         title: Text(
-          widget.isAdmin ? 'Hola, $_nombreUsuario' : 'Hola username!',
+          _esAdmin ? 'Hola, $_nombreUsuario' : 'Hola $_nombreUsuario!',
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -142,7 +146,7 @@ class _ProductosState extends State<Productos> {
           ),
         ],
       ),
-      drawer: widget.isAdmin
+      drawer: _esAdmin
           ? AdminDrawer(adminName: _nombreUsuario, adminEmail: _correoUsuario)
           : null,
       body: SingleChildScrollView(
@@ -226,7 +230,7 @@ class _ProductosState extends State<Productos> {
             else if (_listaDestacados.isEmpty)
               const Center(
                 child: Padding(
-                  padding: const EdgeInsets.all(24),
+                  padding: EdgeInsets.all(24),
                   child: Text('No hay productos destacados disponibles.'),
                 ),
               )
@@ -236,7 +240,7 @@ class _ProductosState extends State<Productos> {
           ],
         ),
       ),
-      // Botón flotante central del carrito funcional
+
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.buttonOrange,
         elevation: 4.0,
@@ -244,9 +248,7 @@ class _ProductosState extends State<Productos> {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (_) => const Carrito(),
-            ), // Reemplaza 'Carrito' con el nombre de tu clase de carrito si es diferente
+            MaterialPageRoute(builder: (_) => const Carrito()),
           );
         },
         child: const Icon(Icons.shopping_cart, color: Colors.white),
@@ -454,10 +456,6 @@ class _ProductosState extends State<Productos> {
   }
 }
 
-// ----------------------------------------------------------------------
-// Widget interno para mostrar los productos de la categoría seleccionada
-// con la misma estructura y diseño de detalle que la primera imagen.
-// ----------------------------------------------------------------------
 class _DetalleCategoriaScreen extends StatefulWidget {
   final String tituloCategoria;
 

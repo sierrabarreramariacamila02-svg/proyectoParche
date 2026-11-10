@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'; // 🚀 IMPORTACIÓN DE SUPABASE
 import '../models/producto_model.dart';
 import '../services/admin_producto_service.dart';
 import 'admin_page_selector.dart';
@@ -41,8 +42,8 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
   late final _precioCtrl = TextEditingController(
     text: widget.producto?.precio != null
         ? (widget.producto!.precio % 1 == 0
-              ? widget.producto!.precio.toInt().toString()
-              : widget.producto!.precio.toString())
+            ? widget.producto!.precio.toInt().toString()
+            : widget.producto!.precio.toString())
         : '',
   );
 
@@ -184,6 +185,25 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
           destacado: _destacado,
           imagen: imagen!,
         );
+      }
+
+      // 🚀 PASO 1 IMPLEMENTADO: Registrar la notificación en Supabase
+      try {
+        final supabase = Supabase.instance.client;
+        final tituloNotif = _esEdicion
+            ? '¡Producto actualizado! 🍔'
+            : '¡Nuevo producto en El Parche! 🍔';
+        final cuerpoNotif = _esEdicion
+            ? 'Hemos actualizado el plato "$nombre". ¡Ven a probarlo!'
+            : 'Prueba nuestro nuevo plato "$nombre". $descripcion';
+
+        await supabase.from('notificaciones').insert({
+          'titulo': tituloNotif,
+          'cuerpo': cuerpoNotif,
+          'leida': false,
+        });
+      } catch (errNotif) {
+        print('Error registrando notificación en Supabase: $errNotif');
       }
 
       if (mounted) Navigator.pop(context, true);

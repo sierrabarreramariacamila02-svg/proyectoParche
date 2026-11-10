@@ -1,13 +1,10 @@
 import 'package:elparchee/components/admin_banner_list_page.dart';
+import 'package:elparchee/components/inventario.dart';
+import 'package:elparchee/pantallas/inicioSesion.dart';
 import 'package:elparchee/services/adminUserListPage.dart';
 import 'package:elparchee/services/admin_destacado_page.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../pages/menu_page.dart';
-import '../pantallas/inicioSesion.dart';
-import '../pantallas/cocina_pedidos.dart';
-import '../pantallas/domicilio.dart';
-import '../pantallas/mesero1.dart';
 import 'package:elparchee/app_colors.dart';
 import '../pages/admin_product_list_page.dart';
 
@@ -34,18 +31,16 @@ class AdminDrawer extends StatelessWidget {
     );
   }
 
-  void _openModule(BuildContext context, Widget module) {
-    Navigator.pop(context);
-    Navigator.push(context, MaterialPageRoute(builder: (_) => module));
+  void _openHome(BuildContext context) {
+    final navigator = Navigator.of(context);
+    navigator.pop();
+    navigator.pushNamedAndRemoveUntil('/administracion', (route) => false);
   }
 
-  void _openHome(BuildContext context) {
-    Navigator.pop(context);
-    Navigator.pushNamedAndRemoveUntil(
-      context,
-      '/administracion',
-      (route) => false,
-    );
+  void _openPage(BuildContext context, Widget page) {
+    final navigator = Navigator.of(context);
+    navigator.pop();
+    navigator.push(MaterialPageRoute(builder: (_) => page));
   }
 
   @override
@@ -86,69 +81,19 @@ class AdminDrawer extends StatelessWidget {
                   _openHome(context);
                 }),
                 _item(Icons.store, 'Administrar productos', () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const AdminProductListPage(),
-                    ),
-                  );
+                  _openPage(context, const AdminProductListPage());
                 }),
-
+                _item(Icons.inventory_2_outlined, 'Inventario', () {
+                  _openPage(context, const InventarioScreen());
+                }),
                 _item(Icons.star_outline, 'Platos destacados', () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const AdminDestacadosPage(),
-                    ),
-                  );
+                  _openPage(context, const AdminDestacadosPage());
                 }),
-
-                // --- 2. OPCIÓN DE BANNERS / PROMOCIONES CONECTADA ---
                 _item(Icons.image_outlined, 'Banners y Promociones', () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const AdminBannerListPage(),
-                    ),
-                  );
+                  _openPage(context, const AdminBannerListPage());
                 }),
-
                 _item(Icons.people_alt_outlined, 'Usuarios', () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const AdminUserListPage(),
-                    ),
-                  );
-                }),
-
-                const Divider(),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                  child: Text(
-                    'MÓDULOS OPERATIVOS',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Colors.black54,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                _item(Icons.receipt_long_outlined, 'Pedidos y cocina', () {
-                  _openModule(context, const Cocina());
-                }),
-                _item(Icons.table_restaurant_outlined, 'Mesero y mesas', () {
-                  _openModule(context, const GestionMesas(adminMode: true));
-                }),
-                _item(Icons.delivery_dining, 'Domicilios', () {
-                  _openModule(context, const DomicilioPantalla());
-                }),
-                const Divider(),
-                _item(Icons.menu_book_outlined, 'Ver carta', () {
-                  _openModule(context, const MenuPage());
+                  _openPage(context, const AdminUserListPage());
                 }),
               ],
             ),

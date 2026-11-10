@@ -126,6 +126,8 @@ class _BuscarState extends State<Buscar> {
           ),
         ],
       ),
+      floatingActionButton: const CustomerCartButton(selectedIndex: 1),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: const CustomerBottomNavigation(selectedIndex: 1),
     );
   }

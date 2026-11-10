@@ -7,19 +7,15 @@ class Mensaje {
   const Mensaje({required this.texto, required this.esUsuario});
 }
 
-class ChatBurbuja extends StatefulWidget {
+class ChatBurbuja extends StatelessWidget {
   final Mensaje mensaje;
 
   const ChatBurbuja({super.key, required this.mensaje});
 
   @override
-  State<ChatBurbuja> createState() => _ChatBurbujaState();
-}
-
-class _ChatBurbujaState extends State<ChatBurbuja> {
-  @override
   Widget build(BuildContext context) {
-    final esUsuario = widget.mensaje.esUsuario;
+    final esUsuario = mensaje.esUsuario;
+    
     return Align(
       alignment: esUsuario ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -29,7 +25,8 @@ class _ChatBurbujaState extends State<ChatBurbuja> {
           maxWidth: MediaQuery.of(context).size.width * 0.75,
         ),
         decoration: BoxDecoration(
-          color: esUsuario ? Colors.orange : Colors.grey.shade200,
+          // Color naranja para el usuario y un tono gris/crema suave para la IA
+          color: esUsuario ? const Color(0xFFE59866) : Colors.grey.shade200,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
             topRight: const Radius.circular(16),
@@ -38,7 +35,7 @@ class _ChatBurbujaState extends State<ChatBurbuja> {
           ),
         ),
         child: Text(
-          widget.mensaje.texto,
+          mensaje.texto,
           style: TextStyle(
             color: esUsuario ? Colors.white : Colors.black87,
             fontSize: 15,

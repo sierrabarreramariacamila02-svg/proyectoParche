@@ -62,6 +62,14 @@ Antes de usar la creación, edición o eliminación de usuarios desde el panel, 
 Esta migración añade la marca que separa las cuentas creadas/gestionadas desde el
 panel de los registros normales.
 
+## 4. Configurar el inventario
+
+En el SQL Editor de Supabase, ejecuta `migrations/202611030002_secure_inventory_access.sql`.
+En el `.env` del backend, configura `SUPABASE_SERVICE_ROLE_KEY` con la clave `service_role`
+del proyecto Supabase y reinicia el servidor. Esta clave se usa únicamente en el backend;
+no la incluyas en Flutter ni la publiques. Las rutas de inventario verifican el rol admin
+antes de acceder a la tabla.
+
 ---
 
 ## 📂 Estructura del proyecto

@@ -5,7 +5,7 @@ import { verificarToken, verificarRol, verificarAdmin } from '../middlewares/aut
 const router = express.Router();
 
 router.get('/', verificarToken, verificarRol('admin', 'administrador', 'cocina', 'cocinero', 'mesero', 'domiciliario'), listarPedidos);
-router.get('/mis-pedidos', verificarToken, verificarRol('usuario'), misPedidos);
+router.get('/mis-pedidos', verificarToken, verificarRol('usuario', 'cliente'), misPedidos);
 router.get('/:id', verificarToken, obtenerPedido);
 router.post('/', verificarToken, crear);
 router.put('/:id', verificarToken, verificarRol('admin', 'cocina', 'cocinero', 'mesero'), editar);

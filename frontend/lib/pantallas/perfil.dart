@@ -283,6 +283,8 @@ class _PerfilState extends State<Perfil> {
                 ),
               ],
             ),
+      floatingActionButton: const CustomerCartButton(selectedIndex: 3),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: const CustomerBottomNavigation(selectedIndex: 3),
     );
   }
