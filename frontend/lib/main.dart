@@ -1,19 +1,18 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:elparchee/components/productos.dart';
 import 'package:elparchee/pantallas/bienvenidos.dart';
 import 'package:elparchee/pantallas/inicio.dart';
 import 'package:elparchee/pantallas/inicioSesion.dart';
 import 'package:elparchee/pantallas/verificacion.dart';
-import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-<<<<<<< HEAD
-import 'firebase_options.dart'; // <-- 1. Importa el archivo de opciones generado por Firebase
-=======
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:supabase_flutter/supabase_flutter.dart'; // 🚀 IMPORTACIÓN DE SUPABASE
->>>>>>> 48bdf18621d817100a66b4507635d1a4aff118e9
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-// 1. Definir el canal de notificaciones locales (Debe coincidir con el AndroidManifest)
+import 'firebase_options.dart';
+
 const AndroidNotificationChannel channel = AndroidNotificationChannel(
   'high_importance_channel',
   'Notificaciones Importantes',
@@ -24,35 +23,31 @@ const AndroidNotificationChannel channel = AndroidNotificationChannel(
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
-// 2. Manejador de notificaciones en segundo plano
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
-  print("Mensaje recibido en segundo plano: ${message.messageId}");
+  debugPrint('Mensaje recibido en segundo plano: ${message.messageId}');
 }
 
 void main() async {
-<<<<<<< HEAD
-  // 2. Asegurar la inicialización y Firebase con las opciones de la plataforma
-=======
-  // 3. Asegurar la inicialización y Firebase
->>>>>>> 48bdf18621d817100a66b4507635d1a4aff118e9
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
-    options: DefaultFirebaseOptions
-        .currentPlatform, // <-- 2. Añade esta línea obligatoria para la Web
+    options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // 🚀 INICIALIZAR SUPABASE ANTES DE CORRER LA APLICACIÓN
-  await Supabase.initialize(
-    url: 'TU_SUPABASE_URL', // Reemplaza con tu URL de Supabase
-    anonKey: 'TU_SUPABASE_ANON_KEY', // Reemplaza con tu Anon Key de Supabase
-  );
+  const supabaseUrl = String.fromEnvironment('SUPABASE_URL', defaultValue: '');
+  const supabaseAnonKey =
+      String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: '');
 
-  // Registrar el manejador de segundo plano
+  if (supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty) {
+    await Supabase.initialize(
+      url: supabaseUrl,
+      anonKey: supabaseAnonKey,
+    );
+  }
+
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-  // 4. Inicializar el canal de notificaciones locales en Android
   await flutterLocalNotificationsPlugin
       .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin>()
@@ -85,23 +80,23 @@ class _MainAppState extends State<MainApp> {
       sound: true,
     );
 
-    print('Estado de permisos: ${settings.authorizationStatus}');
+    debugPrint('Estado de permisos: ${settings.authorizationStatus}');
 
     // Obtener el Token FCM del dispositivo
     String? token = await messaging.getToken();
-    print("FCM Token: $token");
+    debugPrint("FCM Token: $token");
 
     // 🚀 NUEVO: Suscribir automáticamente al usuario al tema de promociones
     try {
       await messaging.subscribeToTopic('promociones');
-      print("¡Suscrito exitosamente al tema 'promociones'!");
+      debugPrint("¡Suscrito exitosamente al tema 'promociones'!");
     } catch (e) {
-      print("Error al suscribirse al tema de promociones: $e");
+      debugPrint("Error al suscribirse al tema de promociones: $e");
     }
 
     // Escuchar mensajes en primer plano y mostrarlos visualmente
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      print('¡Notificación recibida en primer plano!');
+      debugPrint('¡Notificación recibida en primer plano!');
       RemoteNotification? notification = message.notification;
       AndroidNotification? android = message.notification?.android;
 

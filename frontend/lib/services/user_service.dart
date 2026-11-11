@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/user_model.dart';
@@ -48,11 +49,16 @@ class UserService {
     final url = Uri.parse('${ApiConfig.baseUrl}/auth/login');
 
     try {
-      final response = await http.post(
-        url,
-        headers: ApiConfig.headers,
-        body: jsonEncode({'email': email, 'password': password}),
-      );
+      final response = await http
+          .post(
+            url,
+            headers: ApiConfig.headers,
+            body: jsonEncode({'email': email, 'password': password}),
+          )
+          .timeout(
+            const Duration(seconds: 60),
+            onTimeout: () => throw TimeoutException('Tiempo de espera agotado'),
+          );
 
       final contentType = response.headers['content-type'] ?? '';
 
@@ -75,6 +81,10 @@ class UserService {
           );
         }
       }
+    } on TimeoutException {
+      throw Exception(
+        'El servidor no respondió a tiempo. Revisa tu conexión e inténtalo nuevamente.',
+      );
     } catch (e) {
       throw Exception(e.toString().replaceAll('Exception: ', ''));
     }

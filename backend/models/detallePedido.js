@@ -1,7 +1,11 @@
 import { supabase } from '../config/supabase.js';
+import { obtenerClienteServiceRole } from '../config/serviceRoleSupabase.js';
 
 export const crearDetallePedido = async (detalleData) => {
-  const { data, error } = await supabase.from('detalle_pedido').insert(detalleData).select();
+  const { data, error } = await obtenerClienteServiceRole()
+    .from('detalle_pedido')
+    .insert(detalleData)
+    .select();
   return { data, error };
 };
 
@@ -15,12 +19,20 @@ export const obtenerDetallesPorPedido = async (pedidoId) => {
 };
 
 export const actualizarDetallePedido = async (id, cambios) => {
-  const { data, error } = await supabase.from('detalle_pedido').update(cambios).eq('id', id).select();
+  const { data, error } = await supabase
+    .from('detalle_pedido')
+    .update(cambios)
+    .eq('id', id)
+    .select();
   return { data, error };
 };
 
  
 export const eliminarDetallePedido = async (id) => {
-  const { data, error } = await supabase.from('detalle_pedido').delete().eq('id', id).select();
+  const { data, error } = await supabase
+    .from('detalle_pedido')
+    .delete()
+    .eq('id', id)
+    .select();
   return { data, error };
 };

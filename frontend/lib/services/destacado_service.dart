@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
@@ -60,10 +61,19 @@ static String _mensajeError(http.Response response) {
 
   /// Lista pública (la usa el home y el panel admin)
   static Future<List<DestacadoModel>> obtener() async {
-    final response = await http.get(
-      Uri.parse('${ApiConfig.baseUrl}/destacados'),
-      headers: ApiConfig.headers,
-    );
+    late final http.Response response;
+    try {
+      response = await http
+          .get(
+            Uri.parse('${ApiConfig.baseUrl}/destacados'),
+            headers: ApiConfig.headers,
+          )
+          .timeout(const Duration(seconds: 30));
+    } on TimeoutException {
+      throw Exception(
+        'El servidor no respondió a tiempo al cargar los productos destacados.',
+      );
+    }
     if (response.statusCode != 200) {
       throw Exception(_mensajeError(response));
     }

@@ -80,7 +80,16 @@ class RestaurantOrderService {
   }
 
   Future<List<Map<String, dynamic>>> listarPedidosMesero() async {
-    return _listarPedidos('/pedidos/mis-pedidos');
+    final profile = await _request('GET', '/usuarios/perfil');
+    if (profile is! Map<String, dynamic> || profile['id'] == null) {
+      throw Exception('No se pudo identificar la sesión del mesero.');
+    }
+
+    final userId = profile['id'].toString();
+    final pedidos = await _listarPedidos('/pedidos');
+    return pedidos
+        .where((pedido) => pedido['usuario_id']?.toString() == userId)
+        .toList();
   }
 
   Future<List<Map<String, dynamic>>> listarTodosLosPedidos() async {

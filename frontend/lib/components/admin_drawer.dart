@@ -1,5 +1,7 @@
 import 'package:elparchee/components/admin_banner_list_page.dart';
 import 'package:elparchee/components/inventario.dart';
+import 'package:elparchee/components/admin_sales_report_page.dart';
+import 'package:elparchee/components/admin_domicilios_page.dart';
 import 'package:elparchee/pantallas/inicioSesion.dart';
 import 'package:elparchee/services/adminUserListPage.dart';
 import 'package:elparchee/services/admin_destacado_page.dart';
@@ -48,33 +50,71 @@ class AdminDrawer extends StatelessWidget {
     final initial = adminName.isNotEmpty ? adminName[0].toUpperCase() : 'A';
 
     return Drawer(
+      backgroundColor: AppColors.background,
       child: Column(
         children: [
           Expanded(
             child: ListView(
-              padding: EdgeInsets.zero,
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
               children: [
-                UserAccountsDrawerHeader(
-                  margin: EdgeInsets.zero,
-                  decoration: const BoxDecoration(color: _colorPrincipal),
-                  currentAccountPicture: CircleAvatar(
-                    backgroundColor: Colors.white,
-                    child: Text(
-                      initial,
-                      style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: _colorPrincipal,
-                      ),
+                Container(
+                  padding: const EdgeInsets.fromLTRB(18, 28, 16, 20),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [_colorPrincipal, Color(0xFFB63D24)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
+                    borderRadius: BorderRadius.circular(22),
                   ),
-                  accountName: Text(
-                    adminName.isNotEmpty ? adminName : 'Administrador',
-                  ),
-                  accountEmail: Text(
-                    adminEmail.isNotEmpty
-                        ? adminEmail
-                        : 'Sin correo registrado',
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 28,
+                        backgroundColor: Colors.white,
+                        child: Text(
+                          initial,
+                          style: const TextStyle(
+                            fontSize: 25,
+                            fontWeight: FontWeight.bold,
+                            color: _colorPrincipal,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              adminName.isNotEmpty
+                                  ? adminName
+                                  : 'Administrador',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              adminEmail.isNotEmpty
+                                  ? adminEmail
+                                  : 'Sin correo registrado',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.82),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 _item(Icons.home_outlined, 'Inicio (Productos)', () {
@@ -94,6 +134,12 @@ class AdminDrawer extends StatelessWidget {
                 }),
                 _item(Icons.people_alt_outlined, 'Usuarios', () {
                   _openPage(context, const AdminUserListPage());
+                }),
+                _item(Icons.point_of_sale_outlined, 'Reporte de ventas', () {
+                  _openPage(context, const AdminSalesReportPage());
+                }),
+                _item(Icons.delivery_dining_outlined, 'Domiciliarios', () {
+                  _openPage(context, const AdminDeliveriesPage());
                 }),
               ],
             ),
@@ -119,10 +165,36 @@ class AdminDrawer extends StatelessWidget {
     VoidCallback onTap, {
     Color? color,
   }) {
-    return ListTile(
-      leading: Icon(icon, color: color ?? _colorPrincipal),
-      title: Text(title, style: TextStyle(color: color)),
-      onTap: onTap,
+    final itemColor = color ?? _colorPrincipal;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Material(
+        color: Colors.white.withValues(alpha: 0.78),
+        borderRadius: BorderRadius.circular(15),
+        child: ListTile(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          leading: Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: itemColor.withValues(alpha: 0.09),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: itemColor, size: 21),
+          ),
+          title: Text(
+            title,
+            style: TextStyle(
+              color: color ?? Colors.black87,
+              fontWeight: FontWeight.w500,
+              fontSize: 14,
+            ),
+          ),
+          onTap: onTap,
+        ),
+      ),
     );
   }
 }

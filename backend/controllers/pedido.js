@@ -56,6 +56,10 @@ export const crear = async (req, res) => {
       tipo_pedido,
       numero_mesa,
       direccion_entrega,
+      nombre_receptor,
+      telefono_receptor,
+      correo_contacto,
+      metodo_pago,
       productos
     } = req.body || {};
     const tipo = tipo_pedido || 'domicilio';
@@ -74,6 +78,36 @@ export const crear = async (req, res) => {
       return res.status(400).json({
         error: 'La dirección de entrega es obligatoria para pedidos a domicilio'
       });
+    }
+
+    const nombreReceptor = String(nombre_receptor || '').trim();
+    const telefonoReceptor = String(telefono_receptor || '').trim();
+    const correoContacto = String(correo_contacto || '').trim().toLowerCase();
+    const metodoPago = String(metodo_pago || '').trim();
+    const metodosPagoValidos = ['Efectivo', 'Nequi', 'Bancolombia', 'Daviplata'];
+
+    if (tipo === 'domicilio' && !nombreReceptor) {
+      return res.status(400).json({
+        error: 'El nombre de quien recibe es obligatorio'
+      });
+    }
+
+    if (tipo === 'domicilio' && !/^\d{10}$/.test(telefonoReceptor)) {
+      return res.status(400).json({
+        error: 'El teléfono debe tener 10 dígitos'
+      });
+    }
+
+    if (
+      tipo === 'domicilio' &&
+      correoContacto &&
+      !/^[\w.+-]+@[\w-]+\.[\w.-]+$/.test(correoContacto)
+    ) {
+      return res.status(400).json({ error: 'El correo de contacto no es válido' });
+    }
+
+    if (tipo === 'domicilio' && !metodosPagoValidos.includes(metodoPago)) {
+      return res.status(400).json({ error: 'El método de pago no es válido' });
     }
 
     if (!Array.isArray(productos) || productos.length === 0) {
@@ -130,19 +164,42 @@ export const crear = async (req, res) => {
     const total = subtotal + (tipo === 'domicilio' ? 8000 : 0);
 
     // 1. Crear pedido principal
-    const { data, error } = await crearPedido({
+    const pedidoData = {
       usuario_id: req.usuario.id,
       tipo_pedido: tipo,
       numero_mesa: numero_mesa || null,
-      direccion_entrega: tipo === 'domicilio'
-        ? String(direccion_entrega).trim()
-        : null,
       estado: 'pendiente',
       total
-    });
+    };
+
+    if (tipo === 'domicilio') {
+      Object.assign(pedidoData, {
+        direccion_entrega: String(direccion_entrega).trim(),
+        nombre_receptor: nombreReceptor,
+        telefono_receptor: telefonoReceptor,
+        correo_contacto: correoContacto || null,
+        metodo_pago: metodoPago
+      });
+    }
+
+    const { data, error } = await crearPedido(pedidoData);
 
     if (error || !data?.length) {
       logError('crear pedido', error);
+      if (
+        error?.code === '42703' &&
+        [
+          'direccion_entrega',
+          'nombre_receptor',
+          'telefono_receptor',
+          'correo_contacto',
+          'metodo_pago'
+        ].some((columna) => error.message?.includes(columna))
+      ) {
+        return res.status(503).json({
+          error: 'La base de datos aún no está preparada para domicilios. Ejecuta la migración de pedidos a domicilio.'
+        });
+      }
       return res.status(500).json({
         error: 'No se pudo crear el pedido'
       });
@@ -191,6 +248,9 @@ export const crear = async (req, res) => {
 
   } catch (error) {
     console.error('Error creando pedido:', error);
+    if (error.code === 'SUPABASE_SERVICE_ROLE_CONFIG') {
+      return res.status(503).json({ error: error.message });
+    }
     return res.status(500).json({
       error: 'Error interno al crear el pedido'
     });
@@ -201,7 +261,13 @@ export const actualizarEstado = async (req, res) => {
     try {
         const { id } = req.params;
         const estado = String(req.body?.estado || '').trim().toLowerCase();
-        const estadosValidos = ['pendiente', 'en_preparacion', 'listo', 'entregado'];
+        const estadosValidos = [
+            'pendiente',
+            'en_preparacion',
+            'listo',
+            'en_camino',
+            'entregado'
+        ];
 
         if (!estadosValidos.includes(estado)) {
             return res.status(400).json({ error: 'Estado de pedido no válido' });
@@ -216,9 +282,26 @@ export const actualizarEstado = async (req, res) => {
             return res.status(404).json({ error: 'Pedido no encontrado' });
         }
 
-        const rol = String(req.usuario.rol || '').toLowerCase();
+        const rol = String(req.usuario.rol || '').trim().toLowerCase();
+        const esAdmin = rol === 'admin' || rol === 'administrador';
         if (rol === 'mesero' && String(pedidoActual.usuario_id) !== String(req.usuario.id)) {
             return res.status(403).json({ error: 'No puedes actualizar un pedido de otro mesero' });
+        }
+
+        if (estado === 'en_camino') {
+            if (!esAdmin) {
+                return res.status(403).json({
+                    error: 'Solo el administrador puede gestionar la entrega del domicilio'
+                });
+            }
+            if (
+                pedidoActual.tipo_pedido !== 'domicilio' ||
+                pedidoActual.estado !== 'listo'
+            ) {
+                return res.status(409).json({
+                    error: 'El domicilio debe estar listo en cocina antes de salir'
+                });
+            }
         }
 
         if ((rol === 'cocina' || rol === 'cocinero') && estado === 'entregado') {
@@ -238,7 +321,12 @@ export const actualizarEstado = async (req, res) => {
             return res.status(403).json({ error: 'El mesero solo puede marcar el pedido como entregado' });
         }
 
-        if (estado === 'entregado' && pedidoActual.estado !== 'listo' && pedidoActual.estado !== 'entregado') {
+        if (
+            estado === 'entregado' &&
+            pedidoActual.estado !== 'listo' &&
+            pedidoActual.estado !== 'en_camino' &&
+            pedidoActual.estado !== 'entregado'
+        ) {
             return res.status(409).json({ error: 'El pedido debe estar listo antes de entregarlo' });
         }
 

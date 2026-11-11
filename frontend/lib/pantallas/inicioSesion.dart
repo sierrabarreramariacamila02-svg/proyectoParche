@@ -6,6 +6,7 @@ import 'package:elparchee/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart';
 
 class Iniciosesion extends StatefulWidget {
   const Iniciosesion({super.key});
@@ -15,10 +16,19 @@ class Iniciosesion extends StatefulWidget {
 }
 
 class _IniciosesionState extends State<Iniciosesion> {
+  static const _googleWebClientId = String.fromEnvironment(
+    'GOOGLE_WEB_CLIENT_ID',
+    defaultValue:
+        '1019899287750-nq15fegk865o24f27j6hns9appjs3rf2.apps.googleusercontent.com',
+  );
+
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final UserService _userService = UserService();
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    clientId: kIsWeb ? _googleWebClientId : null,
+  );
+
   bool _cargando = false;
 
   Future<void> _guardarSesionYNavegar(Map<String, dynamic> respuesta) async {
@@ -32,7 +42,14 @@ class _IniciosesionState extends State<Iniciosesion> {
     }
 
     final UserModel usuario = UserModel.fromJson(usuarioJson);
-    final String rol = (usuarioJson['rol'] ?? 'usuario').toString().toLowerCase();
+    if (token.isEmpty) {
+      throw Exception('El servidor no devolvió un token de sesión válido.');
+    }
+
+    final String rol = (usuarioJson['rol'] ?? 'usuario')
+        .toString()
+        .toLowerCase()
+        .trim();
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('jwt_token', token);
@@ -55,9 +72,9 @@ class _IniciosesionState extends State<Iniciosesion> {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('¡Bienvenido, ${usuario.nombre}!')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('¡Bienvenido, ${usuario.nombre}!')));
 
     if (!mounted) return;
 
@@ -103,14 +120,19 @@ class _IniciosesionState extends State<Iniciosesion> {
       final googleAccount = await _googleSignIn.signIn();
       if (googleAccount == null) {
         if (!mounted) return;
-        _mostrarMensaje('Inicio de sesión con Google cancelado.', color: Colors.orange);
+        _mostrarMensaje(
+          'Inicio de sesión con Google cancelado.',
+          color: Colors.orange,
+        );
         return;
       }
 
       final googleAuth = await googleAccount.authentication;
       final idToken = googleAuth.idToken;
       if (idToken == null || idToken.isEmpty) {
-        throw Exception('No se pudo obtener el token de autenticación de Google.');
+        throw Exception(
+          'No se pudo obtener el token de autenticación de Google.',
+        );
       }
 
       final response = await _userService.autenticarConGoogleBackend(idToken);
@@ -129,12 +151,9 @@ class _IniciosesionState extends State<Iniciosesion> {
   }
 
   void _mostrarMensaje(String mensaje, {required Color color}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(mensaje),
-        backgroundColor: color,
-      ),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(mensaje), backgroundColor: color));
   }
 
   @override

@@ -43,9 +43,9 @@ class _AdminDestacadosPageState extends State<AdminDestacadosPage> {
   }
 
   void _snack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: brand),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(msg), backgroundColor: brand));
   }
 
   String _formatoPrecio(double v) {
@@ -151,17 +151,38 @@ class _AdminDestacadosPageState extends State<AdminDestacadosPage> {
             final items = snap.data ?? [];
             if (snap.hasError || items.isEmpty) {
               return ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
                 children: [
-                  const SizedBox(height: 160),
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Text(
-                        snap.hasError
-                            ? 'Error: ${snap.error}'.replaceAll('Exception: ', '')
-                            : 'No hay platos destacados.\nToca + para agregar el primero.',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.black54),
+                  const SizedBox(height: 100),
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(22),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(
+                            snap.hasError
+                                ? Icons.error_outline
+                                : Icons.star_outline_rounded,
+                            size: 44,
+                            color: brand,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            snap.hasError
+                                ? 'Error: ${snap.error}'.replaceAll(
+                                    'Exception: ',
+                                    '',
+                                  )
+                                : 'No hay platos destacados.\nToca + para agregar el primero.',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(color: Colors.black54),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -175,14 +196,21 @@ class _AdminDestacadosPageState extends State<AdminDestacadosPage> {
               itemBuilder: (context, i) {
                 final d = items[i];
                 return Card(
-                  color: AppColors.inputBackground,
+                  color: Colors.white,
+                  elevation: 1,
+                  shadowColor: brand.withValues(alpha: 0.1),
                   margin: const EdgeInsets.only(bottom: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                    side: BorderSide(color: brand.withValues(alpha: 0.07)),
+                  ),
                   child: ListTile(
+                    contentPadding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
                     leading: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(13),
                       child: SizedBox(
-                        width: 50,
-                        height: 50,
+                        width: 58,
+                        height: 58,
                         child: _miniatura(d.imagenUrl),
                       ),
                     ),
@@ -192,18 +220,27 @@ class _AdminDestacadosPageState extends State<AdminDestacadosPage> {
                     ),
                     subtitle: Text(
                       _formatoPrecio(d.precio),
-                      style: const TextStyle(color: brand),
+                      style: const TextStyle(
+                        color: brand,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
                           tooltip: 'Editar',
-                          icon: const Icon(Icons.edit, color: brand),
+                          style: IconButton.styleFrom(
+                            backgroundColor: brand.withValues(alpha: 0.08),
+                          ),
+                          icon: const Icon(Icons.edit_outlined, color: brand),
                           onPressed: () => _abrirFormulario(destacado: d),
                         ),
                         IconButton(
                           tooltip: 'Eliminar',
+                          style: IconButton.styleFrom(
+                            backgroundColor: brand.withValues(alpha: 0.06),
+                          ),
                           icon: const Icon(Icons.delete_outline, color: brand),
                           onPressed: () => _eliminar(d),
                         ),

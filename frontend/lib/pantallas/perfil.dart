@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import '../app_colors.dart';
 import '../components/customer_bottom_navigation.dart';
+import 'inicioSesion.dart';
 import '../services/profile_service.dart';
 
 class Perfil extends StatefulWidget {
@@ -88,6 +89,36 @@ class _PerfilState extends State<Perfil> {
     }
   }
 
+  Future<void> _cerrarSesion() async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Cerrar sesión'),
+        content: const Text('¿Quieres salir de tu cuenta?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.barraHome),
+            child: const Text('Cerrar sesión'),
+          ),
+        ],
+      ),
+    );
+    if (confirmar != true) return;
+
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.clear();
+    if (!mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const Iniciosesion()),
+      (_) => false,
+    );
+  }
+
   Future<void> _guardar() async {
     final nombre = _nombreController.text.trim();
     if (nombre.isEmpty) {
@@ -155,7 +186,9 @@ class _PerfilState extends State<Perfil> {
         foregroundColor: Colors.white,
       ),
       body: _cargando
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.barraHome),
+            )
           : _error != null
           ? Center(
               child: Padding(
@@ -163,7 +196,17 @@ class _PerfilState extends State<Perfil> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(_error!, textAlign: TextAlign.center),
+                    const Icon(
+                      Icons.person_off_outlined,
+                      size: 48,
+                      color: AppColors.barraHome,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      _error!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.black54),
+                    ),
                     TextButton(
                       onPressed: () {
                         setState(() {
@@ -179,92 +222,178 @@ class _PerfilState extends State<Perfil> {
               ),
             )
           : ListView(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 28),
               children: [
-                Center(
-                  child: Stack(
-                    children: [
-                      CircleAvatar(
-                        radius: 54,
-                        backgroundColor: AppColors.buttonOrange,
-                        backgroundImage: _imagenPerfil,
-                        child: _imagenPerfil == null
-                            ? const Icon(
-                                Icons.person,
-                                size: 60,
-                                color: Colors.white,
-                              )
-                            : null,
+                Container(
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [AppColors.barraHome, Color(0xFFB63A25)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.barraHome.withValues(alpha: 0.18),
+                        blurRadius: 16,
+                        offset: const Offset(0, 7),
                       ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: IconButton.filled(
-                          onPressed: _seleccionarFoto,
-                          tooltip: 'Cambiar foto',
-                          icon: const Icon(Icons.camera_alt),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Center(
+                        child: Stack(
+                          children: [
+                            CircleAvatar(
+                              radius: 54,
+                              backgroundColor: AppColors.buttonOrange,
+                              backgroundImage: _imagenPerfil,
+                              child: _imagenPerfil == null
+                                  ? const Icon(
+                                      Icons.person,
+                                      size: 60,
+                                      color: Colors.white,
+                                    )
+                                  : null,
+                            ),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: IconButton.filled(
+                                onPressed: _seleccionarFoto,
+                                tooltip: 'Cambiar foto',
+                                style: IconButton.styleFrom(
+                                  backgroundColor: Colors.white,
+                                  foregroundColor: AppColors.barraHome,
+                                  fixedSize: const Size(38, 38),
+                                ),
+                                icon: const Icon(Icons.camera_alt, size: 19),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Text(
+                        _nombreController.text.isEmpty
+                            ? 'Mi cuenta'
+                            : _nombreController.text,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (_correo.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          _correo,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.85),
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 4),
+                      TextButton.icon(
+                        onPressed: _seleccionarFoto,
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        icon: const Icon(
+                          Icons.photo_library_outlined,
+                          size: 18,
+                        ),
+                        label: const Text('Cambiar foto'),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 22),
+                const Padding(
+                  padding: EdgeInsets.only(left: 4, bottom: 10),
+                  child: Text(
+                    'Información personal',
+                    style: TextStyle(
+                      color: AppColors.barraHome,
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(22),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.barraHome.withValues(alpha: 0.06),
+                        blurRadius: 14,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      TextField(
+                        controller: _nombreController,
+                        textCapitalization: TextCapitalization.words,
+                        decoration: _decoracionCampo(
+                          label: 'Nombre completo',
+                          icon: Icons.person_outline,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      TextFormField(
+                        initialValue: _correo,
+                        readOnly: true,
+                        decoration: _decoracionCampo(
+                          label: 'Correo electrónico',
+                          icon: Icons.email_outlined,
+                          helperText:
+                              'El correo no se puede editar desde el perfil.',
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      TextField(
+                        controller: _telefonoController,
+                        keyboardType: TextInputType.phone,
+                        decoration: _decoracionCampo(
+                          label: 'Teléfono',
+                          icon: Icons.phone_outlined,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      TextField(
+                        controller: _direccionController,
+                        maxLines: 2,
+                        decoration: _decoracionCampo(
+                          label: 'Dirección guardada',
+                          icon: Icons.location_on_outlined,
+                          alignLabelWithHint: true,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 8),
-                Center(
-                  child: TextButton.icon(
-                    onPressed: _seleccionarFoto,
-                    icon: const Icon(Icons.photo_library_outlined),
-                    label: const Text('Cambiar foto de perfil'),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                TextField(
-                  controller: _nombreController,
-                  textCapitalization: TextCapitalization.words,
-                  decoration: const InputDecoration(
-                    labelText: 'Nombre completo',
-                    prefixIcon: Icon(Icons.person_outline),
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  initialValue: _correo,
-                  readOnly: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Correo electrónico',
-                    prefixIcon: Icon(Icons.email_outlined),
-                    helperText: 'El correo no se puede editar desde el perfil.',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _telefonoController,
-                  keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(
-                    labelText: 'Teléfono',
-                    prefixIcon: Icon(Icons.phone_outlined),
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _direccionController,
-                  maxLines: 2,
-                  decoration: const InputDecoration(
-                    labelText: 'Dirección guardada',
-                    prefixIcon: Icon(Icons.location_on_outlined),
-                    border: OutlineInputBorder(),
-                  ),
-                ),
                 const SizedBox(height: 20),
                 SizedBox(
-                  height: 48,
+                  height: 54,
                   child: ElevatedButton.icon(
                     onPressed: _guardando ? null : _guardar,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.barraHome,
                       foregroundColor: Colors.white,
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(17),
+                      ),
                     ),
                     icon: _guardando
                         ? const SizedBox(
@@ -281,11 +410,60 @@ class _PerfilState extends State<Perfil> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 52,
+                  child: OutlinedButton.icon(
+                    onPressed: _cerrarSesion,
+                    icon: const Icon(Icons.logout_rounded),
+                    label: const Text('Cerrar sesión'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.barraHome,
+                      side: BorderSide(
+                        color: AppColors.barraHome.withValues(alpha: 0.35),
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(17),
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
       floatingActionButton: const CustomerCartButton(selectedIndex: 3),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: const CustomerBottomNavigation(selectedIndex: 3),
+    );
+  }
+
+  InputDecoration _decoracionCampo({
+    required String label,
+    required IconData icon,
+    String? helperText,
+    bool alignLabelWithHint = false,
+  }) {
+    return InputDecoration(
+      labelText: label,
+      helperText: helperText,
+      prefixIcon: Icon(icon, color: AppColors.barraHome),
+      alignLabelWithHint: alignLabelWithHint,
+      filled: true,
+      fillColor: AppColors.background,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: BorderSide(
+          color: AppColors.barraHome.withValues(alpha: 0.10),
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: const BorderSide(color: AppColors.barraHome, width: 1.4),
+      ),
     );
   }
 }

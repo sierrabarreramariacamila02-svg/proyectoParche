@@ -11,7 +11,9 @@ Future<bool> confirmarEliminacionBanner(BuildContext context) async {
     context: context,
     builder: (ctx) => AlertDialog(
       title: const Text('Eliminar banner'),
-      content: const Text('¿Estás seguro de eliminar esta promoción del carrusel?'),
+      content: const Text(
+        '¿Estás seguro de eliminar esta promoción del carrusel?',
+      ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(ctx, false),
@@ -71,9 +73,9 @@ class _AdminBannerListPageState extends State<AdminBannerListPage> {
   }
 
   void _snack(String msg, {Color color = AppColors.barraHome}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: color),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(msg), backgroundColor: color));
   }
 
   // Seleccionar imagen de la galería y subirla directamente
@@ -83,10 +85,13 @@ class _AdminBannerListPageState extends State<AdminBannerListPage> {
 
     if (pickedFile == null) return;
 
+    final descripcion = await _solicitarDescripcion();
+    if (descripcion == null) return;
+
     setState(() => _subiendo = true);
 
     try {
-      await _bannerService.crearBanner(pickedFile);
+      await _bannerService.crearBanner(pickedFile, descripcion: descripcion);
       if (!mounted) return;
       _reload();
       _snack('Banner subido con éxito al carrusel');
@@ -96,6 +101,44 @@ class _AdminBannerListPageState extends State<AdminBannerListPage> {
     } finally {
       if (mounted) setState(() => _subiendo = false);
     }
+  }
+
+  Future<String?> _solicitarDescripcion() async {
+    var descripcion = '';
+    return showDialog<String>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Describe la promoción'),
+          content: TextField(
+            autofocus: true,
+            minLines: 2,
+            maxLines: 4,
+            onChanged: (value) {
+              descripcion = value.trim();
+              setDialogState(() {});
+            },
+            decoration: const InputDecoration(
+              hintText:
+                  'Ej.: 20% de descuento en hamburguesas hasta el viernes',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: descripcion.isEmpty
+                  ? null
+                  : () => Navigator.pop(dialogContext, descripcion),
+              child: const Text('Continuar'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _delete(BannerModel banner) async {
@@ -149,15 +192,39 @@ class _AdminBannerListPageState extends State<AdminBannerListPage> {
             final items = snap.data ?? [];
             if (snap.hasError || items.isEmpty) {
               return ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
                 children: [
-                  const SizedBox(height: 160),
-                  Center(
-                    child: Text(
-                      snap.hasError
-                          ? 'Error: ${snap.error}'.replaceAll('Exception: ', '')
-                          : 'No hay banners activos en el carrusel.',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.black54),
+                  const SizedBox(height: 100),
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(22),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(
+                            snap.hasError
+                                ? Icons.error_outline
+                                : Icons.photo_library_outlined,
+                            color: brand,
+                            size: 44,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            snap.hasError
+                                ? 'Error: ${snap.error}'.replaceAll(
+                                    'Exception: ',
+                                    '',
+                                  )
+                                : 'No hay banners activos en el carrusel.',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(color: Colors.black54),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -170,35 +237,66 @@ class _AdminBannerListPageState extends State<AdminBannerListPage> {
               itemBuilder: (context, i) {
                 final banner = items[i];
                 return Card(
-                  color: AppColors.inputBackground,
+                  color: Colors.white,
+                  elevation: 2,
+                  shadowColor: brand.withValues(alpha: 0.1),
                   margin: const EdgeInsets.only(bottom: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    side: BorderSide(color: brand.withValues(alpha: 0.07)),
+                  ),
                   clipBehavior: Clip.antiAlias,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       // Imagen previa del Banner en el carrusel
                       SizedBox(
-                        height: 150,
+                        height: 180,
                         child: Image.network(
                           banner.imagenUrl,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stack) => const Center(
-                            child: Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                            child: Icon(
+                              Icons.broken_image,
+                              size: 50,
+                              color: Colors.grey,
+                            ),
                           ),
                         ),
                       ),
+                      if (banner.descripcion.trim().isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
+                          child: Text(
+                            banner.descripcion,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w500,
+                              height: 1.35,
+                            ),
+                          ),
+                        ),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
                               'Banner #${banner.id}',
-                              style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.black87),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                              ),
                             ),
                             IconButton(
                               tooltip: 'Eliminar banner',
-                              icon: const Icon(Icons.delete_outline, color: AppColors.barraHome),
+                              style: IconButton.styleFrom(
+                                foregroundColor: brand,
+                                backgroundColor: brand.withValues(alpha: 0.07),
+                              ),
+                              icon: const Icon(Icons.delete_outline, size: 20),
                               onPressed: () => _delete(banner),
                             ),
                           ],

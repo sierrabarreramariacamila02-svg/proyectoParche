@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:elparchee/app_colors.dart';
@@ -8,7 +9,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../api_config.dart';
 
 class InventarioScreen extends StatefulWidget {
-  const InventarioScreen({super.key});
+  final bool readOnly;
+  final bool embedded;
+
+  const InventarioScreen({
+    super.key,
+    this.readOnly = false,
+    this.embedded = false,
+  });
 
   @override
   State<InventarioScreen> createState() => _InventarioScreenState();
@@ -16,11 +24,24 @@ class InventarioScreen extends StatefulWidget {
 
 class _InventarioScreenState extends State<InventarioScreen> {
   late Future<List<Map<String, dynamic>>> _inventario;
+  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
     _inventario = _cargarInventario();
+    if (widget.embedded) {
+      _refreshTimer = Timer.periodic(
+        const Duration(seconds: 30),
+        (_) => _recargar(),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
   }
 
   Future<String> _token() async {
@@ -175,177 +196,350 @@ class _InventarioScreenState extends State<InventarioScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Inventario'),
-        backgroundColor: AppColors.barraHome,
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            tooltip: 'Actualizar inventario',
-            onPressed: _recargar,
-            icon: const Icon(Icons.refresh),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _editarIngrediente(),
-        backgroundColor: AppColors.buttonOrange,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.add),
-        label: const Text('Ingrediente'),
-      ),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _inventario,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(color: AppColors.barraHome),
-            );
-          }
-          if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.error_outline,
-                      color: AppColors.barraHome,
-                      size: 44,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      _errorText(snapshot.error!),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    OutlinedButton.icon(
-                      onPressed: _recargar,
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Reintentar'),
-                    ),
-                  ],
-                ),
+      appBar: widget.embedded
+          ? null
+          : AppBar(
+              title: const Text(
+                'Inventario',
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
-            );
-          }
-
-          final items = snapshot.data ?? [];
-          if (items.isEmpty) {
-            return const Center(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Text(
-                  'Aún no hay ingredientes. Usa “Ingrediente” para agregar el primero.',
-                  textAlign: TextAlign.center,
+              backgroundColor: AppColors.barraHome,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              actions: [
+                IconButton(
+                  tooltip: 'Actualizar inventario',
+                  onPressed: _recargar,
+                  icon: const Icon(Icons.refresh),
                 ),
-              ),
-            );
-          }
-
-          return RefreshIndicator(
-            color: AppColors.barraHome,
-            onRefresh: () async {
-              final nuevaCarga = _cargarInventario();
-              setState(() {
-                _inventario = nuevaCarga;
-              });
-              try {
-                await nuevaCarga;
-              } catch (error) {
-                if (mounted) _mensaje(_errorText(error), error: true);
-              }
-            },
-            child: ListView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
-              itemCount: items.length,
-              itemBuilder: (context, index) {
-                final item = items[index];
-                final cantidad = _numero(item['cantidad']);
-                final minimo = _numero(item['stock_minimo']);
-                final stockBajo = cantidad <= minimo;
-                final unidad = item['unidad_medida']?.toString() ?? '';
-
-                return Card(
-                  color: AppColors.inputBackground,
-                  margin: const EdgeInsets.only(bottom: 12),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
-                    leading: CircleAvatar(
-                      backgroundColor: AppColors.barraInferior,
-                      child: Icon(
-                        stockBajo
-                            ? Icons.warning_amber_rounded
-                            : Icons.inventory_2_outlined,
-                        color: stockBajo
-                            ? AppColors.barraHome
-                            : Colors.green.shade800,
+              ],
+            ),
+      floatingActionButton: widget.readOnly
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: () => _editarIngrediente(),
+              backgroundColor: AppColors.buttonOrange,
+              foregroundColor: Colors.white,
+              icon: const Icon(Icons.add),
+              label: const Text('Ingrediente'),
+            ),
+      body: Column(
+        children: [
+          if (widget.embedded)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 12, 4),
+              child: Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Ingredientes del inventario',
+                      style: TextStyle(
+                        color: AppColors.barraHome,
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    title: Text(
-                      item['nombre']?.toString() ?? 'Ingrediente',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  IconButton(
+                    tooltip: 'Actualizar ingredientes',
+                    onPressed: _recargar,
+                    icon: const Icon(Icons.refresh, color: AppColors.barraHome),
+                  ),
+                ],
+              ),
+            ),
+          Expanded(
+            child: FutureBuilder<List<Map<String, dynamic>>>(
+              future: _inventario,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.barraHome,
                     ),
-                    subtitle: Padding(
-                      padding: const EdgeInsets.only(top: 5),
+                  );
+                }
+                if (snapshot.hasError) {
+                  if (widget.embedded) {
+                    return _errorInventarioCocina(snapshot.error!);
+                  }
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
-                            'Stock: ${_formatear(cantidad)} $unidad'
-                            ' · Mínimo: ${_formatear(minimo)} $unidad',
+                          const Icon(
+                            Icons.error_outline,
+                            color: AppColors.barraHome,
+                            size: 44,
                           ),
-                          const SizedBox(height: 6),
-                          DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: stockBajo
-                                  ? AppColors.barraHome.withValues(alpha: 0.1)
-                                  : Colors.green.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
-                              ),
-                              child: Text(
-                                stockBajo ? 'Stock bajo' : 'Disponible',
-                                style: TextStyle(
-                                  color: stockBajo
-                                      ? AppColors.barraHome
-                                      : Colors.green.shade800,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
+                          const SizedBox(height: 12),
+                          Text(
+                            _errorText(snapshot.error!),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          OutlinedButton.icon(
+                            onPressed: _recargar,
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Reintentar'),
                           ),
                         ],
                       ),
                     ),
-                    trailing: PopupMenuButton<String>(
-                      tooltip: 'Acciones del ingrediente',
-                      onSelected: (action) {
-                        if (action == 'edit') {
-                          _editarIngrediente(item);
-                        } else {
-                          _eliminarIngrediente(item);
-                        }
-                      },
-                      itemBuilder: (context) => const [
-                        PopupMenuItem(value: 'edit', child: Text('Editar')),
-                        PopupMenuItem(value: 'delete', child: Text('Eliminar')),
-                      ],
-                      icon: const Icon(Icons.more_vert),
+                  );
+                }
+
+                final items = snapshot.data ?? [];
+                if (items.isEmpty) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(
+                        widget.readOnly
+                            ? 'Aún no hay ingredientes registrados.'
+                            : 'Aún no hay ingredientes. Usa “Ingrediente” para agregar el primero.',
+                        textAlign: TextAlign.center,
+                      ),
                     ),
-                    onTap: () => _editarIngrediente(item),
+                  );
+                }
+
+                return RefreshIndicator(
+                  color: AppColors.barraHome,
+                  onRefresh: () async {
+                    final nuevaCarga = _cargarInventario();
+                    setState(() {
+                      _inventario = nuevaCarga;
+                    });
+                    try {
+                      await nuevaCarga;
+                    } catch (error) {
+                      if (mounted) _mensaje(_errorText(error), error: true);
+                    }
+                  },
+                  child: ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
+                    itemCount: items.length,
+                    itemBuilder: (context, index) {
+                      final item = items[index];
+                      final cantidad = _numero(item['cantidad']);
+                      final minimo = _numero(item['stock_minimo']);
+                      final stockBajo = cantidad <= minimo;
+                      final unidad = item['unidad_medida']?.toString() ?? '';
+
+                      return Card(
+                        color: Colors.white,
+                        elevation: 1,
+                        shadowColor: AppColors.barraHome.withValues(alpha: 0.1),
+                        margin: const EdgeInsets.only(bottom: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          side: BorderSide(
+                            color: AppColors.barraHome.withValues(alpha: 0.07),
+                          ),
+                        ),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.fromLTRB(
+                            14,
+                            8,
+                            8,
+                            8,
+                          ),
+                          leading: CircleAvatar(
+                            backgroundColor: stockBajo
+                                ? AppColors.barraHome.withValues(alpha: 0.1)
+                                : Colors.green.withValues(alpha: 0.1),
+                            child: Icon(
+                              stockBajo
+                                  ? Icons.warning_amber_rounded
+                                  : Icons.inventory_2_outlined,
+                              color: stockBajo
+                                  ? AppColors.barraHome
+                                  : Colors.green.shade800,
+                            ),
+                          ),
+                          title: Text(
+                            item['nombre']?.toString() ?? 'Ingrediente',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
+                          ),
+                          subtitle: Padding(
+                            padding: const EdgeInsets.only(top: 5),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Stock: ${_formatear(cantidad)} $unidad'
+                                  ' · Mínimo: ${_formatear(minimo)} $unidad',
+                                ),
+                                const SizedBox(height: 6),
+                                DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    color: stockBajo
+                                        ? AppColors.barraHome.withValues(
+                                            alpha: 0.1,
+                                          )
+                                        : Colors.green.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 4,
+                                    ),
+                                    child: Text(
+                                      stockBajo ? 'Stock bajo' : 'Disponible',
+                                      style: TextStyle(
+                                        color: stockBajo
+                                            ? AppColors.barraHome
+                                            : Colors.green.shade800,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          trailing: widget.readOnly
+                              ? null
+                              : PopupMenuButton<String>(
+                                  tooltip: 'Acciones del ingrediente',
+                                  onSelected: (action) {
+                                    if (action == 'edit') {
+                                      _editarIngrediente(item);
+                                    } else {
+                                      _eliminarIngrediente(item);
+                                    }
+                                  },
+                                  itemBuilder: (context) => const [
+                                    PopupMenuItem(
+                                      value: 'edit',
+                                      child: Text('Editar'),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'delete',
+                                      child: Text('Eliminar'),
+                                    ),
+                                  ],
+                                  icon: const Icon(Icons.more_vert),
+                                ),
+                          onTap: widget.readOnly
+                              ? null
+                              : () => _editarIngrediente(item),
+                        ),
+                      );
+                    },
                   ),
                 );
               },
             ),
-          );
-        },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _errorInventarioCocina(Object error) {
+    final mensaje = _errorText(error);
+    final sinPermiso = mensaje.toLowerCase().contains('permisos');
+
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 420),
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: AppColors.barraHome.withValues(alpha: 0.08),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.barraHome.withValues(alpha: 0.08),
+                blurRadius: 18,
+                offset: const Offset(0, 7),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 62,
+                height: 62,
+                decoration: BoxDecoration(
+                  color: AppColors.barraHome.withValues(alpha: 0.08),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  sinPermiso
+                      ? Icons.lock_outline_rounded
+                      : Icons.inventory_2_outlined,
+                  color: AppColors.barraHome,
+                  size: 31,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                sinPermiso
+                    ? 'No se pudo acceder a los ingredientes'
+                    : 'No se pudo cargar el inventario',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: AppColors.barraHome,
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                sinPermiso
+                    ? 'Actualiza el backend en Render para que los roles cocina y cocinero puedan consultar el inventario.'
+                    : mensaje,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.black54, height: 1.4),
+              ),
+              if (sinPermiso) ...[
+                const SizedBox(height: 8),
+                Text(
+                  mensaje,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.black.withValues(alpha: 0.45),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 18),
+              OutlinedButton.icon(
+                onPressed: _recargar,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Reintentar'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.barraHome,
+                  side: BorderSide(
+                    color: AppColors.barraHome.withValues(alpha: 0.35),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
