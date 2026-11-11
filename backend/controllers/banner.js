@@ -36,9 +36,15 @@ export const crear = async (req, res) => {
             return res.status(400).json({ error: 'La imagen del banner es obligatoria' });
         }
 
+        const descripcion = req.body.descripcion?.trim();
+        if (!descripcion) {
+            return res.status(400).json({ error: 'La descripción de la promoción es obligatoria' });
+        }
+
         const imagenUrl = await subirImagenBanner(req.file);
         const { data, error } = await crearBanner({
-            imagen_url: imagenUrl
+            imagen_url: imagenUrl,
+            descripcion
         });
 
         if (error) {

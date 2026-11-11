@@ -412,49 +412,119 @@ class _AdminUserListPageState extends State<AdminUserListPage> {
                     : 'pendiente';
 
                 return Card(
-                  color: AppColors.inputBackground,
+                  color: Colors.white,
+                  elevation: 1,
+                  shadowColor: brand.withValues(alpha: 0.1),
                   margin: const EdgeInsets.only(bottom: 12),
-                  child: Stack(
-                    children: [
-                      ListTile(
-                        title: Text(
-                          user.nombre.isEmpty ? 'Sin nombre' : user.nombre,
-                          style: const TextStyle(fontWeight: FontWeight.w600),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                    side: BorderSide(color: brand.withValues(alpha: 0.07)),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CircleAvatar(
+                              radius: 24,
+                              backgroundColor: brand.withValues(alpha: 0.09),
+                              child: Text(
+                                user.nombre.isNotEmpty
+                                    ? user.nombre[0].toUpperCase()
+                                    : '?',
+                                style: const TextStyle(
+                                  color: brand,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    user.nombre.isEmpty
+                                        ? 'Sin nombre'
+                                        : user.nombre,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    user.email,
+                                    style: const TextStyle(
+                                      color: Colors.black54,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                  if (user.telefono.isNotEmpty) ...[
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      user.telefono,
+                                      style: const TextStyle(
+                                        color: Colors.black54,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                  const SizedBox(height: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 5,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: brand.withValues(alpha: 0.08),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      rolActual,
+                                      style: const TextStyle(
+                                        color: brand,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
-                        subtitle: Text(
-                          'Correo: ${user.email}\nTel: ${user.telefono}\nRol actual: $rolActual',
+                        const SizedBox(height: 10),
+                        Divider(
+                          height: 1,
+                          color: brand.withValues(alpha: 0.10),
                         ),
-                        isThreeLine: true,
-                      ),
-                      Positioned(
-                        bottom: 4,
-                        right: 4,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
                           children: [
                             TextButton.icon(
                               style: TextButton.styleFrom(
                                 foregroundColor: brand,
                               ),
-                              icon: const Icon(Icons.edit_outlined, size: 14),
-                              label: const Text(
-                                'Editar',
-                                style: TextStyle(fontSize: 11),
-                              ),
+                              icon: const Icon(Icons.edit_outlined, size: 18),
+                              label: const Text('Editar rol'),
                               onPressed: () => _mostrarEditorRol(user),
                             ),
                             IconButton(
                               tooltip: 'Eliminar usuario',
-                              icon: const Icon(
-                                Icons.delete_outline,
-                                color: Colors.red,
+                              style: IconButton.styleFrom(
+                                foregroundColor: brand,
                               ),
+                              icon: const Icon(Icons.delete_outline),
                               onPressed: () => _eliminarUsuario(user),
                             ),
                           ],
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 );
               },

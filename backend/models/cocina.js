@@ -1,4 +1,5 @@
 import { supabase } from '../config/supabase.js';
+import { obtenerClienteServiceRole } from '../config/serviceRoleSupabase.js';
 
 export const obtenerCocina = async () => {
   const { data, error } = await supabase
@@ -9,17 +10,24 @@ export const obtenerCocina = async () => {
 };
 
 export const crearRegistroCocina = async (cocinaData) => {
-  const { data, error } = await supabase.from('cocina').insert(cocinaData).select();
+  const { data, error } = await obtenerClienteServiceRole()
+    .from('cocina')
+    .insert(cocinaData)
+    .select();
   return { data, error };
 };
 
 export const actualizarCocina = async (id, cambios) => {
-  const { data, error } = await supabase.from('cocina').update(cambios).eq('id', id).select();
+  const { data, error } = await supabase
+    .from('cocina')
+    .update(cambios)
+    .eq('id', id)
+    .select();
   return { data, error };
 };
 
 export const actualizarCocinaPorPedido = async (pedidoId, cambios) => {
-  const { data, error } = await supabase
+  const { data, error } = await obtenerClienteServiceRole()
     .from('cocina')
     .update(cambios)
     .eq('pedido_id', pedidoId)

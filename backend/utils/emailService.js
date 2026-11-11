@@ -2,16 +2,37 @@ import { BrevoClient } from '@getbrevo/brevo';
 
 export const enviarcodigoverificacion = async (emailDestino, nombreDestino, codigo) => {
   try {
+    const apiKey = process.env.BREVO_API_KEY?.trim();
+    const senderEmail = (
+      process.env.BREVO_SENDER_EMAIL ||
+      process.env.EMAIL_USER ||
+      ''
+    ).trim();
+    const senderName = (
+      process.env.BREVO_SENDER_NAME ||
+      process.env.EMAIL_FROM_NAME ||
+      'EL PARCHE'
+    ).trim();
+
+    if (!apiKey) {
+      throw new Error('Falta configurar BREVO_API_KEY.');
+    }
+    if (!senderEmail) {
+      throw new Error(
+        'Falta configurar BREVO_SENDER_EMAIL con un remitente verificado en Brevo.',
+      );
+    }
+
     // 1. Instanciar el cliente dentro de la funcion para asegurar la lectura del .env
     const brevo = new BrevoClient({
-      apiKey: process.env.BREVO_API_KEY
+      apiKey
     });
 
     const result = await brevo.transactionalEmails.sendTransacEmail({
       subject: 'Codigo de verificacion - EL PARCHE',
       sender: {
-        name: process.env.EMAIL_FROM_NAME || 'EL PARCHE',
-        email: process.env.EMAIL_USER
+        name: senderName,
+        email: senderEmail
       },
       to: [
         {
@@ -62,7 +83,16 @@ export const enviarcodigoverificacion = async (emailDestino, nombreDestino, codi
     console.log('Correo enviado con exito');
     return { exito: true, result };
   } catch (error) {
-    console.error('Error enviando correo con Brevo:', error);
-    return { exito: false, error };
+    const status = error?.status ?? error?.response?.status;
+    const message = status === 401
+      ? 'Brevo rechazó BREVO_API_KEY (HTTP 401). Configura una API Key válida de Brevo; no uses la clave SMTP.'
+      : error?.message || 'Error desconocido al enviar el correo.';
+
+    console.error(
+      'Error enviando correo con Brevo:',
+      status ? `HTTP ${status}` : 'sin código HTTP',
+      message,
+    );
+    return { exito: false, error: new Error(message), status };
   }
 };

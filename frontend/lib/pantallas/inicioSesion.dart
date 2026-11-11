@@ -4,8 +4,9 @@ import 'package:elparchee/pantallas/registro.dart';
 import 'package:elparchee/services/role_navigation.dart';
 import 'package:elparchee/services/user_service.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart';
 
 class Iniciosesion extends StatefulWidget {
   const Iniciosesion({super.key});
@@ -15,32 +16,50 @@ class Iniciosesion extends StatefulWidget {
 }
 
 class _IniciosesionState extends State<Iniciosesion> {
+  static const _googleWebClientId = String.fromEnvironment(
+    'GOOGLE_WEB_CLIENT_ID',
+    defaultValue:
+        '1019899287750-nq15fegk865o24f27j6hns9appjs3rf2.apps.googleusercontent.com',
+  );
+
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final UserService _userService = UserService();
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    clientId: kIsWeb ? _googleWebClientId : null,
+  );
+
   bool _cargando = false;
 
   Future<void> _guardarSesionYNavegar(Map<String, dynamic> respuesta) async {
     final String token = (respuesta['token'] ?? '').toString();
-    final usuarioRespuesta = respuesta['usuario'];
-    if (token.isEmpty || usuarioRespuesta is! Map<String, dynamic>) {
+    final Map<String, dynamic> usuarioJson = Map<String, dynamic>.from(
+      respuesta['usuario'] ?? <String, dynamic>{},
+    );
+
+    if (usuarioJson.isEmpty) {
       throw Exception('La respuesta del servidor no incluye la sesión activa.');
     }
 
-    final Map<String, dynamic> usuarioJson = usuarioRespuesta;
     final UserModel usuario = UserModel.fromJson(usuarioJson);
+    if (token.isEmpty) {
+      throw Exception('El servidor no devolvió un token de sesión válido.');
+    }
 
-    final String rol = usuario.rol.toLowerCase();
+    final String rol = (usuarioJson['rol'] ?? 'usuario')
+        .toString()
+        .toLowerCase()
+        .trim();
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('jwt_token', token);
     await prefs.setString('user_role', rol);
+    await prefs.setString('user_rol', rol);
     await prefs.setString('user_name', usuario.nombre);
     await prefs.setString('user_email', usuario.email);
 
     if (!mounted) return;
 
-    // Validación si la cuenta se encuentra pendiente de aprobación
     if (rol == 'pendiente') {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -56,6 +75,8 @@ class _IniciosesionState extends State<Iniciosesion> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text('¡Bienvenido, ${usuario.nombre}!')));
+
+    if (!mounted) return;
 
     Navigator.pushReplacement(
       context,
@@ -90,6 +111,45 @@ class _IniciosesionState extends State<Iniciosesion> {
     }
   }
 
+  Future<void> _loginConGoogle() async {
+    if (_cargando) return;
+
+    setState(() => _cargando = true);
+
+    try {
+      final googleAccount = await _googleSignIn.signIn();
+      if (googleAccount == null) {
+        if (!mounted) return;
+        _mostrarMensaje(
+          'Inicio de sesión con Google cancelado.',
+          color: Colors.orange,
+        );
+        return;
+      }
+
+      final googleAuth = await googleAccount.authentication;
+      final idToken = googleAuth.idToken;
+      if (idToken == null || idToken.isEmpty) {
+        throw Exception(
+          'No se pudo obtener el token de autenticación de Google.',
+        );
+      }
+
+      final response = await _userService.autenticarConGoogleBackend(idToken);
+      await _guardarSesionYNavegar(response);
+    } catch (e) {
+      if (!mounted) return;
+      _mostrarMensaje(
+        e.toString().replaceAll('Exception: ', ''),
+        color: Colors.red,
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _cargando = false);
+      }
+    }
+  }
+
   void _mostrarMensaje(String mensaje, {required Color color}) {
     ScaffoldMessenger.of(
       context,
@@ -101,38 +161,6 @@ class _IniciosesionState extends State<Iniciosesion> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
-  }
-
-  Future<void> _loginConGoogle() async {
-    setState(() => _cargando = true);
-
-    try {
-      final googleSignIn = GoogleSignIn();
-      await googleSignIn.signOut();
-      final googleUser = await googleSignIn.signIn();
-
-      if (googleUser == null) {
-        return;
-      }
-
-      final idToken = (await googleUser.authentication).idToken;
-      if (idToken == null || idToken.isEmpty) {
-        throw Exception('Google no devolvió un token de autenticación.');
-      }
-
-      final respuesta = await _userService.autenticarConGoogleBackend(idToken);
-      await _guardarSesionYNavegar(respuesta);
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString().replaceFirst('Exception: ', '')),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } finally {
-      if (mounted) setState(() => _cargando = false);
-    }
   }
 
   @override

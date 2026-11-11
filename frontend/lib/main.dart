@@ -1,15 +1,18 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:elparchee/components/productos.dart';
 import 'package:elparchee/pantallas/bienvenidos.dart';
 import 'package:elparchee/pantallas/inicio.dart';
 import 'package:elparchee/pantallas/inicioSesion.dart';
 import 'package:elparchee/pantallas/verificacion.dart';
-import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:supabase_flutter/supabase_flutter.dart'; // 🚀 IMPORTACIÓN DE SUPABASE
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-// 1. Definir el canal de notificaciones locales (Debe coincidir con el AndroidManifest)
+import 'firebase_options.dart';
+
 const AndroidNotificationChannel channel = AndroidNotificationChannel(
   'high_importance_channel',
   'Notificaciones Importantes',
@@ -20,28 +23,31 @@ const AndroidNotificationChannel channel = AndroidNotificationChannel(
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
-// 2. Manejador de notificaciones en segundo plano
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
-  print("Mensaje recibido en segundo plano: ${message.messageId}");
+  debugPrint('Mensaje recibido en segundo plano: ${message.messageId}');
 }
 
 void main() async {
-  // 3. Asegurar la inicialización y Firebase
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-
-  // 🚀 INICIALIZAR SUPABASE ANTES DE CORRER LA APLICACIÓN
-  await Supabase.initialize(
-    url: 'TU_SUPABASE_URL', // Reemplaza con tu URL de Supabase
-    anonKey: 'TU_SUPABASE_ANON_KEY', // Reemplaza con tu Anon Key de Supabase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Registrar el manejador de segundo plano
+  const supabaseUrl = String.fromEnvironment('SUPABASE_URL', defaultValue: '');
+  const supabaseAnonKey =
+      String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: '');
+
+  if (supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty) {
+    await Supabase.initialize(
+      url: supabaseUrl,
+      anonKey: supabaseAnonKey,
+    );
+  }
+
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-  // 4. Inicializar el canal de notificaciones locales en Android
   await flutterLocalNotificationsPlugin
       .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin>()
@@ -74,23 +80,23 @@ class _MainAppState extends State<MainApp> {
       sound: true,
     );
 
-    print('Estado de permisos: ${settings.authorizationStatus}');
+    debugPrint('Estado de permisos: ${settings.authorizationStatus}');
 
     // Obtener el Token FCM del dispositivo
     String? token = await messaging.getToken();
-    print("FCM Token: $token");
+    debugPrint("FCM Token: $token");
 
     // 🚀 NUEVO: Suscribir automáticamente al usuario al tema de promociones
     try {
       await messaging.subscribeToTopic('promociones');
-      print("¡Suscrito exitosamente al tema 'promociones'!");
+      debugPrint("¡Suscrito exitosamente al tema 'promociones'!");
     } catch (e) {
-      print("Error al suscribirse al tema de promociones: $e");
+      debugPrint("Error al suscribirse al tema de promociones: $e");
     }
 
     // Escuchar mensajes en primer plano y mostrarlos visualmente
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      print('¡Notificación recibida en primer plano!');
+      debugPrint('¡Notificación recibida en primer plano!');
       RemoteNotification? notification = message.notification;
       AndroidNotification? android = message.notification?.android;
 
@@ -119,14 +125,13 @@ class _MainAppState extends State<MainApp> {
       title: 'El parche',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF8C0E0E)),
-      ), // ThemeData
+      ),
       home: const Inicio(),
       routes: {
         '/login': (context) => const Iniciosesion(),
         '/verificacion': (context) => const Verificacion(),
         '/menu': (context) => const Productos(),
         '/bienvenidos': (context) => const Bienvenidos(),
-        // Rutas añadidas para que coincidan con las opciones de tu DrawerContent:
         '/inicio': (context) => const Inicio(),
         '/platos': (context) => const Productos(),
         '/carrito': (context) => const Productos(),
@@ -137,6 +142,6 @@ class _MainAppState extends State<MainApp> {
         '/perfil': (context) => const Productos(),
         '/administracion': (context) => const Productos(isAdmin: true),
       },
-    ); // MaterialApp
+    );
   }
 }

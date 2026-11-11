@@ -20,11 +20,15 @@ export const verificarToken = (req, res, next) => {
 
 // Deja pasar solo si el usuario tiene uno de los roles permitidos
 export const verificarRol = (...rolesPermitidos) => {
+  const rolesNormalizados = rolesPermitidos.map((rol) =>
+    String(rol).trim().toLowerCase()
+  );
   return (req, res, next) => {
     if (!req.usuario) {
       return res.status(401).json({ error: 'No autenticado' });
     }
-    if (!rolesPermitidos.includes(req.usuario.rol)) {
+    const rolUsuario = String(req.usuario.rol || '').trim().toLowerCase();
+    if (!rolesNormalizados.includes(rolUsuario)) {
       return res.status(403).json({ error: 'No tienes permisos para esta operación' });
     }
     next();

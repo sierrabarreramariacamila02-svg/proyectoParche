@@ -4,7 +4,6 @@ import '../app_colors.dart';
 import '../components/customer_bottom_navigation.dart';
 import '../models/producto_model.dart';
 import '../services/cart_service.dart';
-import '../services/restaurant_order_service.dart';
 import 'buscar.dart';
 import 'domicilio.dart';
 import 'pedidos.dart';
@@ -15,12 +14,14 @@ class Carrito extends StatefulWidget {
   static List<Map<String, dynamic>> itemsMemoria = [];
 
   static void agregarItem(Map<String, dynamic> nuevoItem) {
-    int index = itemsMemoria.indexWhere((item) =>
-        item["nombre"] == nuevoItem["nombre"] &&
-        item["acompanamiento"] == nuevoItem["acompanamiento"] &&
-        item["bebida"] == nuevoItem["bebida"] &&
-        item["sinCebolla"] == nuevoItem["sinCebolla"] &&
-        item["sinLechuga"] == nuevoItem["sinLechuga"]);
+    int index = itemsMemoria.indexWhere(
+      (item) =>
+          item["nombre"] == nuevoItem["nombre"] &&
+          item["acompanamiento"] == nuevoItem["acompanamiento"] &&
+          item["bebida"] == nuevoItem["bebida"] &&
+          item["sinCebolla"] == nuevoItem["sinCebolla"] &&
+          item["sinLechuga"] == nuevoItem["sinLechuga"],
+    );
 
     if (index >= 0) {
       itemsMemoria[index]["cant"] += nuevoItem["cant"];
@@ -34,59 +35,25 @@ class Carrito extends StatefulWidget {
 }
 
 class _CarritoState extends State<Carrito> {
-  final RestaurantOrderService _orders = RestaurantOrderService();
-  bool _recogerEnTienda = false;
-  bool _procesando = false;
   static const double _costoDomicilio = 8000;
 
   Future<void> _confirmarPedido() async {
     final cart = CartService.instance;
     if (cart.isEmpty) return;
-    if (_recogerEnTienda) {
-      await _enviarPedido('recoger');
-      return;
-    }
-
-    final creado = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => const DomicilioPantalla()),
-    );
+    final creado = await Navigator.of(
+      context,
+    ).push<bool>(MaterialPageRoute(builder: (_) => const DomicilioPantalla()));
     if (creado == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pedido enviado. Puedes ver su estado en Mis pedidos.')),
-      );
+      // Pedido enviado: lo llevamos a Mis pedidos para que pueda seguirlo
+      await Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const Pedidos()));
     }
   }
 
-  Future<void> _enviarPedido(String tipo) async {
-    setState(() => _procesando = true);
-    try {
-      await _orders.crearPedidoCliente(
-        tipoPedido: tipo,
-        productos: CartService.instance.toOrderItems(),
-      );
-      CartService.instance.clear();
-      if (!mounted) return;
-      await Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const Pedidos()),
-      );
-    } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error.toString().replaceFirst('Exception: ', '')),
-          backgroundColor: Colors.red.shade700,
-        ),
-      );
-    } finally {
-      if (mounted) setState(() => _procesando = false);
-    }
-  }
-
-  String _formatearPrecio(double precio) =>
-      precio.toStringAsFixed(0).replaceAllMapped(
-        RegExp(r'\B(?=(\d{3})+(?!\d))'),
-        (match) => '.',
-      );
+  String _formatearPrecio(double precio) => precio
+      .toStringAsFixed(0)
+      .replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (match) => '.');
 
   @override
   Widget build(BuildContext context) {
@@ -101,28 +68,78 @@ class _CarritoState extends State<Carrito> {
         animation: CartService.instance,
         builder: (context, _) {
           final cart = CartService.instance;
-          final delivery = _recogerEnTienda ? 0.0 : _costoDomicilio;
+          const delivery = _costoDomicilio;
           final total = cart.subtotal + delivery;
           if (cart.isEmpty) {
             return Center(
               child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.shopping_cart_outlined, size: 64, color: Colors.black38),
-                    const SizedBox(height: 12),
-                    const Text('Tu carrito está vacío'),
-                    const SizedBox(height: 12),
-                    ElevatedButton.icon(
-                      onPressed: () => Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (_) => const Buscar()),
+                padding: const EdgeInsets.all(28),
+                child: Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.barraHome.withValues(alpha: 0.08),
+                        blurRadius: 18,
+                        offset: const Offset(0, 8),
                       ),
-                      icon: const Icon(Icons.search),
-                      label: const Text('Buscar productos'),
-                    ),
-                  ],
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 84,
+                        height: 84,
+                        decoration: BoxDecoration(
+                          color: AppColors.inputBackground,
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: const Icon(
+                          Icons.shopping_bag_outlined,
+                          size: 42,
+                          color: AppColors.barraHome,
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      const Text(
+                        'Tu carrito está vacío',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.barraHome,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Explora el menú y agrega algo delicioso.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.black54),
+                      ),
+                      const SizedBox(height: 20),
+                      ElevatedButton.icon(
+                        onPressed: () => Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => const Buscar()),
+                        ),
+                        icon: const Icon(Icons.search),
+                        label: const Text('Buscar productos'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.barraHome,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 13,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -135,28 +152,82 @@ class _CarritoState extends State<Carrito> {
                   padding: const EdgeInsets.all(16),
                   children: [
                     ...cart.items.map((line) => _cartItem(line)),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Tipo de entrega',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
                     const SizedBox(height: 8),
-                    SegmentedButton<bool>(
-                      segments: const [
-                        ButtonSegment(
-                          value: false,
-                          icon: Icon(Icons.delivery_dining),
-                          label: Text('Domicilio'),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.barraHome.withValues(alpha: 0.06),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(
+                              width: double.infinity,
+                              child: Text(
+                                '¡Pide tu domicilio!',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: AppColors.barraHome,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            const SizedBox(
+                              width: double.infinity,
+                              child: Text(
+                                'Recibe tu pedido en la dirección que indiques.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.black54,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            Center(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: AppColors.barraHome,
+                                  borderRadius: BorderRadius.circular(24),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 18,
+                                  vertical: 10,
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.delivery_dining,
+                                      size: 18,
+                                      color: Colors.white,
+                                    ),
+                                    SizedBox(width: 6),
+                                    Text(
+                                      'Domicilio',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        ButtonSegment(
-                          value: true,
-                          icon: Icon(Icons.store),
-                          label: Text('Recoger'),
-                        ),
-                      ],
-                      selected: {_recogerEnTienda},
-                      onSelectionChanged: (selection) =>
-                          setState(() => _recogerEnTienda = selection.first),
+                      ),
                     ),
                   ],
                 ),
@@ -164,34 +235,32 @@ class _CarritoState extends State<Carrito> {
               SafeArea(
                 top: false,
                 child: Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
                   color: Colors.white,
                   child: Column(
                     children: [
                       _totalRow('Subtotal', cart.subtotal),
-                      _totalRow(
-                        'Domicilio',
-                        delivery,
-                        gratis: delivery == 0,
+                      _totalRow('Domicilio', delivery),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8),
+                        child: Divider(height: 1),
                       ),
-                      const Divider(),
                       _totalRow('Total', total, destacado: true),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 14),
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: _procesando ? null : _confirmarPedido,
+                          onPressed: _confirmarPedido,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.buttonOrange,
                             foregroundColor: Colors.white,
+                            elevation: 1,
+                            padding: const EdgeInsets.symmetric(vertical: 15),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(18),
+                            ),
                           ),
-                          child: _procesando
-                              ? const CircularProgressIndicator()
-                              : Text(
-                                  _recogerEnTienda
-                                      ? 'Confirmar pedido para recoger'
-                                      : 'Continuar con domicilio',
-                                ),
+                          child: const Text('Continuar con domicilio'),
                         ),
                       ),
                     ],
@@ -212,43 +281,130 @@ class _CarritoState extends State<Carrito> {
     final ProductoModel product = line.product;
     final int quantity = line.quantity;
     return Card(
-      margin: const EdgeInsets.only(bottom: 10),
-      child: ListTile(
-        leading: product.imagenUrl.isEmpty
-            ? const CircleAvatar(child: Icon(Icons.fastfood))
-            : CircleAvatar(backgroundImage: NetworkImage(product.imagenUrl)),
-        title: Text(product.nombre),
-        subtitle: Text(
-          '\$${_formatearPrecio(product.precio)} × $quantity  ·  \$${_formatearPrecio(product.precio * quantity)}',
-        ),
-        trailing: SizedBox(
-          width: 120,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              IconButton(
-                onPressed: () => CartService.instance.setQuantity(
-                  product.id,
-                  quantity - 1,
-                ),
-                icon: const Icon(Icons.remove_circle_outline),
+      color: const Color(0xFFFFF8F3),
+      elevation: 1,
+      shadowColor: AppColors.barraHome.withValues(alpha: 0.12),
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: AppColors.barraHome.withValues(alpha: 0.08)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: SizedBox(
+                width: 58,
+                height: 58,
+                child: product.imagenUrl.isEmpty
+                    ? const ColoredBox(
+                        color: AppColors.inputBackground,
+                        child: Icon(Icons.fastfood, color: AppColors.barraHome),
+                      )
+                    : Image.network(
+                        product.imagenUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => const ColoredBox(
+                          color: AppColors.inputBackground,
+                          child: Icon(
+                            Icons.fastfood,
+                            color: AppColors.barraHome,
+                          ),
+                        ),
+                      ),
               ),
-              Text('$quantity'),
-              IconButton(
-                onPressed: () => CartService.instance.setQuantity(
-                  product.id,
-                  quantity + 1,
-                ),
-                icon: const Icon(Icons.add_circle_outline),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    product.nombre,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '\$${_formatearPrecio(product.precio)} × $quantity',
+                    style: const TextStyle(color: Colors.black54, fontSize: 12),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '\$${_formatearPrecio(product.precio * quantity)}',
+                    style: const TextStyle(
+                      color: AppColors.barraHome,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+            const SizedBox(width: 4),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: AppColors.barraHome.withValues(alpha: 0.12),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _quantityButton(
+                    icon: Icons.remove,
+                    onPressed: () => CartService.instance.setQuantity(
+                      product.id,
+                      quantity - 1,
+                    ),
+                  ),
+                  Text(
+                    '$quantity',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  _quantityButton(
+                    icon: Icons.add,
+                    onPressed: () => CartService.instance.setQuantity(
+                      product.id,
+                      quantity + 1,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _totalRow(String label, double value, {bool destacado = false, bool gratis = false}) {
+  Widget _quantityButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
+    return IconButton(
+      visualDensity: VisualDensity.compact,
+      constraints: const BoxConstraints(minWidth: 34, minHeight: 38),
+      onPressed: onPressed,
+      color: AppColors.barraHome,
+      icon: Icon(icon, size: 18),
+    );
+  }
+
+  Widget _totalRow(
+    String label,
+    double value, {
+    bool destacado = false,
+    bool gratis = false,
+  }) {
     final style = TextStyle(
       fontWeight: destacado ? FontWeight.bold : FontWeight.normal,
       fontSize: destacado ? 17 : 14,
@@ -260,7 +416,10 @@ class _CarritoState extends State<Carrito> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: style),
-          Text(gratis ? 'GRATIS' : '\$${_formatearPrecio(value)} COP', style: style),
+          Text(
+            gratis ? 'GRATIS' : '\$${_formatearPrecio(value)} COP',
+            style: style,
+          ),
         ],
       ),
     );

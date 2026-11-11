@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
+import '../app_colors.dart';
 import '../services/restaurant_order_service.dart';
 
 class TomarPedidoScreen extends StatefulWidget {
-  const TomarPedidoScreen({super.key});
+  final String numeroMesa;
+
+  const TomarPedidoScreen({super.key, required this.numeroMesa});
 
   @override
   State<TomarPedidoScreen> createState() => _TomarPedidoScreenState();
@@ -11,9 +15,10 @@ class TomarPedidoScreen extends StatefulWidget {
 
 class _TomarPedidoScreenState extends State<TomarPedidoScreen> {
   final RestaurantOrderService _orders = RestaurantOrderService();
-  final TextEditingController _mesaController = TextEditingController();
   final Map<String, int> _cantidades = {};
   List<Map<String, dynamic>> _productos = [];
+  String _categoriaSeleccionada = 'Todos';
+  String _busqueda = '';
   bool _cargando = true;
   bool _enviando = false;
   String? _error;
@@ -26,7 +31,6 @@ class _TomarPedidoScreenState extends State<TomarPedidoScreen> {
 
   @override
   void dispose() {
-    _mesaController.dispose();
     super.dispose();
   }
 
@@ -62,19 +66,14 @@ class _TomarPedidoScreenState extends State<TomarPedidoScreen> {
   double get _total {
     var total = 0.0;
     for (final producto in _productos) {
-      final id = producto['id'].toString();
-      final precio = (producto['precio'] as num?)?.toDouble() ?? 0;
+      final id = producto['id']?.toString() ?? '';
+      final precio = _precio(producto['precio']);
       total += precio * (_cantidades[id] ?? 0);
     }
     return total;
   }
 
   Future<void> _enviarPedido() async {
-    final mesa = _mesaController.text.trim();
-    if (mesa.isEmpty) {
-      _mostrarError('Escribe el número de la mesa.');
-      return;
-    }
     if (_cantidades.isEmpty) {
       _mostrarError('Agrega al menos un producto al pedido.');
       return;
@@ -83,7 +82,7 @@ class _TomarPedidoScreenState extends State<TomarPedidoScreen> {
     setState(() => _enviando = true);
     try {
       await _orders.crearPedidoMesa(
-        numeroMesa: mesa,
+        numeroMesa: widget.numeroMesa,
         productos: _cantidades.entries
             .map((entry) => {'producto_id': entry.key, 'cantidad': entry.value})
             .toList(),
@@ -105,30 +104,77 @@ class _TomarPedidoScreenState extends State<TomarPedidoScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final categorias = <String>{
+      'Todos',
+      ..._productos
+          .map((producto) => _texto(producto['categoria']).trim())
+          .where((categoria) => categoria.isNotEmpty),
+    };
+    final productosFiltrados = _productos.where((producto) {
+      final categoria = _texto(producto['categoria']).trim();
+      final nombre = _texto(producto['nombre']).toLowerCase();
+      return (_categoriaSeleccionada == 'Todos' ||
+              categoria.toLowerCase() ==
+                  _categoriaSeleccionada.toLowerCase()) &&
+          nombre.contains(_busqueda.toLowerCase());
+    }).toList();
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFDFBF7),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF6B1D0F),
-        title: const Text(
-          'Tomar pedido',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        backgroundColor: AppColors.barraHome,
+        foregroundColor: Colors.white,
+        title: Text(
+          'Mesa ${widget.numeroMesa} · Menú',
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
             child: TextField(
-              controller: _mesaController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Número de mesa',
-                prefixIcon: Icon(Icons.table_restaurant),
-                border: OutlineInputBorder(),
+              onChanged: (value) => setState(() => _busqueda = value.trim()),
+              decoration: InputDecoration(
+                hintText: 'Buscar en todo el menú',
+                prefixIcon: const Icon(Icons.search),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide.none,
+                ),
               ),
             ),
           ),
+          if (!_cargando && _error == null && categorias.length > 1)
+            SizedBox(
+              height: 48,
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                scrollDirection: Axis.horizontal,
+                children: categorias.map((categoria) {
+                  final seleccionado = categoria == _categoriaSeleccionada;
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: ChoiceChip(
+                      label: Text(categoria),
+                      selected: seleccionado,
+                      onSelected: (_) =>
+                          setState(() => _categoriaSeleccionada = categoria),
+                      selectedColor: AppColors.barraHome,
+                      labelStyle: TextStyle(
+                        color: seleccionado
+                            ? Colors.white
+                            : AppColors.barraHome,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
           if (_error != null)
             MaterialBanner(
               content: Text(_error!),
@@ -143,13 +189,19 @@ class _TomarPedidoScreenState extends State<TomarPedidoScreen> {
           Expanded(
             child: _cargando
                 ? const Center(child: CircularProgressIndicator())
-                : _productos.isEmpty
-                ? const Center(child: Text('No hay productos disponibles.'))
+                : productosFiltrados.isEmpty
+                ? Center(
+                    child: Text(
+                      _productos.isEmpty
+                          ? 'No hay productos disponibles.'
+                          : 'No encontramos productos en esta categoría.',
+                    ),
+                  )
                 : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _productos.length,
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                    itemCount: productosFiltrados.length,
                     itemBuilder: (context, index) {
-                      final producto = _productos[index];
+                      final producto = productosFiltrados[index];
                       return _productoTile(producto);
                     },
                   ),
@@ -158,7 +210,7 @@ class _TomarPedidoScreenState extends State<TomarPedidoScreen> {
             top: false,
             child: Container(
               padding: const EdgeInsets.all(16),
-              color: const Color(0xFFF5EBE6),
+              color: AppColors.inputBackground,
               child: Column(
                 children: [
                   Row(
@@ -172,7 +224,7 @@ class _TomarPedidoScreenState extends State<TomarPedidoScreen> {
                         ),
                       ),
                       Text(
-                        '\$${_total.toStringAsFixed(0)} COP',
+                        '\$${NumberFormat('#,##0', 'es_CO').format(_total)} COP',
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
@@ -186,7 +238,7 @@ class _TomarPedidoScreenState extends State<TomarPedidoScreen> {
                     height: 48,
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFD35400),
+                        backgroundColor: AppColors.primaryOrange,
                         foregroundColor: Colors.white,
                       ),
                       onPressed: _enviando || _cargando ? null : _enviarPedido,
@@ -215,15 +267,19 @@ class _TomarPedidoScreenState extends State<TomarPedidoScreen> {
   }
 
   Widget _productoTile(Map<String, dynamic> producto) {
-    final id = producto['id'].toString();
-    final precio = (producto['precio'] as num?)?.toDouble() ?? 0;
+    final id = producto['id']?.toString() ?? '';
+    final precio = _precio(producto['precio']);
     final cantidad = _cantidades[id] ?? 0;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
+      color: const Color(0xFFFFEFEC),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       child: ListTile(
-        title: Text(producto['nombre']?.toString() ?? 'Producto'),
-        subtitle: Text('\$${precio.toStringAsFixed(0)} COP'),
+        title: Text(_texto(producto['nombre'], fallback: 'Producto')),
+        subtitle: Text(
+          '\$${NumberFormat('#,##0', 'es_CO').format(precio)} COP',
+        ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -244,5 +300,16 @@ class _TomarPedidoScreenState extends State<TomarPedidoScreen> {
         ),
       ),
     );
+  }
+
+  String _texto(dynamic value, {String fallback = ''}) {
+    if (value == null) return fallback;
+    final text = value.toString();
+    return text == 'null' ? fallback : text;
+  }
+
+  double _precio(dynamic value) {
+    final precio = double.tryParse(value?.toString() ?? '');
+    return precio != null && precio.isFinite && precio >= 0 ? precio : 0;
   }
 }

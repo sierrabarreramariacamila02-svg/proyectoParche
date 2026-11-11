@@ -43,7 +43,7 @@ class _AdminProductListPageState extends State<AdminProductListPage> {
   late Future<List<ProductoModel>> _future;
   String _adminName = '';
   String _adminEmail = '';
-  
+
   bool _huboCambios = false;
 
   @override
@@ -74,9 +74,9 @@ class _AdminProductListPageState extends State<AdminProductListPage> {
   }
 
   void _snack(String msg, {Color color = AppColors.barraHome}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: color),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(msg), backgroundColor: color));
   }
 
   Future<void> _openForm({ProductoModel? producto}) async {
@@ -160,15 +160,39 @@ class _AdminProductListPageState extends State<AdminProductListPage> {
               final items = snap.data ?? [];
               if (snap.hasError || items.isEmpty) {
                 return ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
                   children: [
-                    const SizedBox(height: 160),
-                    Center(
-                      child: Text(
-                        snap.hasError
-                            ? 'Error: ${snap.error}'.replaceAll('Exception: ', '')
-                            : 'No hay productos registrados.',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.black54),
+                    const SizedBox(height: 100),
+                    Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(22),
+                        ),
+                        child: Column(
+                          children: [
+                            Icon(
+                              snap.hasError
+                                  ? Icons.error_outline
+                                  : Icons.storefront_outlined,
+                              size: 44,
+                              color: brand,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              snap.hasError
+                                  ? 'Error: ${snap.error}'.replaceAll(
+                                      'Exception: ',
+                                      '',
+                                    )
+                                  : 'No hay productos registrados.',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: Colors.black54),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -181,14 +205,21 @@ class _AdminProductListPageState extends State<AdminProductListPage> {
                 itemBuilder: (context, i) {
                   final p = items[i];
                   return Card(
-                    color: AppColors.inputBackground,
+                    color: Colors.white,
+                    elevation: 1,
+                    shadowColor: brand.withValues(alpha: 0.1),
                     margin: const EdgeInsets.only(bottom: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                      side: BorderSide(color: brand.withValues(alpha: 0.07)),
+                    ),
                     child: ListTile(
+                      contentPadding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
                       leading: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(13),
                         child: SizedBox(
-                          width: 50,
-                          height: 50,
+                          width: 58,
+                          height: 58,
                           child: _thumb(p.imagenUrl),
                         ),
                       ),
@@ -197,22 +228,36 @@ class _AdminProductListPageState extends State<AdminProductListPage> {
                         style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
                       subtitle: Text(
-                        '\$${p.precio.toStringAsFixed(2)}',
-                        style: const TextStyle(color: brand),
+                        '\$${p.precio.toStringAsFixed(0)} COP',
+                        style: const TextStyle(
+                          color: brand,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
                             tooltip: 'Editar',
-                            icon: const Icon(Icons.edit, color: brand),
+                            style: IconButton.styleFrom(
+                              backgroundColor: brand.withValues(alpha: 0.08),
+                            ),
+                            icon: const Icon(
+                              Icons.edit_outlined,
+                              color: brand,
+                              size: 20,
+                            ),
                             onPressed: () => _openForm(producto: p),
                           ),
                           IconButton(
                             tooltip: 'Eliminar',
+                            style: IconButton.styleFrom(
+                              backgroundColor: brand.withValues(alpha: 0.06),
+                            ),
                             icon: const Icon(
                               Icons.delete_outline,
-                              color: AppColors.barraHome,
+                              color: brand,
+                              size: 20,
                             ),
                             onPressed: () => _delete(p),
                           ),

@@ -1,22 +1,27 @@
     import jwt from "jsonwebtoken";
     import { OAuth2Client } from "google-auth-library";
     import {  obtenerUsuarioPorEmail, crearUsuarioGoogle, actualizarUsuario } from "../models/usuario.js";
-    const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
     export const autenticarConGoogle = async (req, res) => {
         try {
             const { idToken } = req.body;
+            const googleClientId = process.env.GOOGLE_CLIENT_ID?.trim();
 
             if (!idToken) {
                 return res.status(400).json({
                     error: 'El idToken de Google es requerido'
                 });
             }
+            if (!googleClientId) {
+                return res.status(500).json({
+                    error: 'El inicio de sesión con Google no está configurado en el servidor.'
+                });
+            }
 
             // 1. Validar el token con Google
-            const ticket = await client.verifyIdToken({
+            const ticket = await new OAuth2Client(googleClientId).verifyIdToken({
                 idToken,
-                audience: process.env.GOOGLE_CLIENT_ID
+                audience: googleClientId
             });
 
             const payload = ticket.getPayload();

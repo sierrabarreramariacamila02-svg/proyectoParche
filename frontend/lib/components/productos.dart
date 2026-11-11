@@ -1,4 +1,5 @@
 import 'package:elparchee/app_colors.dart';
+import 'package:elparchee/components/chat_elparche_modal.dart';
 import 'package:elparchee/components/customer_bottom_navigation.dart';
 import 'package:elparchee/models/producto_model.dart';
 import 'package:elparchee/pantallas/carrito.dart';
@@ -9,7 +10,6 @@ import 'package:elparchee/services/destacado_service.dart';
 import 'package:elparchee/services/producto_service.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:elparchee/components/chat_elparche_modal.dart'; // 👈 Importación del chat con IA
 
 import 'admin_drawer.dart';
 
@@ -31,6 +31,8 @@ class _ProductosState extends State<Productos> {
   bool _esAdmin = false;
   String _nombreUsuario = 'username';
   String _correoUsuario = '';
+  double _chatRight = 16;
+  double _chatBottom = 20;
 
   final List<String> _imagenes = [
     'assets/images/promo1.png',
@@ -149,103 +151,167 @@ class _ProductosState extends State<Productos> {
       drawer: _esAdmin
           ? AdminDrawer(adminName: _nombreUsuario, adminEmail: _correoUsuario)
           : null,
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _titulo('Promociones y descuentos!'),
-            SizedBox(
-              height: 200,
-              child: PageView.builder(
-                controller: _controller,
-                itemCount: _imagenes.length,
-                onPageChanged: (index) => setState(() => _paginaActual = index),
-                itemBuilder: (_, index) => Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 10),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(45),
-                    child: Image.asset(_imagenes[index], fit: BoxFit.cover),
-                  ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          const buttonSize = 76.0;
+          final maxRight = (constraints.maxWidth - buttonSize - 8)
+              .clamp(8.0, double.infinity)
+              .toDouble();
+          final maxBottom = (constraints.maxHeight - buttonSize - 8)
+              .clamp(8.0, double.infinity)
+              .toDouble();
+          final chatRight = _chatRight.clamp(8.0, maxRight).toDouble();
+          final chatBottom = _chatBottom.clamp(8.0, maxBottom).toDouble();
+
+          return Stack(
+            children: [
+              SingleChildScrollView(
+                padding: const EdgeInsets.only(bottom: 76),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _titulo('Promociones y descuentos!'),
+                    SizedBox(
+                      height: 200,
+                      child: PageView.builder(
+                        controller: _controller,
+                        itemCount: _imagenes.length,
+                        onPageChanged: (index) =>
+                            setState(() => _paginaActual = index),
+                        itemBuilder: (_, index) => Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 10),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(45),
+                            child: Image.asset(
+                              _imagenes[index],
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                        _imagenes.length,
+                        (index) => AnimatedContainer(
+                          duration: const Duration(milliseconds: 400),
+                          margin: const EdgeInsets.symmetric(horizontal: 3),
+                          width: _paginaActual == index ? 18 : 8,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: _paginaActual == index
+                                ? AppColors.barraHome
+                                : Colors.grey.shade400,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      ),
+                    ),
+                    _titulo('Menú.'),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: _categorias.map((categoria) {
+                        final nombre = categoria['lbl']! as String;
+                        return _catItem(
+                          categoria['img']! as String,
+                          nombre,
+                          categoria['color']! as Color,
+                          () => _abrirCategoria(nombre),
+                        );
+                      }).toList(),
+                    ),
+                    _titulo('Productos destacados'),
+                    if (_isLoading)
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(32),
+                          child: CircularProgressIndicator(),
+                        ),
+                      )
+                    else if (_errorCarga != null)
+                      Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            children: [
+                              Text(
+                                'No se pudieron cargar los productos: $_errorCarga',
+                                textAlign: TextAlign.center,
+                              ),
+                              TextButton(
+                                onPressed: _cargarProductosHome,
+                                child: const Text('Reintentar'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    else if (_listaDestacados.isEmpty)
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(24),
+                          child: Text(
+                            'No hay productos destacados disponibles.',
+                          ),
+                        ),
+                      )
+                    else
+                      _buildProductGrid(_listaDestacados),
+                    const SizedBox(height: 20),
+                  ],
                 ),
               ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                _imagenes.length,
-                (index) => AnimatedContainer(
-                  duration: const Duration(milliseconds: 400),
-                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                  width: _paginaActual == index ? 18 : 8,
-                  height: 10,
-                  decoration: BoxDecoration(
-                    color: _paginaActual == index
-                        ? AppColors.barraHome
-                        : Colors.grey.shade400,
-                    borderRadius: BorderRadius.circular(4),
+              if (!widget.isAdmin && !_esAdmin)
+                AnimatedPositioned(
+                  right: chatRight,
+                  bottom: chatBottom,
+                  duration: const Duration(milliseconds: 100),
+                  curve: Curves.easeOut,
+                  child: Semantics(
+                    button: true,
+                    label:
+                        'Abrir chat de El Parche. Mantén y arrastra para mover.',
+                    child: GestureDetector(
+                      onTap: () => mostrarChatElParche(context),
+                      onPanUpdate: (details) {
+                        setState(() {
+                          _chatRight = (chatRight - details.delta.dx)
+                              .clamp(8.0, maxRight)
+                              .toDouble();
+                          _chatBottom = (chatBottom - details.delta.dy)
+                              .clamp(8.0, maxBottom)
+                              .toDouble();
+                        });
+                      },
+                      child: SizedBox(
+                        width: buttonSize,
+                        height: buttonSize,
+                        child: ClipOval(
+                          child: Image.asset(
+                            'assets/images/logo-parche.png',
+                            fit: BoxFit.cover,
+                            semanticLabel: 'Logo de El Parche',
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-            _titulo('Menú.'),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: _categorias.map((categoria) {
-                final nombre = categoria['lbl']! as String;
-                return _catItem(
-                  categoria['img']! as String,
-                  nombre,
-                  categoria['color']! as Color,
-                  () => _abrirCategoria(nombre),
-                );
-              }).toList(),
-            ),
-            _titulo('Productos destacados'),
-            if (_isLoading)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(32),
-                  child: CircularProgressIndicator(),
-                ),
-              )
-            else if (_errorCarga != null)
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    children: [
-                      Text(
-                        'No se pudieron cargar los productos: $_errorCarga',
-                        textAlign: TextAlign.center,
-                      ),
-                      TextButton(
-                        onPressed: _cargarProductosHome,
-                        child: const Text('Reintentar'),
-                      ),
-                    ],
-                  ),
-                ),
-              )
-            else if (_listaDestacados.isEmpty)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Text('No hay productos destacados disponibles.'),
-                ),
-              )
-            else
-              _buildProductGrid(_listaDestacados),
-            const SizedBox(height: 20),
-          ],
-        ),
+            ],
+          );
+        },
       ),
 
       // 🛒 BOTÓN FLOTANTE DEL CARRITO EN EL CENTRO
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           // TODO: Agrega aquí la navegación a tu pantalla o modal de carrito
-           Navigator.push(context, MaterialPageRoute(builder: (_) => const Carrito()));
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const Carrito()),
+          );
         },
         backgroundColor:
             AppColors.buttonOrange, // El color naranja de tu diseño
@@ -255,8 +321,6 @@ class _ProductosState extends State<Productos> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: const CustomerBottomNavigation(selectedIndex: 0),
-
-     
     );
   }
 
