@@ -1,32 +1,66 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:elparchee/app_colors.dart';
 
-class Notificaciones extends StatefulWidget {
-  const Notificaciones({super.key});
+class notificacionesButton extends StatelessWidget {
+  const notificacionesButton({super.key});
 
   @override
-  State<Notificaciones> createState() => _NotificacionesState();
+  Widget build(BuildContext context) {
+    return IconButton(
+      tooltip: 'notificaciones',
+      icon: const Icon(Icons.notifications_outlined),
+      onPressed: () => Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => const notificaciones())),
+    );
+  }
 }
 
-class _NotificacionesState extends State<Notificaciones> {
+class notificaciones extends StatefulWidget {
+  const notificaciones({super.key});
+
+  @override
+  State<notificaciones> createState() => _notificacionesState();
+}
+
+class _notificacionesState extends State<notificaciones> {
   static const Color rojo = AppColors.barraHome;
   static const Color naranja = AppColors.buttonOrange;
   static const Color crema = Color(0xFFFAF3E0);
+  late Future<List<Map<String, dynamic>>> _notificacionesFuture;
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
-    
-    // Opcional: Escuchar por si llega una notificación push en primer plano 
-    // y asegurarnos de que quede registrada o manejada visualmente.
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      if (message.notification != null) {
-        // La notificación ya se guardó en Supabase desde el origen (Admin),
-        // por lo que el StreamBuilder la detectará automáticamente en tiempo real.
-        print("Notificación en primer plano recibida: ${message.notification?.title}");
-      }
+    _notificacionesFuture = _cargarNotificaciones();
+    _timer = Timer.periodic(
+      const Duration(seconds: 5),
+      (_) => _actualizarNotificaciones(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  Future<List<Map<String, dynamic>>> _cargarNotificaciones() async {
+    final data = await Supabase.instance.client
+        .from('notificaciones')
+        .select()
+        .order('fecha', ascending: false);
+    return List<Map<String, dynamic>>.from(data);
+  }
+
+  void _actualizarNotificaciones() {
+    if (!mounted) return;
+    setState(() {
+      _notificacionesFuture = _cargarNotificaciones();
     });
   }
 
@@ -38,8 +72,14 @@ class _NotificacionesState extends State<Notificaciones> {
           .from('notificaciones')
           .update({'leida': true})
           .eq('leida', false);
+      _actualizarNotificaciones();
     } catch (e) {
-      print('Error al marcar todas como leídas: $e');
+      debugPrint('Error al marcar todas como leídas: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('No se pudieron marcar como leídas: $e')),
+        );
+      }
     }
   }
 
@@ -51,25 +91,39 @@ class _NotificacionesState extends State<Notificaciones> {
           .from('notificaciones')
           .update({'leida': true})
           .eq('id', id);
+      _actualizarNotificaciones();
     } catch (e) {
-      print('Error al marcar notificación como leída: $e');
+      debugPrint('Error al marcar notificación como leída: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('No se pudo marcar como leída: $e')),
+        );
+      }
     }
   }
 
   // Helper para asignar iconos según el tipo o contenido
   IconData _obtenerIcono(String titulo, String cuerpo) {
     final texto = '$titulo $cuerpo'.toLowerCase();
-    if (texto.contains('pedido') || texto.contains('camino')) return Icons.delivery_dining;
-    if (texto.contains('descuento') || texto.contains('promo') || texto.contains('producto')) return Icons.local_offer;
-    if (texto.contains('pago')) return Icons.payment;
-    if (texto.contains('bienvenido')) return Icons.star_outline;
+    if (texto.contains('pedido') || texto.contains('camino')) {
+      return Icons.delivery_dining;
+    }
+    if (texto.contains('descuento') ||
+        texto.contains('promo') ||
+        texto.contains('producto')) {
+      return Icons.local_offer;
+    }
+    if (texto.contains('pago')) {
+      return Icons.payment;
+    }
+    if (texto.contains('bienvenido')) {
+      return Icons.star_outline;
+    }
     return Icons.notifications;
   }
 
   @override
   Widget build(BuildContext context) {
-    final supabase = Supabase.instance.client;
-
     return Scaffold(
       backgroundColor: crema,
       appBar: AppBar(
@@ -80,7 +134,7 @@ class _NotificacionesState extends State<Notificaciones> {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Notificaciones',
+          'notificaciones',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         actions: [
@@ -91,20 +145,30 @@ class _NotificacionesState extends State<Notificaciones> {
           ),
         ],
       ),
-      // 🚀 PASO 2 IMPLEMENTADO: StreamBuilder conectado a Supabase en tiempo real
-      body: StreamBuilder<List>(
-        stream: supabase
-            .from('notificaciones')
-            .stream(primaryKey: ['id'])
-            .order('fecha', ascending: false),
+      body: FutureBuilder<List<Map<String, dynamic>>>(
+        future: _notificacionesFuture,
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(color: rojo),
+          if (snapshot.connectionState == ConnectionState.waiting &&
+              !snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator(color: rojo));
+          }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  'No se pudieron cargar las notificaciones: ${snapshot.error}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
             );
           }
 
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          final listanotificaciones = snapshot.data ?? [];
+
+          if (listanotificaciones.isEmpty) {
             return const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -124,13 +188,11 @@ class _NotificacionesState extends State<Notificaciones> {
             );
           }
 
-          final listaNotificaciones = snapshot.data!;
-
           return ListView.builder(
             padding: const EdgeInsets.all(16),
-            itemCount: listaNotificaciones.length,
+            itemCount: listanotificaciones.length,
             itemBuilder: (context, index) {
-              final item = listaNotificaciones[index];
+              final item = listanotificaciones[index];
               final String id = item['id'].toString();
               final String titulo = item['titulo'] ?? '';
               final String mensaje = item['cuerpo'] ?? '';
@@ -178,8 +240,7 @@ class _NotificacionesState extends State<Notificaciones> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Expanded(
                                   child: Text(

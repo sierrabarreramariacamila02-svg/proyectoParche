@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../components/admin_drawer.dart';
 import '../models/banner_model.dart';
 import '../services/banner_service.dart';
@@ -94,7 +95,25 @@ class _AdminBannerListPageState extends State<AdminBannerListPage> {
       await _bannerService.crearBanner(pickedFile, descripcion: descripcion);
       if (!mounted) return;
       _reload();
-      _snack('Banner subido con éxito al carrusel');
+      String? errorNotificacion;
+      try {
+        await Supabase.instance.client.from('notificaciones').insert({
+          'titulo': 'Nueva promoción disponible',
+          'cuerpo': descripcion,
+          'leida': false,
+        });
+      } catch (error) {
+        debugPrint('Error registrando notificación de promoción: $error');
+        errorNotificacion = error.toString();
+      }
+      if (!mounted) return;
+      _snack(
+        errorNotificacion == null
+            ? 'Banner subido y notificación guardada'
+            : 'Banner subido, pero no se pudo guardar la notificación: '
+                  '$errorNotificacion',
+        color: errorNotificacion == null ? brand : Colors.red,
+      );
     } catch (e) {
       if (!mounted) return;
       _snack(e.toString().replaceAll('Exception: ', ''), color: Colors.red);

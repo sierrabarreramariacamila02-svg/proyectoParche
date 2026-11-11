@@ -1,5 +1,3 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:elparchee/components/productos.dart';
 import 'package:elparchee/pantallas/bienvenidos.dart';
 import 'package:elparchee/pantallas/inicio.dart';
@@ -31,18 +29,47 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
+
+  // 1. Inicializar Firebase
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // 2. Inicializar Supabase de forma segura
+  // (Asegúrate de reemplazar los textos temporales con tus credenciales reales si no usas variables de entorno)
+  const supabaseUrl = String.fromEnvironment(
+    'SUPABASE_URL',
+    defaultValue: 'https://fmfneevycopvgdslzyzp.supabase.co',
+  );
+  const supabaseAnonKey = String.fromEnvironment(
+    'SUPABASE_ANON_KEY',
+    defaultValue: 'sb_publishable_W79h4DAnAifwbWLferkKTA_1eCHO16R',
   );
 
-  const supabaseUrl = String.fromEnvironment('SUPABASE_URL', defaultValue: '');
-  const supabaseAnonKey =
-      String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: '');
-
-  if (supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty) {
+  if (supabaseUrl.isNotEmpty &&
+      supabaseAnonKey.isNotEmpty &&
+      supabaseUrl != 'TU_URL_DE_SUPABASE') {
+    final parsedSupabaseUrl = Uri.parse(supabaseUrl.trim());
+    final pathSegments = parsedSupabaseUrl.pathSegments
+        .where((segment) => segment.isNotEmpty)
+        .toList();
+    if (pathSegments.length >= 2 &&
+        pathSegments[pathSegments.length - 2] == 'rest' &&
+        pathSegments.last == 'v1') {
+      pathSegments.removeRange(pathSegments.length - 2, pathSegments.length);
+    }
+    final supabaseBaseUrl = parsedSupabaseUrl
+        .replace(pathSegments: pathSegments, query: null, fragment: null)
+        .toString()
+        .replaceFirst(RegExp(r'/+$'), '');
+    debugPrint('Supabase project host: ${Uri.parse(supabaseBaseUrl).host}');
     await Supabase.initialize(
-      url: supabaseUrl,
-      anonKey: supabaseAnonKey,
+      url: supabaseBaseUrl,
+      publishableKey: supabaseAnonKey,
+    );
+  } else {
+    await Supabase.initialize(
+      url: 'https://fmfneevycopvgdslzyzp.supabase.co', // <-- SIN /rest/v1/
+      publishableKey:
+          'sb_publishable_W79h4DAnAifwbWLferkKTA_1eCHO16R', // <-- anonKey con K mayúscula
     );
   }
 
@@ -50,7 +77,8 @@ void main() async {
 
   await flutterLocalNotificationsPlugin
       .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>()
+        AndroidFlutterLocalNotificationsPlugin
+      >()
       ?.createNotificationChannel(channel);
 
   runApp(const MainApp());
@@ -70,7 +98,7 @@ class _MainAppState extends State<MainApp> {
     _setupNotifications();
   }
 
-  // 5. Configurar permisos, suscripción a temas y escucha de notificaciones
+  // Configurar permisos, suscripción a temas y escucha de notificaciones
   void _setupNotifications() async {
     FirebaseMessaging messaging = FirebaseMessaging.instance;
 
@@ -86,7 +114,7 @@ class _MainAppState extends State<MainApp> {
     String? token = await messaging.getToken();
     debugPrint("FCM Token: $token");
 
-    // 🚀 NUEVO: Suscribir automáticamente al usuario al tema de promociones
+    // Suscribir automáticamente al usuario al tema de promociones
     try {
       await messaging.subscribeToTopic('promociones');
       debugPrint("¡Suscrito exitosamente al tema 'promociones'!");

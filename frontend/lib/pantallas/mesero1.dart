@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:elparchee/app_colors.dart';
 import 'package:elparchee/pantallas/mesero_perfil.dart';
+import 'package:elparchee/pantallas/notificaciones.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../services/restaurant_order_service.dart';
 import 'meseroo2.dart';
@@ -22,6 +24,7 @@ class _GestionMesasState extends State<GestionMesas> {
   final RestaurantOrderService _orders = RestaurantOrderService();
   List<Map<String, dynamic>> _pedidos = [];
   final Set<String> _pedidosListosNotificados = {};
+  final Set<String> _pedidosEntregando = {};
   int _numeroMesas = 4;
   String _nombre = 'Mesero';
   Timer? _timer;
@@ -141,11 +144,32 @@ class _GestionMesasState extends State<GestionMesas> {
       ),
     );
     if (creado == true) {
+      String? errorNotificacion;
+      try {
+        await Supabase.instance.client.from('notificaciones').insert({
+          'titulo': 'Nuevo pedido para cocina',
+          'cuerpo':
+              'El mesero envió un nuevo pedido desde la mesa $numeroMesa.',
+          'leida': false,
+        });
+      } catch (error) {
+        debugPrint('Error registrando notificación de nuevo pedido: $error');
+        errorNotificacion = error.toString();
+      }
+
       await _cargarPedidos();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Pedido de la mesa $numeroMesa enviado a cocina.'),
+          content: Text(
+            errorNotificacion == null
+                ? 'Pedido de la mesa $numeroMesa enviado a cocina.'
+                : 'Pedido enviado, pero no se pudo notificar a cocina: '
+                      '$errorNotificacion',
+          ),
+          backgroundColor: errorNotificacion == null
+              ? AppColors.barraHome
+              : Colors.red.shade700,
         ),
       );
     }
@@ -160,6 +184,72 @@ class _GestionMesasState extends State<GestionMesas> {
     return deLaMesa.isEmpty ? null : deLaMesa.first;
   }
 
+  Future<void> _marcarComoEntregado(Map<String, dynamic> pedido) async {
+    final id = int.tryParse(pedido['id']?.toString() ?? '');
+    if (id == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo identificar el pedido.')),
+      );
+      return;
+    }
+
+    final pedidoId = id.toString();
+    if (_pedidosEntregando.contains(pedidoId)) return;
+    setState(() => _pedidosEntregando.add(pedidoId));
+
+    try {
+      await _orders.actualizarEstado(id, 'entregado');
+      String? errorNotificacion;
+      try {
+        final mesa = pedido['numero_mesa']?.toString();
+        await Supabase.instance.client.from('notificaciones').insert({
+          'titulo': 'Pedido #$pedidoId entregado',
+          'cuerpo': mesa == null
+              ? 'El mesero entregó el pedido #$pedidoId.'
+              : 'El mesero entregó el pedido #$pedidoId de la mesa $mesa. '
+                    'La mesa está disponible.',
+          'leida': false,
+        });
+      } catch (error) {
+        debugPrint('Error registrando notificación de entrega: $error');
+        errorNotificacion = error.toString();
+      }
+
+      if (mounted) {
+        setState(() {
+          _pedidos.removeWhere(
+            (pedidoActual) => pedidoActual['id']?.toString() == pedidoId,
+          );
+        });
+      }
+      await _cargarPedidos();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            errorNotificacion == null
+                ? 'Pedido #$pedidoId entregado. Mesa disponible.'
+                : 'Pedido entregado, pero no se pudo notificar a cocina: '
+                      '$errorNotificacion',
+          ),
+          backgroundColor: errorNotificacion == null
+              ? Colors.green.shade800
+              : Colors.red.shade700,
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString().replaceFirst('Exception: ', '')),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _pedidosEntregando.remove(pedidoId));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -172,6 +262,7 @@ class _GestionMesasState extends State<GestionMesas> {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
+          const notificacionesButton(),
           IconButton(
             tooltip: 'Actualizar mesas',
             onPressed: _cargando ? null : _cargarPedidos,
@@ -296,7 +387,7 @@ class _GestionMesasState extends State<GestionMesas> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
-        onTap: () => _abrirMesa(numeroMesa),
+        onTap: pedido == null ? () => _abrirMesa(numeroMesa) : null,
         child: Padding(
           padding: const EdgeInsets.all(10),
           child: Column(
@@ -304,10 +395,10 @@ class _GestionMesasState extends State<GestionMesas> {
             children: [
               Icon(
                 Icons.table_restaurant_rounded,
-                size: 38,
+                size: estaLista ? 30 : 38,
                 color: colorEstado,
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: estaLista ? 4 : 8),
               Text(
                 'Mesa $numeroMesa',
                 style: const TextStyle(
@@ -340,6 +431,36 @@ class _GestionMesasState extends State<GestionMesas> {
                   child: Text(
                     'Pedido #${pedido['id']}',
                     style: const TextStyle(fontSize: 11, color: Colors.black54),
+                  ),
+                ),
+              if (estaLista && pedido != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: SizedBox(
+                    height: 30,
+                    child: OutlinedButton.icon(
+                      onPressed:
+                          _pedidosEntregando.contains(pedido['id']?.toString())
+                          ? null
+                          : () => _marcarComoEntregado(pedido),
+                      icon:
+                          _pedidosEntregando.contains(pedido['id']?.toString())
+                          ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.done, size: 16),
+                      label: const Text(
+                        'Entregado',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.green.shade800,
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ),
                   ),
                 ),
             ],

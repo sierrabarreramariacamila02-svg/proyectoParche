@@ -187,26 +187,47 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
         );
       }
 
-      // 🚀 PASO 1 IMPLEMENTADO: Registrar la notificación en Supabase
-      try {
-        final supabase = Supabase.instance.client;
-        final tituloNotif = _esEdicion
-            ? '¡Producto actualizado! 🍔'
-            : '¡Nuevo producto en El Parche! 🍔';
-        final cuerpoNotif = _esEdicion
-            ? 'Hemos actualizado el plato "$nombre". ¡Ven a probarlo!'
+      final esDescuento = _esEdicion && precio < widget.producto!.precio;
+      final debeNotificar = !_esEdicion || esDescuento;
+      String? errorNotificacion;
+
+      if (debeNotificar) {
+        final tituloNotif = esDescuento
+            ? 'Descuento en $nombre'
+            : 'Nuevo producto en El Parche';
+        final cuerpoNotif = esDescuento
+            ? 'El precio de "$nombre" bajó de '
+                  '\$${widget.producto!.precio.toStringAsFixed(0)} a '
+                  '\$${precio.toStringAsFixed(0)}.'
             : 'Prueba nuestro nuevo plato "$nombre". $descripcion';
 
-        await supabase.from('notificaciones').insert({
-          'titulo': tituloNotif,
-          'cuerpo': cuerpoNotif,
-          'leida': false,
-        });
-      } catch (errNotif) {
-        print('Error registrando notificación en Supabase: $errNotif');
+        try {
+          await Supabase.instance.client.from('notificaciones').insert({
+            'titulo': tituloNotif,
+            'cuerpo': cuerpoNotif,
+            'leida': false,
+          });
+        } catch (error) {
+          debugPrint('Error registrando notificación: $error');
+          errorNotificacion = error.toString();
+        }
       }
 
-      if (mounted) Navigator.pop(context, true);
+      if (mounted) {
+        final messenger = ScaffoldMessenger.of(context);
+        Navigator.pop(context, true);
+        if (errorNotificacion != null) {
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text(
+                'El producto se guardó, pero no se pudo guardar la '
+                'notificación: $errorNotificacion',
+              ),
+              backgroundColor: Colors.red.shade700,
+            ),
+          );
+        }
+      }
     } catch (e) {
       if (mounted) _error(e.toString().replaceAll('Exception: ', ''));
     } finally {

@@ -29,7 +29,7 @@ class _SeguimientoPedidoState extends State<SeguimientoPedido> {
   static const _iconos = {
     'receipt_long': Icons.receipt_long,
     'restaurant': Icons.restaurant,
-    'delivery_dining': Icons.delivery_dining,
+    'delivery_dining': Icons.soup_kitchen_sharp,
     'check_circle': Icons.check_circle,
   };
 

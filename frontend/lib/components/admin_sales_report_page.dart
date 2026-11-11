@@ -69,7 +69,9 @@ class _AdminSalesReportPageState extends State<AdminSalesReportPage> {
       final orders = await _orders.listarTodosLosPedidos();
       if (!mounted) return;
       setState(() {
-        _ordersList = orders;
+        _ordersList = orders
+            .where((order) => order['estado']?.toString() == 'entregado')
+            .toList();
         _error = null;
         _loading = false;
       });
@@ -201,7 +203,7 @@ class _AdminSalesReportPageState extends State<AdminSalesReportPage> {
             ),
             const SizedBox(height: 4),
             const Text(
-              'Consulta las ventas y pedidos registrados.',
+              'Consulta las ventas y pedidos entregados.',
               style: TextStyle(color: Colors.black54),
             ),
             const SizedBox(height: 12),

@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:elparchee/app_colors.dart';
 import 'package:elparchee/components/inventario.dart';
+import 'package:elparchee/pantallas/notificaciones.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'mesero_perfil.dart';
 import '../services/restaurant_order_service.dart';
@@ -75,17 +77,38 @@ class _CocinaState extends State<Cocina> with SingleTickerProviderStateMixin {
     setState(() => _updatingOrders.add(id));
     try {
       await _orders.actualizarEstado(int.parse(id), status);
+      String? notificationError;
+      if (status == 'listo') {
+        try {
+          await Supabase.instance.client.from('notificaciones').insert({
+            'titulo': 'Pedido #$id listo para entregar',
+            'cuerpo': 'El pedido de ${_orderPlace(order)} está listo.',
+            'leida': false,
+          });
+        } catch (error) {
+          debugPrint('Error guardando la notificación de pedido listo: $error');
+          notificationError = error.toString();
+        }
+      }
+
       await _loadOrders();
       if (!mounted) return;
       final ready = status == 'listo';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            ready
+            notificationError != null
+                ? 'Pedido #$id listo, pero no se pudo guardar el aviso: '
+                      '$notificationError'
+                : ready
                 ? 'Pedido #$id listo. El mesero recibirá el aviso.'
                 : 'Pedido #$id tomado para preparación.',
           ),
-          backgroundColor: ready ? Colors.green.shade800 : AppColors.barraHome,
+          backgroundColor: notificationError != null
+              ? Colors.red.shade700
+              : ready
+              ? Colors.green.shade800
+              : AppColors.barraHome,
         ),
       );
     } catch (error) {
@@ -152,6 +175,7 @@ class _CocinaState extends State<Cocina> with SingleTickerProviderStateMixin {
         backgroundColor: AppColors.barraHome,
         foregroundColor: Colors.white,
         actions: [
+          const notificacionesButton(),
           IconButton(
             tooltip: 'Actualizar pedidos',
             onPressed: _refreshing ? null : _loadOrders,

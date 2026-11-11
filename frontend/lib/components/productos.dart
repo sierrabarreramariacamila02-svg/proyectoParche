@@ -142,7 +142,7 @@ class _ProductosState extends State<Productos> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const Notificaciones()),
+                MaterialPageRoute(builder: (_) => const notificaciones()),
               );
             },
           ),

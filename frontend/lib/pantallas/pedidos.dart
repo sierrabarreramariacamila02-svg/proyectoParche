@@ -1,8 +1,6 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../app_colors.dart';
 import '../components/customer_bottom_navigation.dart';
 import '../services/restaurant_order_service.dart';
@@ -189,7 +187,7 @@ class _PedidosState extends State<Pedidos> {
             Align(
               alignment: Alignment.centerRight,
               child: TextButton.icon(
-                icon: const Icon(Icons.delivery_dining),
+                icon: const Icon(Icons.soup_kitchen_sharp),
                 label: const Text('Seguir mi domicilio'),
                 onPressed: () => _abrirSeguimiento(pedido['id']),
               ),
