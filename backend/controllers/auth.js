@@ -22,7 +22,7 @@ export const registro = async (req, res) => {
 
         const correoNormalizado = email.trim().toLowerCase();
         const { data: usuarioExiste } = await obtenerUsuarioPorEmail(correoNormalizado);
-        if (usuarioExiste && (!usuarioExiste.creado_por_admin || usuarioExiste.isverified)) {
+        if (usuarioExiste?.isverified) {
             return res.status(400).json({
                 error: "El email ya está registrado"
             });
@@ -35,16 +35,21 @@ export const registro = async (req, res) => {
 
         let nuevoUsuario;
         let error;
-        if (usuarioExiste?.creado_por_admin) {
-            const resultado = await actualizarUsuario(usuarioExiste.id, {
-                nombre,
-                password: hashedPassword,
-                telefono: telefono || null,
-                direccion: direccion || null,
+        if (usuarioExiste) {
+            const camposActualizar = {
                 codigoverificacion,
                 codigoverificacionexpiracion,
                 isverified: false,
-            });
+            };
+            if (usuarioExiste.creado_por_admin) {
+                Object.assign(camposActualizar, {
+                    nombre,
+                    password: hashedPassword,
+                    telefono: telefono || null,
+                    direccion: direccion || null,
+                });
+            }
+            const resultado = await actualizarUsuario(usuarioExiste.id, camposActualizar);
             error = resultado.error;
             nuevoUsuario = Array.isArray(resultado.data) ? resultado.data[0] : resultado.data;
         } else {
@@ -67,9 +72,9 @@ export const registro = async (req, res) => {
         // Enviar el código de verificación por correo
         const { exito, error: emailError } = await enviarcodigoverificacion(correoNormalizado, nombre, codigoverificacion);
         if (!exito) {
-            console.error("Error enviando correo de verificación:", emailError);
+            console.error("No se pudo enviar el código de verificación:", emailError.message);
             return res.status(500).json({
-                error: "Error al enviar el código de verificación. Por favor, intenta nuevamente más tarde."
+                error: emailError.message
             });
         }
 
