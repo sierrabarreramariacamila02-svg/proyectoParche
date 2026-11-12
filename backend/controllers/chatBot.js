@@ -64,6 +64,7 @@ const historialValido = (historial) =>
           role: item.role,
           content: item.content.slice(0, 1500),
         }))
+        
     : [];
 
 export const chatParche = async (req, res) => {
