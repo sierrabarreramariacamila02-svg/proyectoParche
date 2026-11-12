@@ -8,7 +8,7 @@ export const obtenerBanners = async () => {
         .order('created_at', { ascending: false });
 };
 
-// 2. Insertar un nuevo banner en la base de datos
+// 2. Insertar un nuevo banner en la base de dato
 export const crearBanner = async (bannerData) => {
     return await supabase
         .from('banners')
