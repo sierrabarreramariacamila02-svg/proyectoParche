@@ -8,6 +8,7 @@ export const obtenerProductos = async (categoria) => {
     if (categoria) {
         query = query.eq('categoria', categoria);
     }
+    
 
     const { data, error } = await query.order('id');
     return { data, error };
