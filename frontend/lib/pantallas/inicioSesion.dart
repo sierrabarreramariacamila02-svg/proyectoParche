@@ -19,7 +19,7 @@ class _IniciosesionState extends State<Iniciosesion> {
   static const _googleWebClientId = String.fromEnvironment(
     'GOOGLE_WEB_CLIENT_ID',
     defaultValue:
-        '1019899287750-nq15fegk865o24f27j6hns9appjs3rf2.apps.googleusercontent.com',
+        '1089175526478-es0rabg3qipbiimn1qua6cudkbn8msbn.apps.googleusercontent.com',
   );
 
   final TextEditingController _emailController = TextEditingController();
@@ -27,6 +27,7 @@ class _IniciosesionState extends State<Iniciosesion> {
   final UserService _userService = UserService();
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     clientId: kIsWeb ? _googleWebClientId : null,
+    serverClientId: _googleWebClientId,
   );
 
   bool _cargando = false;
@@ -86,7 +87,7 @@ class _IniciosesionState extends State<Iniciosesion> {
 
   Future<void> _login() async {
     final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
+    final password = _passwordController.text;
 
     if (email.isEmpty || password.isEmpty) {
       _mostrarMensaje('Ingresa tu email y contraseña.', color: Colors.orange);

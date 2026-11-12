@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.elparchee"
+    namespace = "com.example.elparche"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -17,7 +17,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.elparchee"
+        applicationId = "com.example.elparche"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
