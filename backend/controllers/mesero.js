@@ -1,4 +1,6 @@
 import { obtenerAtenciones, crearAtencion, actualizarAtencion } from '../models/mesero.js';
+import { supabase } from '../config/supabase.js';
+import { logError } from '../utils/logger.js';
 
 export const listar = async (req, res) => {
     try {
@@ -50,5 +52,30 @@ export const editar = async (req, res) => {
         return res.status(200).json({ message: 'Atención actualizada', mesero: data[0] });
     } catch (error) {
         return res.status(500).json({ error: error.message });
+    }
+};
+
+export const notificarPedidoMesa = async (req, res) => {
+    const numeroMesa = String(req.body?.numero_mesa ?? '').trim();
+    if (!numeroMesa) {
+        return res.status(400).json({ error: 'El número de mesa es obligatorio' });
+    }
+
+    try {
+        const { error } = await supabase.from('notificaciones').insert({
+            titulo: 'Nuevo pedido para cocina',
+            cuerpo: `El mesero envió un nuevo pedido desde la mesa ${numeroMesa}.`,
+            leida: false,
+        });
+
+        if (error) {
+            logError('notificarPedidoMesa', error);
+            return res.status(500).json({ error: 'No se pudo notificar a cocina' });
+        }
+
+        return res.status(201).json({ message: 'Cocina fue notificada' });
+    } catch (error) {
+        logError('notificarPedidoMesa', error);
+        return res.status(500).json({ error: 'No se pudo notificar a cocina' });
     }
 };
