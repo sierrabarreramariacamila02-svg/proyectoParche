@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:elparchee/models/user_model.dart';
@@ -18,6 +19,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _confirm = TextEditingController();
   bool _isLoading = false;
   bool _verPassword = false;
+  bool _aceptaTerminos = false;
+  late final TapGestureRecognizer _terminosRecognizer;
 
   // Las 3 reglas de seguridad de la contraseña
   bool get _tiene8 => _password.text.length >= 8;
@@ -25,10 +28,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool get _tieneNumero => RegExp(r'\d').hasMatch(_password.text);
 
   @override
+  void initState() {
+    super.initState();
+    _terminosRecognizer = TapGestureRecognizer()..onTap = _mostrarTerminos;
+  }
+
+  @override
   void dispose() {
     for (final c in [_nombre, _telefono, _email, _password, _confirm]) {
       c.dispose();
     }
+    _terminosRecognizer.dispose();
     super.dispose();
   }
 
@@ -64,6 +74,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (password != _confirm.text) {
       return _aviso('Las contraseñas no coinciden');
     }
+    if (!_aceptaTerminos) {
+      return _aviso(
+        'Debes aceptar los términos y condiciones para registrarte',
+      );
+    }
 
     setState(() => _isLoading = true);
     try {
@@ -86,6 +101,49 @@ class _RegisterScreenState extends State<RegisterScreen> {
       setState(() => _isLoading = false);
       _aviso(e.toString().replaceFirst('Exception: ', ''));
     }
+  }
+
+  Future<void> _mostrarTerminos() {
+    return showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFFF9F6EE),
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(22),
+          side: const BorderSide(color: Color(0xFFE59866), width: 1.5),
+        ),
+        title: const Text(
+          'Términos, Políticas y Condiciones',
+          style: TextStyle(
+            color: Color(0xFFD35400),
+            fontSize: 21,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: const SingleChildScrollView(
+          child: Text(
+            'Bienvenido a El Parche. Esta aplicación te permite consultar el menú y realizar pedidos de los productos del restaurante.\n\n'
+            '1. Uso de tus datos: Al registrarte, autorizas el uso de tu nombre, teléfono y correo electrónico para crear y gestionar tu cuenta, atender tus solicitudes y comunicarte información relacionada con el servicio.\n\n'
+            '2. Gestión de pedidos: Si realizas un pedido, los productos seleccionados y los datos que ingreses para la entrega —como nombre del receptor, teléfono, correo, dirección e indicaciones— se utilizarán para preparar, gestionar y entregar tu pedido. También se utilizará el método de pago que selecciones para procesarlo.\n\n'
+            '3. Uso responsable: Te comprometes a proporcionar información correcta, cuidar el acceso a tu cuenta y utilizar la aplicación de manera adecuada al consultar el menú y realizar pedidos.',
+            style: TextStyle(color: Colors.black87, fontSize: 14, height: 1.4),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFFD35400),
+            ),
+            child: const Text(
+              'Cerrar',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -139,6 +197,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   _campo('Contraseña', _password, secreto: true, verOjo: true),
                   _reglas(),
                   _campo('Confirmar contraseña', _confirm, secreto: true),
+                  _terminos(),
                   const SizedBox(height: 6),
                   ElevatedButton(
                     onPressed: _isLoading ? null : _registrar,
@@ -163,6 +222,43 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _terminos() {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, right: 4, bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Checkbox(
+            value: _aceptaTerminos,
+            activeColor: const Color(0xFFD35400),
+            onChanged: (acepta) =>
+                setState(() => _aceptaTerminos = acepta ?? false),
+          ),
+          Expanded(
+            child: Text.rich(
+              TextSpan(
+                style: const TextStyle(fontSize: 13, color: Colors.black87),
+                children: [
+                  const TextSpan(text: 'Acepto los '),
+                  TextSpan(
+                    text: 'Términos, Políticas y Condiciones',
+                    style: const TextStyle(
+                      color: Color(0xFFD35400),
+                      decoration: TextDecoration.underline,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    recognizer: _terminosRecognizer,
+                  ),
+                  const TextSpan(text: ' de tratamiento de datos.'),
                 ],
               ),
             ),

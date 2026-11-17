@@ -107,6 +107,25 @@ class AdminProductService {
     }
   }
 
+  static Future<void> guardarNotificacionProducto({
+    required String titulo,
+    required String cuerpo,
+  }) async {
+    final token = await _obtenerToken();
+    if (token == null || token.isEmpty) {
+      throw Exception('No hay sesión activa. Inicia sesión nuevamente.');
+    }
+
+    final response = await http.post(
+      Uri.parse('${ApiConfig.baseUrl}/productos/notificaciones'),
+      headers: {...ApiConfig.headers, 'Authorization': 'Bearer $token'},
+      body: jsonEncode({'titulo': titulo, 'cuerpo': cuerpo}),
+    );
+    if (response.statusCode != 201) {
+      throw Exception(_mensajeError(response));
+    }
+  }
+
   static Future<void> eliminarProductos(String id) async {
     final token = await _obtenerToken();
     if (token == null || token.isEmpty) {

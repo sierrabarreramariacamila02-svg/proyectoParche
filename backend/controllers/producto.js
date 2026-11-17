@@ -1,5 +1,6 @@
 import { obtenerProductos, obtenerProductoPorId, crearProducto, actualizarProducto, eliminarProducto } from '../models/producto.js';
 import { cloudinary } from '../config/cloudinary.js';
+import { obtenerClienteServiceRole } from '../config/serviceRoleSupabase.js';
 
 // Función auxiliar para subir el buffer de multer a Cloudinary mediante una Promesa
 const subirACloudinary = (fileBuffer) => {
@@ -129,5 +130,44 @@ export const eliminar = async (req, res) => {
         return res.status(200).json({ message: 'Producto eliminado correctamente' });
     } catch (error) {
         return res.status(500).json({ error: error.message });
+    }
+};
+
+export const crearNotificacionProducto = async (req, res) => {
+    const { titulo, cuerpo } = req.body;
+
+    if (
+        typeof titulo !== 'string' ||
+        !titulo.trim() ||
+        typeof cuerpo !== 'string' ||
+        !cuerpo.trim()
+    ) {
+        return res
+            .status(400)
+            .json({ error: 'El título y el cuerpo son obligatorios' });
+    }
+
+    try {
+        const { error } = await obtenerClienteServiceRole()
+            .from('notificaciones')
+            .insert({
+                titulo: titulo.trim(),
+                cuerpo: cuerpo.trim(),
+                leida: false
+            });
+
+        if (error) {
+            console.error('❌ Error al guardar notificación de producto:', error);
+            return res
+                .status(500)
+                .json({ error: 'No se pudo guardar la notificación' });
+        }
+
+        return res.status(201).json({ message: 'Notificación guardada' });
+    } catch (error) {
+        console.error('❌ Excepción al guardar notificación de producto:', error);
+        return res
+            .status(500)
+            .json({ error: 'No se pudo guardar la notificación' });
     }
 };

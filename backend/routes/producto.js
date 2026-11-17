@@ -1,5 +1,12 @@
 import express from 'express';
-import { listarProductos, obtenerProducto, crear, editar, eliminar } from '../controllers/producto.js';
+import {
+    listarProductos,
+    obtenerProducto,
+    crear,
+    editar,
+    eliminar,
+    crearNotificacionProducto
+} from '../controllers/producto.js';
 import { verificarToken, verificarAdmin } from '../middlewares/authmiddleware.js';
 import upload from '../middlewares/multer.js';
 
@@ -8,6 +15,12 @@ const router = express.Router();
 router.get('/', listarProductos);
 router.get('/:id', obtenerProducto);
 
+router.post(
+    '/notificaciones',
+    verificarToken,
+    verificarAdmin,
+    crearNotificacionProducto
+);
 
 router.post('/', verificarToken, verificarAdmin, upload.single('imagen'), crear);
 

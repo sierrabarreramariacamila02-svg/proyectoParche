@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart'; // 🚀 IMPORTACIÓN DE SUPABASE
 import '../models/producto_model.dart';
 import '../services/admin_producto_service.dart';
 import 'admin_page_selector.dart';
@@ -202,11 +201,10 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
             : 'Prueba nuestro nuevo plato "$nombre". $descripcion';
 
         try {
-          await Supabase.instance.client.from('notificaciones').insert({
-            'titulo': tituloNotif,
-            'cuerpo': cuerpoNotif,
-            'leida': false,
-          });
+          await AdminProductService.guardarNotificacionProducto(
+            titulo: tituloNotif,
+            cuerpo: cuerpoNotif,
+          );
         } catch (error) {
           debugPrint('Error registrando notificación: $error');
           errorNotificacion = error.toString();
