@@ -6,8 +6,7 @@ dotenv.config();
 let serviceRoleClient;
 
 export const obtenerClienteServiceRole = () => {
-  const serviceRoleKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const supabaseUrl = process.env.SUPABASE_URL;
 
   if (!supabaseUrl || !serviceRoleKey) {

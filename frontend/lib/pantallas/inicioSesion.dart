@@ -9,7 +9,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
 
 class Iniciosesion extends StatefulWidget {
-  const Iniciosesion({super.key});
+  final bool continuarPedido;
+
+  const Iniciosesion({super.key, this.continuarPedido = false});
 
   @override
   State<Iniciosesion> createState() => _IniciosesionState();
@@ -78,6 +80,11 @@ class _IniciosesionState extends State<Iniciosesion> {
     ).showSnackBar(SnackBar(content: Text('¡Bienvenido, ${usuario.nombre}!')));
 
     if (!mounted) return;
+
+    if (widget.continuarPedido) {
+      Navigator.pop(context, true);
+      return;
+    }
 
     Navigator.pushReplacement(
       context,

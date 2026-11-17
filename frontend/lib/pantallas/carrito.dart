@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../app_colors.dart';
 import '../components/customer_bottom_navigation.dart';
@@ -6,6 +7,7 @@ import '../models/producto_model.dart';
 import '../services/cart_service.dart';
 import 'buscar.dart';
 import 'domicilio.dart';
+import 'inicioSesion.dart';
 import 'pedidos.dart';
 
 class Carrito extends StatefulWidget {
@@ -40,6 +42,17 @@ class _CarritoState extends State<Carrito> {
   Future<void> _confirmarPedido() async {
     final cart = CartService.instance;
     if (cart.isEmpty) return;
+    final preferences = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    final token = preferences.getString('jwt_token') ?? '';
+    if (token.isEmpty) {
+      final inicioSesion = await Navigator.of(context).push<bool>(
+        MaterialPageRoute(
+          builder: (_) => const Iniciosesion(continuarPedido: true),
+        ),
+      );
+      if (inicioSesion != true || !mounted) return;
+    }
     final creado = await Navigator.of(
       context,
     ).push<bool>(MaterialPageRoute(builder: (_) => const DomicilioPantalla()));
