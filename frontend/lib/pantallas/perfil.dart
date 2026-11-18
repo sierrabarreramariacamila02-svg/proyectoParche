@@ -28,6 +28,7 @@ class _PerfilState extends State<Perfil> {
   Uint8List? _avatarBytes;
   bool _cargando = true;
   bool _guardando = false;
+  bool _eliminando = false;
   String? _error;
 
   @override
@@ -117,6 +118,49 @@ class _PerfilState extends State<Perfil> {
       MaterialPageRoute(builder: (_) => const Iniciosesion()),
       (_) => false,
     );
+  }
+
+  Future<void> _eliminarCuenta() async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Eliminar cuenta'),
+        content: const Text(
+          'Esta acción es permanente. ¿Quieres eliminar tu cuenta?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red.shade700),
+            child: const Text('Eliminar cuenta'),
+          ),
+        ],
+      ),
+    );
+    if (confirmar != true) return;
+
+    setState(() => _eliminando = true);
+    try {
+      await _profileService.eliminarCuenta();
+      final preferences = await SharedPreferences.getInstance();
+      await preferences.clear();
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const Iniciosesion()),
+        (_) => false,
+      );
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _eliminando = false);
+      _mostrarMensaje(
+        error.toString().replaceFirst('Exception: ', ''),
+        error: true,
+      );
+    }
   }
 
   Future<void> _guardar() async {
@@ -422,6 +466,33 @@ class _PerfilState extends State<Perfil> {
                       side: BorderSide(
                         color: AppColors.barraHome.withValues(alpha: 0.35),
                       ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(17),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 52,
+                  child: OutlinedButton.icon(
+                    onPressed: _eliminando ? null : _eliminarCuenta,
+                    icon: _eliminando
+                        ? const SizedBox(
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color:AppColors.barraHome,
+                            ),
+                          )
+                        : const Icon(Icons.delete_outline),
+                    label: Text(
+                      _eliminando ? 'Eliminando...' : 'Eliminar cuenta',
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.red.shade700,
+                      side: BorderSide(color:AppColors.barraHome),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(17),
                       ),

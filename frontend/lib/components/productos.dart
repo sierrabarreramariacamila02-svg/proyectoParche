@@ -2,6 +2,7 @@ import 'package:elparchee/app_colors.dart';
 import 'package:elparchee/components/chat_elparche_modal.dart';
 import 'package:elparchee/components/customer_bottom_navigation.dart';
 import 'package:elparchee/models/producto_model.dart';
+import 'package:elparchee/pantallas/buscar.dart';
 import 'package:elparchee/pantallas/carrito.dart';
 import 'package:elparchee/pantallas/detalle_producto.dart';
 import 'package:elparchee/pantallas/notificaciones.dart';
@@ -33,6 +34,8 @@ class _ProductosState extends State<Productos> {
   String _correoUsuario = '';
   double _chatRight = 16;
   double _chatBottom = 20;
+
+  bool get _adminMode => widget.isAdmin || _esAdmin;
 
   final List<String> _imagenes = [
     'assets/images/promo1.png',
@@ -130,13 +133,26 @@ class _ProductosState extends State<Productos> {
       appBar: AppBar(
         backgroundColor: AppColors.barraHome,
         title: Text(
-          _esAdmin ? 'Hola, $_nombreUsuario' : 'Hola $_nombreUsuario!',
+          _adminMode ? 'Hola, $_nombreUsuario' : 'Hola $_nombreUsuario!',
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
           ),
         ),
         actions: [
+          if (_adminMode)
+            IconButton(
+              tooltip: 'Buscar productos',
+              icon: const Icon(Icons.search, color: Colors.white),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const Buscar(isAdmin: true),
+                  ),
+                );
+              },
+            ),
           IconButton(
             icon: const Icon(Icons.notifications_none, color: Colors.white),
             onPressed: () {
@@ -148,7 +164,7 @@ class _ProductosState extends State<Productos> {
           ),
         ],
       ),
-      drawer: _esAdmin
+      drawer: _adminMode
           ? AdminDrawer(adminName: _nombreUsuario, adminEmail: _correoUsuario)
           : null,
       body: LayoutBuilder(
@@ -166,7 +182,7 @@ class _ProductosState extends State<Productos> {
           return Stack(
             children: [
               SingleChildScrollView(
-                padding: const EdgeInsets.only(bottom: 76),
+                padding: EdgeInsets.only(bottom: _adminMode ? 20 : 76),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -263,7 +279,7 @@ class _ProductosState extends State<Productos> {
                   ],
                 ),
               ),
-              if (!widget.isAdmin && !_esAdmin)
+              if (!_adminMode)
                 AnimatedPositioned(
                   right: chatRight,
                   bottom: chatBottom,
@@ -305,22 +321,26 @@ class _ProductosState extends State<Productos> {
       ),
 
       // 🛒 BOTÓN FLOTANTE DEL CARRITO EN EL CENTRO
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // TODO: Agrega aquí la navegación a tu pantalla o modal de carrito
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const Carrito()),
-          );
-        },
-        backgroundColor:
-            AppColors.buttonOrange, // El color naranja de tu diseño
-        elevation: 4,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.shopping_cart, color: Colors.white),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: const CustomerBottomNavigation(selectedIndex: 0),
+      floatingActionButton: _adminMode
+          ? null
+          : FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const Carrito()),
+                );
+              },
+              backgroundColor: AppColors.buttonOrange,
+              elevation: 4,
+              shape: const CircleBorder(),
+              child: const Icon(Icons.shopping_cart, color: Colors.white),
+            ),
+      floatingActionButtonLocation: _adminMode
+          ? null
+          : FloatingActionButtonLocation.centerDocked,
+      bottomNavigationBar: _adminMode
+          ? null
+          : const CustomerBottomNavigation(selectedIndex: 0),
     );
   }
 

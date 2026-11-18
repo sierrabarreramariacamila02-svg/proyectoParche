@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:elparchee/app_colors.dart';
 import '../pages/admin_product_list_page.dart';
+import '../services/profile_service.dart';
 
 class AdminDrawer extends StatelessWidget {
   static const Color _colorPrincipal = AppColors.barraHome;
@@ -31,6 +32,50 @@ class AdminDrawer extends StatelessWidget {
       MaterialPageRoute(builder: (_) => const Iniciosesion()),
       (route) => false,
     );
+  }
+
+  Future<void> _deleteProfile(BuildContext context) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Eliminar perfil'),
+        content: const Text(
+          'Esta acción es permanente. ¿Quieres eliminar tu perfil de administrador?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Eliminar perfil'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+
+    try {
+      await ProfileService().eliminarCuenta();
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+      if (!context.mounted) return;
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const Iniciosesion()),
+        (route) => false,
+      );
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString().replaceFirst('Exception: ', '')),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+    }
   }
 
   void _openHome(BuildContext context) {
@@ -141,6 +186,12 @@ class AdminDrawer extends StatelessWidget {
                 _item(Icons.delivery_dining_outlined, 'Domiciliarios', () {
                   _openPage(context, const AdminDeliveriesPage());
                 }),
+                _item(
+                  Icons.delete_outline,
+                  'Eliminar perfil',
+                  () => _deleteProfile(context),
+                  color: Colors.red.shade700,
+                ),
               ],
             ),
           ),

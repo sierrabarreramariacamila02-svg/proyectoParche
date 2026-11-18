@@ -281,6 +281,21 @@ export const actualizarUsuarioController = async (req, res) => {
 };
 export const updateUsuarioController = actualizarUsuarioController;
 
+export const eliminarMiCuentaController = async (req, res) => {
+  try {
+    const { error } = await eliminarUsuario(req.usuario.id);
+    if (error) {
+      logError('eliminarMiCuentaController', error);
+      return res.status(400).json({ error: 'No se pudo eliminar la cuenta' });
+    }
+
+    return res.status(200).json({ mensaje: 'Cuenta eliminada exitosamente' });
+  } catch (error) {
+    logError('eliminarMiCuentaController', error);
+    return res.status(500).json({ error: 'Error interno al eliminar la cuenta' });
+  }
+};
+
 // 4. Eliminar usuario
 export const eliminarUsuarioController = async (req, res) => {
   try {

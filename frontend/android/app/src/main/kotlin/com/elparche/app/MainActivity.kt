@@ -1,4 +1,4 @@
-package com.example.elparche
+package com.elparche.app
 
 import io.flutter.embedding.android.FlutterActivity
 
