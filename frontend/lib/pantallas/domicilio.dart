@@ -4,7 +4,6 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../app_colors.dart';
-import '../pantallas/metodopagoselector.dart';
 import '../services/cart_service.dart';
 import '../services/restaurant_order_service.dart';
 
@@ -56,6 +55,46 @@ class _DomicilioPantallaState extends State<DomicilioPantalla> {
         : 'Indicaciones: ${_indicaciones.text.trim()}',
     'Coordenadas: ${_ubicacion.latitude.toStringAsFixed(6)}, ${_ubicacion.longitude.toStringAsFixed(6)}',
   ].whereType<String>().join(', ');
+
+  static const _metodosPago = <String, IconData>{
+    'Efectivo': Icons.payments_outlined,
+    'Nequi': Icons.phone_android,
+  };
+
+  Widget _selectorPago() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Medio de pago',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: _metodosPago.entries.map((metodo) {
+            final seleccionado = _metodoPago == metodo.key;
+            return ChoiceChip(
+              avatar: Icon(metodo.value, size: 18, color: AppColors.barraHome),
+              label: Text(metodo.key),
+              selected: seleccionado,
+              showCheckmark: false,
+              selectedColor: AppColors.barraHome.withValues(alpha: 0.18),
+              labelStyle: TextStyle(
+                color: AppColors.barraHome,
+                fontWeight: seleccionado ? FontWeight.bold : FontWeight.w500,
+              ),
+              side: BorderSide(
+                color: AppColors.barraHome.withValues(alpha: 0.35),
+              ),
+              onSelected: (_) => setState(() => _metodoPago = metodo.key),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
 
   Future<void> _confirmarDomicilio() async {
     if (!_form.currentState!.validate()) return;
@@ -438,10 +477,7 @@ class _DomicilioPantallaState extends State<DomicilioPantalla> {
               icon: Icons.payments_outlined,
               title: 'Forma de pago',
               subtitle: 'Elige cómo quieres pagar tu pedido',
-              child: MetodoPagoSelector(
-                seleccionado: _metodoPago,
-                onChanged: (metodo) => setState(() => _metodoPago = metodo),
-              ),
+              child: _selectorPago(),
             ),
           ],
         ),
