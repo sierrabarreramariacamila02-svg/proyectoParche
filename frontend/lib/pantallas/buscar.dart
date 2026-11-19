@@ -7,7 +7,9 @@ import '../services/cart_service.dart';
 import '../services/producto_service.dart';
 
 class Buscar extends StatefulWidget {
-  const Buscar({super.key});
+  final bool isAdmin;
+
+  const Buscar({super.key, this.isAdmin = false});
 
   @override
   State<Buscar> createState() => _BuscarState();
@@ -126,9 +128,15 @@ class _BuscarState extends State<Buscar> {
           ),
         ],
       ),
-      floatingActionButton: const CustomerCartButton(selectedIndex: 1),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: const CustomerBottomNavigation(selectedIndex: 1),
+      floatingActionButton: widget.isAdmin
+          ? null
+          : const CustomerCartButton(selectedIndex: 1),
+      floatingActionButtonLocation: widget.isAdmin
+          ? null
+          : FloatingActionButtonLocation.centerDocked,
+      bottomNavigationBar: widget.isAdmin
+          ? null
+          : const CustomerBottomNavigation(selectedIndex: 1),
     );
   }
 

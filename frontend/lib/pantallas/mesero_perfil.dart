@@ -18,6 +18,7 @@ class _MeseroPerfilPageState extends State<MeseroPerfilPage> {
   Map<String, dynamic>? _profile;
   String? _error;
   bool _loading = true;
+  bool _deleting = false;
 
   @override
   void initState() {
@@ -76,6 +77,51 @@ class _MeseroPerfilPageState extends State<MeseroPerfilPage> {
       MaterialPageRoute(builder: (_) => const Iniciosesion()),
       (_) => false,
     );
+  }
+
+  Future<void> _deleteAccount() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Eliminar cuenta'),
+        content: const Text(
+          'Esta acción es permanente. ¿Quieres eliminar tu cuenta?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Eliminar cuenta'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+
+    setState(() => _deleting = true);
+    try {
+      await _profileService.eliminarCuenta();
+      final preferences = await SharedPreferences.getInstance();
+      await preferences.clear();
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const Iniciosesion()),
+        (_) => false,
+      );
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _deleting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString().replaceFirst('Exception: ', '')),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+    }
   }
 
   String _value(String key) {
@@ -187,13 +233,37 @@ class _MeseroPerfilPageState extends State<MeseroPerfilPage> {
                 SizedBox(
                   height: 50,
                   child: FilledButton.icon(
-                    onPressed: _logout,
+                    onPressed: _deleting ? null : _logout,
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.barraHome,
                       foregroundColor: Colors.white,
                     ),
                     icon: const Icon(Icons.logout),
                     label: const Text('Cerrar sesión'),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 50,
+                  child: OutlinedButton.icon(
+                    onPressed: _deleting ? null : _deleteAccount,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.red.shade700,
+                      side: BorderSide(color: AppColors.barraHome),
+                    ),
+                    icon: _deleting
+                        ? const SizedBox(
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.barraHome,
+                            ),
+                          )
+                        : const Icon(Icons.delete_outline),
+                    label: Text(
+                      _deleting ? 'Eliminando...' : 'Eliminar cuenta',
+                    ),
                   ),
                 ),
               ],

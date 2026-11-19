@@ -7,20 +7,12 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1089175526478:android:d4f34178aa3b15c8fbb71f",
+        "mobilesdk_app_id": "1:1089175526478:android:9f1a8a402fe31e27fbb71f",
         "android_client_info": {
-          "package_name": "com.example.elparche"
+          "package_name": "com.elparche.app"
         }
       },
       "oauth_client": [
-        {
-          "client_id": "1089175526478-0hjd5ek1slohk17m5n3sj3h8opsfa3rf.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.elparche",
-            "certificate_hash": "7c8d9ab0715548e34f1916e492ecdb3e5f33b1e5"
-          }
-        },
         {
           "client_id": "1089175526478-es0rabg3qipbiimn1qua6cudkbn8msbn.apps.googleusercontent.com",
           "client_type": 3
@@ -44,12 +36,20 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1089175526478:android:910a8424fcd3dde1fbb71f",
+        "mobilesdk_app_id": "1:1089175526478:android:d4f34178aa3b15c8fbb71f",
         "android_client_info": {
-          "package_name": "com.example.elparchee"
+          "package_name": "com.example.elparche"
         }
       },
       "oauth_client": [
+        {
+          "client_id": "1089175526478-0hjd5ek1slohk17m5n3sj3h8opsfa3rf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.elparche",
+            "certificate_hash": "7c8d9ab0715548e34f1916e492ecdb3e5f33b1e5"
+          }
+        },
         {
           "client_id": "1089175526478-es0rabg3qipbiimn1qua6cudkbn8msbn.apps.googleusercontent.com",
           "client_type": 3

@@ -7,6 +7,7 @@ import {
     actualizarMiPerfilController,
     actualizarRolUsuarioController,
     actualizarUsuarioController,
+    eliminarMiCuentaController,
     eliminarUsuarioController
 } from '../controllers/usuario.js';
 import { verificarToken, verificarAdmin } from '../middlewares/authmiddleware.js';
@@ -19,6 +20,7 @@ router.post('/', verificarToken, verificarAdmin, crearUsuarioAdminController);
 router.put('/:id/rol', verificarToken, verificarAdmin, actualizarRolUsuarioController);
 router.get('/perfil', verificarToken, getMiPerfilController);
 router.put('/perfil', verificarToken, upload.single('avatar'), actualizarMiPerfilController);
+router.delete('/perfil', verificarToken, eliminarMiCuentaController);
 router.get('/:id', verificarToken, getUsuarioPorIdController);
 router.put('/:id', verificarToken, actualizarUsuarioController);
 router.delete('/:id', verificarToken, verificarAdmin, eliminarUsuarioController);

@@ -60,9 +60,22 @@ class ProfileService {
     final body = _decode(response);
     final profile = body['usuario'];
     if (profile is! Map<String, dynamic>) {
-      throw Exception('El servidor no devolvió los datos del perfil actualizado.');
+      throw Exception(
+        'El servidor no devolvió los datos del perfil actualizado.',
+      );
     }
     return profile;
+  }
+
+  Future<void> eliminarCuenta() async {
+    final response = await http.delete(
+      Uri.parse('${ApiConfig.baseUrl}/usuarios/perfil'),
+      headers: {
+        ...ApiConfig.headers,
+        'Authorization': 'Bearer ${await _token()}',
+      },
+    );
+    _decode(response);
   }
 
   Map<String, dynamic> _decode(http.Response response) {
@@ -77,7 +90,9 @@ class ProfileService {
       final message = body is Map<String, dynamic>
           ? body['error']?.toString()
           : null;
-      throw Exception(message ?? 'Error del servidor (${response.statusCode}).');
+      throw Exception(
+        message ?? 'Error del servidor (${response.statusCode}).',
+      );
     }
     if (body is! Map<String, dynamic>) {
       throw Exception('El servidor devolvió un perfil con formato inválido.');
