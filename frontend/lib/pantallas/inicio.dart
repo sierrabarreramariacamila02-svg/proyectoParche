@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 
 import 'package:elparchee/pantallas/inicioSesion.dart';
+import 'package:elparchee/services/role_navigation.dart';
 
 class Inicio extends StatefulWidget {
   const Inicio({super.key});
@@ -24,13 +26,24 @@ class _SplashScreenState extends State<Inicio> {
     _videoController = VideoPlayerController.asset('assets/videos/fondo.mp4');
     _inicializarVideo();
 
-    _timer = Timer(const Duration(seconds: 5), () {
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const Iniciosesion()),
-        );
-      }
-    });
+    _timer = Timer(const Duration(seconds: 5), _continuar);
+  }
+
+  Future<void> _continuar() async {
+    final preferences = await SharedPreferences.getInstance();
+    final token = preferences.getString('jwt_token') ?? '';
+    final role = (preferences.getString('user_role') ?? '')
+        .toLowerCase()
+        .trim();
+    if (!mounted) return;
+
+    final destination =
+        token.isNotEmpty && role.isNotEmpty && role != 'pendiente'
+        ? pantallaParaRol(role)
+        : const Iniciosesion();
+    Navigator.of(
+      context,
+    ).pushReplacement(MaterialPageRoute(builder: (_) => destination));
   }
 
   Future<void> _inicializarVideo() async {
