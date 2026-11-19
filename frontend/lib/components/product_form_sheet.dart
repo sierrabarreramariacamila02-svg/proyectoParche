@@ -5,8 +5,6 @@ import '../services/admin_producto_service.dart';
 import 'admin_page_selector.dart';
 import 'package:elparchee/app_colors.dart';
 
-/// Bottom sheet para crear (producto == null) o editar un producto.
-/// Devuelve true si se guardó algo, para que la lista se recargue.
 class ProductFormSheet extends StatefulWidget {
   final ProductoModel? producto;
   const ProductFormSheet({super.key, this.producto});
@@ -41,12 +39,17 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
   late final _precioCtrl = TextEditingController(
     text: widget.producto?.precio != null
         ? (widget.producto!.precio % 1 == 0
-            ? widget.producto!.precio.toInt().toString()
-            : widget.producto!.precio.toString())
+              ? widget.producto!.precio.toInt().toString()
+              : widget.producto!.precio.toString())
         : '',
   );
 
-  // Lista de categorías disponibles
+  final _nuevaPersCtrl = TextEditingController();
+  final _nuevoAcompNombreCtrl = TextEditingController();
+  final _nuevoAcompPrecioCtrl = TextEditingController();
+  final _nuevaBebidaNombreCtrl = TextEditingController();
+  final _nuevaBebidaPrecioCtrl = TextEditingController();
+
   static const List<String> _categoriasOpciones = [
     'Hamburguesas',
     'Perros calientes',
@@ -56,8 +59,10 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
 
   late String _categoria;
   late bool _destacado = widget.producto?.destacado ?? false;
+  late List<String> _personalizaciones;
+  late List<OpcionExtraProducto> _acompanamientos;
+  late List<OpcionExtraProducto> _bebidas;
 
-  // Encuadre de la foto (arrastrar / zoom)
   final _capturaKey = GlobalKey();
   final _encuadreCtrl = TransformationController();
 
@@ -68,8 +73,16 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
   @override
   void initState() {
     super.initState();
-    // Normaliza la categoría inicial para coincidir exactamente con la lista
     _categoria = _obtenerCategoriaValida(widget.producto?.categoria);
+    _personalizaciones = List<String>.from(
+      widget.producto?.personalizaciones ?? const [],
+    );
+    _acompanamientos = List<OpcionExtraProducto>.from(
+      widget.producto?.acompanamientos ?? const [],
+    );
+    _bebidas = List<OpcionExtraProducto>.from(
+      widget.producto?.bebidas ?? const [],
+    );
   }
 
   String _obtenerCategoriaValida(String? catOriginal) {
@@ -87,8 +100,140 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
     _nombreCtrl.dispose();
     _descCtrl.dispose();
     _precioCtrl.dispose();
+    _nuevaPersCtrl.dispose();
+    _nuevoAcompNombreCtrl.dispose();
+    _nuevoAcompPrecioCtrl.dispose();
+    _nuevaBebidaNombreCtrl.dispose();
+    _nuevaBebidaPrecioCtrl.dispose();
     _encuadreCtrl.dispose();
     super.dispose();
+  }
+
+  // --- CRUD PERSONALIZACIONES ---
+  void _agregarPersonalizacion() {
+    final texto = _nuevaPersCtrl.text.trim();
+    if (texto.isEmpty) return;
+    if (!_personalizaciones.contains(texto)) {
+      setState(() {
+        _personalizaciones.add(texto);
+        _nuevaPersCtrl.clear();
+      });
+    }
+  }
+
+  Future<void> _editarPersonalizacion(int index) async {
+    final ctrl = TextEditingController(text: _personalizaciones[index]);
+    final nuevo = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Editar personalización'),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: 'Ej: Sin cebolla, Sin azúcar...',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _colorPrincipal,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
+    if (nuevo != null && nuevo.isNotEmpty) {
+      setState(() => _personalizaciones[index] = nuevo);
+    }
+  }
+
+  void _eliminarPersonalizacion(int index) {
+    setState(() => _personalizaciones.removeAt(index));
+  }
+
+  // --- CRUD ACOMPAÑAMIENTOS Y BEBIDAS ---
+  void _agregarExtra({
+    required TextEditingController nombreCtrl,
+    required TextEditingController precioCtrl,
+    required List<OpcionExtraProducto> destino,
+  }) {
+    final nombre = nombreCtrl.text.trim();
+    if (nombre.isEmpty) return;
+    final precio = _parsePrecio(precioCtrl.text) ?? 0.0;
+    setState(() {
+      destino.add(OpcionExtraProducto(nombre: nombre, precio: precio));
+      nombreCtrl.clear();
+      precioCtrl.clear();
+    });
+  }
+
+  Future<void> _editarExtra({
+    required String tituloDialogo,
+    required List<OpcionExtraProducto> lista,
+    required int index,
+  }) async {
+    final actual = lista[index];
+    final nombreCtrl = TextEditingController(text: actual.nombre);
+    final precioCtrl = TextEditingController(
+      text: actual.precio > 0 ? actual.precio.toStringAsFixed(0) : '',
+    );
+
+    final editado = await showDialog<OpcionExtraProducto>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(tituloDialogo),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nombreCtrl,
+              autofocus: true,
+              decoration: const InputDecoration(labelText: 'Nombre'),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: precioCtrl,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Precio adicional (COP)',
+                prefixText: '\$ ',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _colorPrincipal,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              final n = nombreCtrl.text.trim();
+              if (n.isEmpty) return;
+              final p = _parsePrecio(precioCtrl.text) ?? 0.0;
+              Navigator.pop(ctx, OpcionExtraProducto(nombre: n, precio: p));
+            },
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
+
+    if (editado != null) {
+      setState(() => lista[index] = editado);
+    }
   }
 
   void _error(String msg) {
@@ -107,7 +252,6 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
     );
   }
 
-  // Convierte el texto introducido en un double válido limpiando puntos de miles y comas
   double? _parsePrecio(String texto) {
     String limpio = texto.trim();
     if (limpio.isEmpty) return null;
@@ -126,7 +270,6 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
     return double.tryParse(limpio);
   }
 
-  // Si el admin movió la foto, se sube el recorte tal como quedó en el recuadro
   Future<File?> _imagenParaSubir() async {
     final hayFoto =
         _imagen != null ||
@@ -173,6 +316,9 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
           precio: precio,
           categoria: categoria,
           destacado: _destacado,
+          personalizaciones: _personalizaciones,
+          acompanamientos: _acompanamientos,
+          bebidas: _bebidas,
           imagen: imagen,
         );
       } else {
@@ -182,6 +328,9 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
           precio: precio,
           categoria: categoria,
           destacado: _destacado,
+          personalizaciones: _personalizaciones,
+          acompanamientos: _acompanamientos,
+          bebidas: _bebidas,
           imagen: imagen!,
         );
       }
@@ -264,6 +413,133 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
     );
   }
 
+  Widget _seccionExtras({
+    required String titulo,
+    required String hintNombre,
+    required String tituloEditar,
+    required TextEditingController nombreCtrl,
+    required TextEditingController precioCtrl,
+    required List<OpcionExtraProducto> lista,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 10),
+        Text(
+          titulo,
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+            color: _colorPrincipal,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              flex: 3,
+              child: TextField(
+                controller: nombreCtrl,
+                enabled: !_guardando,
+                decoration: InputDecoration(
+                  hintText: hintNombre,
+                  border: const OutlineInputBorder(),
+                  isDense: true,
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              flex: 2,
+              child: TextField(
+                controller: precioCtrl,
+                enabled: !_guardando,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  hintText: 'Precio',
+                  prefixText: '\$',
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+            IconButton.filled(
+              style: IconButton.styleFrom(backgroundColor: _colorPrincipal),
+              onPressed: _guardando
+                  ? null
+                  : () => _agregarExtra(
+                      nombreCtrl: nombreCtrl,
+                      precioCtrl: precioCtrl,
+                      destino: lista,
+                    ),
+              icon: const Icon(Icons.add, color: Colors.white),
+              tooltip: 'Agregar',
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        if (lista.isEmpty)
+          const Padding(
+            padding: EdgeInsets.only(bottom: 6),
+            child: Text(
+              'Sin opciones configuradas.',
+              style: TextStyle(color: Colors.black54, fontSize: 13),
+            ),
+          )
+        else
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: lista.length,
+            itemBuilder: (_, index) {
+              final item = lista[index];
+              return Card(
+                color: Colors.white,
+                margin: const EdgeInsets.only(bottom: 6),
+                child: ListTile(
+                  dense: true,
+                  title: Text(item.nombre),
+                  subtitle: Text(
+                    item.precio > 0
+                        ? '+\$${item.precio.toStringAsFixed(0)} COP'
+                        : 'Sin costo adicional',
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit_outlined, size: 18),
+                        tooltip: 'Modificar',
+                        onPressed: _guardando
+                            ? null
+                            : () => _editarExtra(
+                                tituloDialogo: tituloEditar,
+                                lista: lista,
+                                index: index,
+                              ),
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          color: Colors.red,
+                          size: 18,
+                        ),
+                        tooltip: 'Eliminar',
+                        onPressed: _guardando
+                            ? null
+                            : () => setState(() => lista.removeAt(index)),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -316,8 +592,6 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
                       setState(() => _imagen = file),
                 ),
                 const SizedBox(height: 16),
-
-                // --- SELECTOR DE CATEGORÍA ---
                 DropdownButtonFormField<String>(
                   initialValue: _categoria,
                   decoration: const InputDecoration(
@@ -342,6 +616,112 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
                 _campo(_nombreCtrl, 'Nombre del producto'),
                 _campo(_descCtrl, 'Descripción', maxLines: 2),
                 _campo(_precioCtrl, 'Precio', esNumero: true),
+
+                // --- PERSONALIZACIONES ---
+                const SizedBox(height: 4),
+                const Text(
+                  'Personalizaciones',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: _colorPrincipal,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _nuevaPersCtrl,
+                        enabled: !_guardando,
+                        decoration: const InputDecoration(
+                          hintText: 'Ej: Sin cebolla, Sin azúcar...',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        onSubmitted: (_) => _agregarPersonalizacion(),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton.filled(
+                      style: IconButton.styleFrom(
+                        backgroundColor: _colorPrincipal,
+                      ),
+                      onPressed: _guardando ? null : _agregarPersonalizacion,
+                      icon: const Icon(Icons.add, color: Colors.white),
+                      tooltip: 'Agregar personalización',
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                if (_personalizaciones.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 8),
+                    child: Text(
+                      'No hay personalizaciones agregadas.',
+                      style: TextStyle(color: Colors.black54, fontSize: 13),
+                    ),
+                  )
+                else
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: _personalizaciones.length,
+                    itemBuilder: (_, index) {
+                      return Card(
+                        color: Colors.white,
+                        margin: const EdgeInsets.only(bottom: 6),
+                        child: ListTile(
+                          dense: true,
+                          title: Text(_personalizaciones[index]),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit_outlined, size: 18),
+                                tooltip: 'Modificar',
+                                onPressed: _guardando
+                                    ? null
+                                    : () => _editarPersonalizacion(index),
+                              ),
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.delete_outline,
+                                  color: Colors.red,
+                                  size: 18,
+                                ),
+                                tooltip: 'Eliminar',
+                                onPressed: _guardando
+                                    ? null
+                                    : () => _eliminarPersonalizacion(index),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+
+                // --- ACOMPAÑAMIENTOS ---
+                _seccionExtras(
+                  titulo: 'Acompañamientos',
+                  hintNombre: 'Ej: Papas en casco',
+                  tituloEditar: 'Editar acompañamiento',
+                  nombreCtrl: _nuevoAcompNombreCtrl,
+                  precioCtrl: _nuevoAcompPrecioCtrl,
+                  lista: _acompanamientos,
+                ),
+
+                // --- BEBIDAS ---
+                _seccionExtras(
+                  titulo: 'Bebidas (según disponibilidad)',
+                  hintNombre: 'Ej: Pepsi zero',
+                  tituloEditar: 'Editar bebida',
+                  nombreCtrl: _nuevaBebidaNombreCtrl,
+                  precioCtrl: _nuevaBebidaPrecioCtrl,
+                  lista: _bebidas,
+                ),
+
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   title: const Text('Plato destacado'),

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../api_config.dart';
+import '../models/producto_model.dart';
 import 'package:http_parser/http_parser.dart';
 
 class AdminProductService {
@@ -38,7 +39,7 @@ class AdminProductService {
       bytes,
       filename:
           'productos_${DateTime.now().millisecondsSinceEpoch}.${subtipo == 'jpeg' ? 'jpg' : subtipo}',
-          contentType: MediaType('image', subtipo),
+      contentType: MediaType('image', subtipo),
     );
   }
 
@@ -48,7 +49,10 @@ class AdminProductService {
     required double precio,
     required String categoria,
     required File imagen,
-    bool destacado = false
+    bool destacado = false,
+    List<String> personalizaciones = const [],
+    List<OpcionExtraProducto> acompanamientos = const [],
+    List<OpcionExtraProducto> bebidas = const [],
   }) async {
     final token = await _obtenerToken();
     if (token == null || token.isEmpty) {
@@ -65,6 +69,13 @@ class AdminProductService {
     request.fields['precio'] = precio.toString();
     request.fields['categoria'] = categoria;
     request.fields['destacado'] = destacado.toString();
+    request.fields['personalizaciones'] = jsonEncode(personalizaciones);
+    request.fields['acompanamientos'] = jsonEncode(
+      acompanamientos.map((e) => e.toJson()).toList(),
+    );
+    request.fields['bebidas'] = jsonEncode(
+      bebidas.map((e) => e.toJson()).toList(),
+    );
     request.files.add(await _archivoImagen(imagen));
 
     final response = await http.Response.fromStream(await request.send());
@@ -80,6 +91,9 @@ class AdminProductService {
     required double precio,
     required String categoria,
     bool destacado = false,
+    List<String> personalizaciones = const [],
+    List<OpcionExtraProducto> acompanamientos = const [],
+    List<OpcionExtraProducto> bebidas = const [],
     File? imagen,
   }) async {
     final token = await _obtenerToken();
@@ -97,6 +111,13 @@ class AdminProductService {
     request.fields['precio'] = precio.toString();
     request.fields['categoria'] = categoria;
     request.fields['destacado'] = destacado.toString();
+    request.fields['personalizaciones'] = jsonEncode(personalizaciones);
+    request.fields['acompanamientos'] = jsonEncode(
+      acompanamientos.map((e) => e.toJson()).toList(),
+    );
+    request.fields['bebidas'] = jsonEncode(
+      bebidas.map((e) => e.toJson()).toList(),
+    );
     if (imagen != null) {
       request.files.add(await _archivoImagen(imagen));
     }

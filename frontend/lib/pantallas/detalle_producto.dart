@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:elparchee/pantallas/carrito.dart'; // Asegúrate de importar tu archivo carrito.dart
+import 'package:elparchee/models/producto_model.dart';
+import 'package:elparchee/pantallas/carrito.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final String title;
@@ -8,6 +9,10 @@ class ProductDetailScreen extends StatefulWidget {
   final String name;
   final String description;
   final double rawPrice;
+  final List<String> personalizaciones;
+  final List<OpcionExtraProducto> acompanamientos;
+  final List<OpcionExtraProducto> bebidas;
+  final List<String> initialPersonalizaciones;
   final String? initialAcompanamiento;
   final String? initialBebida;
   final bool initialSinCebolla;
@@ -23,6 +28,10 @@ class ProductDetailScreen extends StatefulWidget {
     required this.name,
     required this.description,
     this.rawPrice = 30000.0,
+    this.personalizaciones = const [],
+    this.acompanamientos = const [],
+    this.bebidas = const [],
+    this.initialPersonalizaciones = const [],
     this.initialAcompanamiento,
     this.initialBebida,
     this.initialSinCebolla = false,
@@ -36,7 +45,7 @@ class ProductDetailScreen extends StatefulWidget {
 }
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
-  late int cantidad;
+  int cantidad = 1;
   int paginaActualImagen = 0;
   final PageController _imageController = PageController();
 
@@ -44,8 +53,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   bool expandirAcompa = false;
   bool expandirBebidas = false;
 
-  late bool sinCebolla;
-  late bool sinLechuga;
+  List<String> _opcionesPersonalizacion = [];
+  Set<String> _personalizacionesSeleccionadas = {};
+  List<OpcionExtraProducto> _listaAcompanamientos = [];
+  List<OpcionExtraProducto> _listaBebidas = [];
+
+  bool sinCebolla = false;
+  bool sinLechuga = false;
 
   String? opcionAcompanamiento;
   double precioAcompanamiento = 0.0;
@@ -56,33 +70,62 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   @override
   void initState() {
     super.initState();
+    _sincronizarDesdeWidget();
+  }
+
+  @override
+  void didUpdateWidget(covariant ProductDetailScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.personalizaciones != widget.personalizaciones ||
+        oldWidget.acompanamientos != widget.acompanamientos ||
+        oldWidget.bebidas != widget.bebidas ||
+        oldWidget.name != widget.name) {
+      _sincronizarDesdeWidget();
+    }
+  }
+
+  void _sincronizarDesdeWidget() {
     cantidad = widget.initialCantidad;
     sinCebolla = widget.initialSinCebolla;
     sinLechuga = widget.initialSinLechuga;
 
-    // Cargar acompañamiento previo si existe
+    _opcionesPersonalizacion = List<String>.from(widget.personalizaciones);
+    _personalizacionesSeleccionadas = Set<String>.from(
+      widget.initialPersonalizaciones,
+    );
+    if (sinCebolla && _opcionesPersonalizacion.contains('Sin Cebolla')) {
+      _personalizacionesSeleccionadas.add('Sin Cebolla');
+    }
+    if (sinLechuga && _opcionesPersonalizacion.contains('Sin Lechuga')) {
+      _personalizacionesSeleccionadas.add('Sin Lechuga');
+    }
+
+    _listaAcompanamientos = List<OpcionExtraProducto>.from(
+      widget.acompanamientos,
+    );
+    _listaBebidas = List<OpcionExtraProducto>.from(widget.bebidas);
+
+    opcionAcompanamiento = null;
+    precioAcompanamiento = 0.0;
     if (widget.initialAcompanamiento != null) {
-      opcionAcompanamiento = widget.initialAcompanamiento;
-      if (opcionAcompanamiento == 'Papas en casco medianas') {
-        precioAcompanamiento = 3500.0;
-      }
-      if (opcionAcompanamiento == 'Papas corral grandes') {
-        precioAcompanamiento = 5000.0;
-      }
-      if (opcionAcompanamiento == 'Papas Espiral') {
-        precioAcompanamiento = 6000.0;
+      final encontrado = _listaAcompanamientos.where(
+        (e) => e.nombre == widget.initialAcompanamiento,
+      );
+      if (encontrado.isNotEmpty) {
+        opcionAcompanamiento = encontrado.first.nombre;
+        precioAcompanamiento = encontrado.first.precio;
       }
     }
 
-    // Cargar bebida previa si existe
+    opcionBebida = null;
+    precioBebida = 0.0;
     if (widget.initialBebida != null) {
-      opcionBebida = widget.initialBebida;
-      if (opcionBebida == 'Gaseosa pepsi zero' ||
-          opcionBebida == 'Gaseosa pepsi') {
-        precioBebida = 4000.0;
-      }
-      if (opcionBebida == 'Mr tea limon') {
-        precioBebida = 4500.0;
+      final encontrada = _listaBebidas.where(
+        (e) => e.nombre == widget.initialBebida,
+      );
+      if (encontrada.isNotEmpty) {
+        opcionBebida = encontrada.first.nombre;
+        precioBebida = encontrada.first.precio;
       }
     }
   }
@@ -109,7 +152,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         : widget.imageUrl;
     final List<String> imagenesCarrusel = List.filled(3, imagenProducto);
 
-    int totalPersonalizaciones = (sinCebolla ? 1 : 0) + (sinLechuga ? 1 : 0);
+    final int totalPersonalizaciones = _personalizacionesSeleccionadas.length;
 
     return Scaffold(
       backgroundColor: bgBeige,
@@ -135,8 +178,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 20),
-
-            // Carrusel de imágenes
             SizedBox(
               height: 220,
               child: PageView.builder(
@@ -171,7 +212,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               ),
             ),
             const SizedBox(height: 10),
-
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
@@ -191,7 +231,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               ),
             ),
             const SizedBox(height: 16),
-
             Text(
               widget.price,
               style: const TextStyle(
@@ -220,176 +259,155 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             ),
             const SizedBox(height: 24),
 
-            // SECCIÓN: Personalizaciones
+            // PERSONALIZACIONES
             _buildAccordionSection(
               title: 'Personalizaciones',
-              subtitle: 'Puedes seleccionar varias opciones',
+              subtitle: _opcionesPersonalizacion.isEmpty
+                  ? 'Sin opciones configuradas en administración'
+                  : 'Puedes seleccionar varias opciones',
               statusText: totalPersonalizaciones > 0 ? 'Listo' : null,
               isStatusGreen: true,
               isExpanded: expandirPersonalizaciones,
               onTap: () => setState(
                 () => expandirPersonalizaciones = !expandirPersonalizaciones,
               ),
-              children: [
-                CheckboxListTile(
-                  title: const Text(
-                    'Sin Cebolla',
-                    style: TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                  value: sinCebolla,
-                  activeColor: orangeColor,
-                  checkboxShape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  onChanged: (val) => setState(() => sinCebolla = val ?? false),
-                ),
-                CheckboxListTile(
-                  title: const Text(
-                    'Sin Lechuga',
-                    style: TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                  value: sinLechuga,
-                  activeColor: orangeColor,
-                  checkboxShape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  onChanged: (val) => setState(() => sinLechuga = val ?? false),
-                ),
-              ],
+              children: _opcionesPersonalizacion.isEmpty
+                  ? [
+                      const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Text(
+                          'No hay personalizaciones configuradas para este producto.',
+                          style: TextStyle(color: Colors.black54, fontSize: 14),
+                        ),
+                      ),
+                    ]
+                  : _opcionesPersonalizacion.map((opcion) {
+                      final marcada = _personalizacionesSeleccionadas.contains(
+                        opcion,
+                      );
+                      return CheckboxListTile(
+                        title: Text(
+                          opcion,
+                          style: const TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                        value: marcada,
+                        activeColor: orangeColor,
+                        checkboxShape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        onChanged: (val) {
+                          setState(() {
+                            if (val == true) {
+                              _personalizacionesSeleccionadas.add(opcion);
+                            } else {
+                              _personalizacionesSeleccionadas.remove(opcion);
+                            }
+                            sinCebolla = _personalizacionesSeleccionadas
+                                .contains('Sin Cebolla');
+                            sinLechuga = _personalizacionesSeleccionadas
+                                .contains('Sin Lechuga');
+                          });
+                        },
+                      );
+                    }).toList(),
             ),
             const SizedBox(height: 12),
 
-            // SECCIÓN: Acompañamientos
+            // ACOMPAÑAMIENTOS
             _buildAccordionSection(
               title: 'Acompanamientos',
-              subtitle: 'Puedes seleccionar varias opciones',
+              subtitle: _listaAcompanamientos.isEmpty
+                  ? 'Sin acompañamientos configurados en administración'
+                  : 'Puedes seleccionar una opción',
               statusText: opcionAcompanamiento != null ? 'Listo' : null,
               isStatusGreen: true,
               isExpanded: expandirAcompa,
               onTap: () => setState(() => expandirAcompa = !expandirAcompa),
-              children: [
-                _buildSquareOption(
-                  text: 'Papas en casco medianas',
-                  priceText: '3,500 COP',
-                  isSelected: opcionAcompanamiento == 'Papas en casco medianas',
-                  onTap: () {
-                    setState(() {
-                      if (opcionAcompanamiento == 'Papas en casco medianas') {
-                        opcionAcompanamiento = null;
-                        precioAcompanamiento = 0.0;
-                      } else {
-                        opcionAcompanamiento = 'Papas en casco medianas';
-                        precioAcompanamiento = 3500.0;
-                      }
-                    });
-                  },
-                ),
-                _buildSquareOption(
-                  text: 'Papas corral grandes',
-                  priceText: '5,000 COP',
-                  isSelected: opcionAcompanamiento == 'Papas corral grandes',
-                  onTap: () {
-                    setState(() {
-                      if (opcionAcompanamiento == 'Papas corral grandes') {
-                        opcionAcompanamiento = null;
-                        precioAcompanamiento = 0.0;
-                      } else {
-                        opcionAcompanamiento = 'Papas corral grandes';
-                        precioAcompanamiento = 5000.0;
-                      }
-                    });
-                  },
-                ),
-                _buildSquareOption(
-                  text: 'Papas Espiral',
-                  priceText: '6,000 COP',
-                  isSelected: opcionAcompanamiento == 'Papas Espiral',
-                  onTap: () {
-                    setState(() {
-                      if (opcionAcompanamiento == 'Papas Espiral') {
-                        opcionAcompanamiento = null;
-                        precioAcompanamiento = 0.0;
-                      } else {
-                        opcionAcompanamiento = 'Papas Espiral';
-                        precioAcompanamiento = 6000.0;
-                      }
-                    });
-                  },
-                ),
-              ],
+              children: _listaAcompanamientos.isEmpty
+                  ? [
+                      const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Text(
+                          'No hay acompañamientos configurados para este producto.',
+                          style: TextStyle(color: Colors.black54, fontSize: 14),
+                        ),
+                      ),
+                    ]
+                  : _listaAcompanamientos.map((acomp) {
+                      final seleccionado = opcionAcompanamiento == acomp.nombre;
+                      return _buildSquareOption(
+                        text: acomp.nombre,
+                        priceText: acomp.precio > 0
+                            ? '${acomp.precio.toStringAsFixed(0)} COP'
+                            : 'Gratis',
+                        isSelected: seleccionado,
+                        onTap: () {
+                          setState(() {
+                            if (seleccionado) {
+                              opcionAcompanamiento = null;
+                              precioAcompanamiento = 0.0;
+                            } else {
+                              opcionAcompanamiento = acomp.nombre;
+                              precioAcompanamiento = acomp.precio;
+                            }
+                          });
+                        },
+                      );
+                    }).toList(),
             ),
             const SizedBox(height: 12),
 
-            // SECCIÓN: Bebida
+            // BEBIDAS
             _buildAccordionSection(
               title: 'Bebida (segun disponibilidad)',
-              subtitle: 'Puedes seleccionar varias opciones',
+              subtitle: _listaBebidas.isEmpty
+                  ? 'Sin bebidas configuradas en administración'
+                  : 'Puedes seleccionar una opción disponible',
               statusText: opcionBebida != null ? 'Listo' : null,
               isStatusGreen: true,
               isExpanded: expandirBebidas,
               onTap: () => setState(() => expandirBebidas = !expandirBebidas),
-              children: [
-                _buildSquareOption(
-                  text: 'Gaseosa pepsi zero',
-                  priceText: '4,000 COP',
-                  isSelected: opcionBebida == 'Gaseosa pepsi zero',
-                  onTap: () {
-                    setState(() {
-                      if (opcionBebida == 'Gaseosa pepsi zero') {
-                        opcionBebida = null;
-                        precioBebida = 0.0;
-                      } else {
-                        opcionBebida = 'Gaseosa pepsi zero';
-                        precioBebida = 4000.0;
-                      }
-                    });
-                  },
-                ),
-                _buildSquareOption(
-                  text: 'Gaseosa pepsi',
-                  priceText: '4,000 COP',
-                  isSelected: opcionBebida == 'Gaseosa pepsi',
-                  onTap: () {
-                    setState(() {
-                      if (opcionBebida == 'Gaseosa pepsi') {
-                        opcionBebida = null;
-                        precioBebida = 0.0;
-                      } else {
-                        opcionBebida = 'Gaseosa pepsi';
-                        precioBebida = 4000.0;
-                      }
-                    });
-                  },
-                ),
-                _buildSquareOption(
-                  text: 'Mr tea limon',
-                  priceText: '4,500 COP',
-                  isSelected: opcionBebida == 'Mr tea limon',
-                  onTap: () {
-                    setState(() {
-                      if (opcionBebida == 'Mr tea limon') {
-                        opcionBebida = null;
-                        precioBebida = 0.0;
-                      } else {
-                        opcionBebida = 'Mr tea limon';
-                        precioBebida = 4500.0;
-                      }
-                    });
-                  },
-                ),
-              ],
+              children: _listaBebidas.isEmpty
+                  ? [
+                      const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Text(
+                          'No hay bebidas configuradas para este producto.',
+                          style: TextStyle(color: Colors.black54, fontSize: 14),
+                        ),
+                      ),
+                    ]
+                  : _listaBebidas.map((bebida) {
+                      final seleccionada = opcionBebida == bebida.nombre;
+                      return _buildSquareOption(
+                        text: bebida.nombre,
+                        priceText: bebida.precio > 0
+                            ? '${bebida.precio.toStringAsFixed(0)} COP'
+                            : 'Gratis',
+                        isSelected: seleccionada,
+                        onTap: () {
+                          setState(() {
+                            if (seleccionada) {
+                              opcionBebida = null;
+                              precioBebida = 0.0;
+                            } else {
+                              opcionBebida = bebida.nombre;
+                              precioBebida = bebida.precio;
+                            }
+                          });
+                        },
+                      );
+                    }).toList(),
             ),
             const SizedBox(height: 80),
           ],
         ),
       ),
-
-      // Botón Inferior: Retorna y guarda la información en el Carrito global
       bottomSheet: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Colors.white,
-          boxShadow: const [
+          boxShadow: [
             BoxShadow(
               color: Colors.black12,
               blurRadius: 10,
@@ -444,6 +462,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     elevation: 0,
                   ),
                   onPressed: () {
+                    final listaPers = _personalizacionesSeleccionadas.toList();
                     final itemActualizado = {
                       "nombre": widget.name,
                       "precio": precioUnitarioTotal.toInt(),
@@ -452,6 +471,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       "imageUrl": widget.imageUrl,
                       "description": widget.description,
                       "rawPrice": widget.rawPrice,
+                      "personalizaciones": listaPers,
                       "acompanamiento": opcionAcompanamiento,
                       "bebida": opcionBebida,
                       "sinCebolla": sinCebolla,

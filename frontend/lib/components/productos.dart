@@ -4,6 +4,7 @@ import 'package:elparchee/components/customer_bottom_navigation.dart';
 import 'package:elparchee/models/producto_model.dart';
 import 'package:elparchee/pantallas/carrito.dart';
 import 'package:elparchee/pantallas/detalle_producto.dart';
+import 'package:elparchee/pantallas/manual_usuario.dart';
 import 'package:elparchee/pantallas/notificaciones.dart';
 import 'package:elparchee/services/cart_service.dart';
 import 'package:elparchee/services/destacado_service.dart';
@@ -40,7 +41,7 @@ class _ProductosState extends State<Productos> {
     'assets/images/promo3.png',
   ];
 
-  final List<Map<String, Object>> _categorias = [
+  final List<Map<String, dynamic>> _categorias = [
     {
       'img': 'assets/images/hamburguesa.png',
       'lbl': 'Hamburguesas',
@@ -137,6 +138,16 @@ class _ProductosState extends State<Productos> {
           ),
         ),
         actions: [
+          IconButton(
+            tooltip: 'Manual de usuario',
+            icon: const Icon(Icons.menu_book_outlined, color: Colors.white),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ManualUsuario()),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.notifications_none, color: Colors.white),
             onPressed: () {
@@ -303,18 +314,14 @@ class _ProductosState extends State<Productos> {
           );
         },
       ),
-
-      // 🛒 BOTÓN FLOTANTE DEL CARRITO EN EL CENTRO
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // TODO: Agrega aquí la navegación a tu pantalla o modal de carrito
           Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const Carrito()),
           );
         },
-        backgroundColor:
-            AppColors.buttonOrange, // El color naranja de tu diseño
+        backgroundColor: AppColors.buttonOrange,
         elevation: 4,
         shape: const CircleBorder(),
         child: const Icon(Icons.shopping_cart, color: Colors.white),
@@ -350,6 +357,9 @@ class _ProductosState extends State<Productos> {
                   name: producto.nombre,
                   description: producto.descripcion,
                   rawPrice: producto.precio,
+                  personalizaciones: producto.personalizaciones,
+                  acompanamientos: producto.acompanamientos,
+                  bebidas: producto.bebidas,
                   onAgregarAlCarrito: (item) {
                     CartService.instance.add(
                       producto,
@@ -546,6 +556,9 @@ class _DetalleCategoriaScreenState extends State<_DetalleCategoriaScreen> {
                         name: producto.nombre,
                         description: producto.descripcion,
                         rawPrice: producto.precio,
+                        personalizaciones: producto.personalizaciones,
+                        acompanamientos: producto.acompanamientos,
+                        bebidas: producto.bebidas,
                         onAgregarAlCarrito: (item) {
                           CartService.instance.add(
                             producto,

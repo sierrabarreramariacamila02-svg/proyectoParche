@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; 
-import 'package:intl/intl.dart'; // 👈 Importante para formatear el precio limpio
+import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:elparchee/app_colors.dart';
-import '../services/producto_service.dart'; // 👈 Tu servicio
-import '../models/producto_model.dart';       // 👈 Tu modelo
+import 'package:elparchee/pantallas/detalle_producto.dart';
+import '../services/producto_service.dart';
+import '../models/producto_model.dart';
 
 class MenuHamburguesas extends StatefulWidget {
   const MenuHamburguesas({super.key});
@@ -13,7 +14,6 @@ class MenuHamburguesas extends StatefulWidget {
 }
 
 class _MenuHamburguesasState extends State<MenuHamburguesas> {
-  // 1. Instanciamos el servicio y declaramos el Future para la lista
   final ProductoService _productoService = ProductoService();
   late Future<List<ProductoModel>> _futureHamburguesas;
 
@@ -22,8 +22,28 @@ class _MenuHamburguesasState extends State<MenuHamburguesas> {
   @override
   void initState() {
     super.initState();
-    // 2. Cargamos las hamburguesas filtrando exactamente por la categoría del panel admin
-    _futureHamburguesas = _productoService.obtenerProductos(categoria: 'Hamburguesas');
+    _futureHamburguesas = _productoService.obtenerProductos(
+      categoria: 'Hamburguesas',
+    );
+  }
+
+  void _abrirDetalle(ProductoModel item, NumberFormat formatoMoneda) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ProductDetailScreen(
+          title: item.categoria.isNotEmpty ? item.categoria : 'Hamburguesas',
+          imageUrl: item.imagenUrl,
+          price: '\$${formatoMoneda.format(item.precio)} COP',
+          name: item.nombre,
+          description: item.descripcion,
+          rawPrice: item.precio,
+          personalizaciones: item.personalizaciones,
+          acompanamientos: item.acompanamientos,
+          bebidas: item.bebidas,
+        ),
+      ),
+    );
   }
 
   @override
@@ -42,7 +62,6 @@ class _MenuHamburguesasState extends State<MenuHamburguesas> {
               onSearchChanged: (text) => setState(() => _query = text),
             ),
             Expanded(
-              // 3. Usamos FutureBuilder para manejar la carga de datos del servidor y Cloudinary
               child: FutureBuilder<List<ProductoModel>>(
                 future: _futureHamburguesas,
                 builder: (context, snapshot) {
@@ -51,19 +70,24 @@ class _MenuHamburguesasState extends State<MenuHamburguesas> {
                   } else if (snapshot.hasError) {
                     return Center(child: Text('Error: ${snapshot.error}'));
                   } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Center(child: Text('No hay hamburguesas registradas'));
+                    return const Center(
+                      child: Text('No hay hamburguesas registradas'),
+                    );
                   }
 
-                  // Obtenemos los productos y filtramos por la barra de búsqueda si el usuario escribe
                   final productos = snapshot.data!;
                   final filtered = productos
-                      .where((e) => e.nombre
-                          .toLowerCase()
-                          .contains(_query.trim().toLowerCase()))
+                      .where(
+                        (e) => e.nombre.toLowerCase().contains(
+                          _query.trim().toLowerCase(),
+                        ),
+                      )
                       .toList();
 
                   if (filtered.isEmpty) {
-                    return const Center(child: Text('No encontramos esa hamburguesa'));
+                    return const Center(
+                      child: Text('No encontramos esa hamburguesa'),
+                    );
                   }
 
                   return ListView.builder(
@@ -71,113 +95,132 @@ class _MenuHamburguesasState extends State<MenuHamburguesas> {
                     itemCount: filtered.length,
                     itemBuilder: (context, i) {
                       final item = filtered[i];
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.barraInferior,
-                          borderRadius: BorderRadius.circular(15),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Colors.black12,
-                              blurRadius: 4,
-                              offset: Offset(0, 4),
-                            )
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            // 4. Imagen dinámica desde Cloudinary con respaldo si no tiene
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: item.imagenUrl.isNotEmpty
-                                  ? Image.network(
-                                      item.imagenUrl,
-                                      width: 60,
-                                      height: 60,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) =>
-                                          const Icon(Icons.fastfood, size: 40, color: Colors.orange),
-                                    )
-                                  : const Icon(Icons.fastfood, size: 50, color: Colors.orange),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    item.nombre,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15,
-                                    ),
-                                  ),
-                                  Text(
-                                    item.descripcion,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      color: Colors.black54,
-                                      fontSize: 11,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      // 5. Precio formateado visualmente con puntos (ej: $ 14.000)
-                                      Text(
-                                        '\$ ${formatoMoneda.format(item.precio)}',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Color(0xFF7A1C1C),
-                                          fontSize: 15,
-                                        ),
+                      return InkWell(
+                        borderRadius: BorderRadius.circular(15),
+                        onTap: () => _abrirDetalle(item, formatoMoneda),
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColors.barraInferior,
+                            borderRadius: BorderRadius.circular(15),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Colors.black12,
+                                blurRadius: 4,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: item.imagenUrl.isNotEmpty
+                                    ? Image.network(
+                                        item.imagenUrl,
+                                        width: 60,
+                                        height: 60,
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) =>
+                                                const Icon(
+                                                  Icons.fastfood,
+                                                  size: 40,
+                                                  color: Colors.orange,
+                                                ),
+                                      )
+                                    : const Icon(
+                                        Icons.fastfood,
+                                        size: 50,
+                                        color: Colors.orange,
                                       ),
-                                      Row(
-                                        children: [
-                                          IconButton(
-                                            icon: const Icon(Icons.remove,
-                                                size: 18),
-                                            onPressed: () {},
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item.nombre,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                    Text(
+                                      item.descripcion,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: Colors.black54,
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          '\$ ${formatoMoneda.format(item.precio)}',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFF7A1C1C),
+                                            fontSize: 15,
                                           ),
-                                          const Text(
-                                            '1',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
+                                        ),
+                                        Row(
+                                          children: [
+                                            IconButton(
+                                              icon: const Icon(
+                                                Icons.remove,
+                                                size: 18,
+                                              ),
+                                              onPressed: () {},
                                             ),
-                                          ),
-                                          IconButton(
-                                            icon: const Icon(Icons.add,
-                                                size: 18),
-                                            onPressed: () {},
-                                          ),
-                                          ElevatedButton(
-                                            onPressed: () {},
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor:
-                                                  const Color(0xFF7A1C1C),
-                                              shadowColor: Colors.black12,
-                                              elevation: 4,
-                                            ),
-                                            child: const Text(
-                                              'Añadir',
+                                            const Text(
+                                              '1',
                                               style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
                                               ),
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ],
+                                            IconButton(
+                                              icon: const Icon(
+                                                Icons.add,
+                                                size: 18,
+                                              ),
+                                              onPressed: () {},
+                                            ),
+                                            ElevatedButton(
+                                              onPressed: () => _abrirDetalle(
+                                                item,
+                                                formatoMoneda,
+                                              ),
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: const Color(
+                                                  0xFF7A1C1C,
+                                                ),
+                                                shadowColor: Colors.black12,
+                                                elevation: 4,
+                                              ),
+                                              child: const Text(
+                                                'Añadir',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       );
                     },
@@ -193,10 +236,7 @@ class _MenuHamburguesasState extends State<MenuHamburguesas> {
           icon: const Icon(Icons.shopping_cart, color: Colors.white),
           label: const Text(
             'Ver mi Pedido',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           ),
         ),
       ),
@@ -204,7 +244,6 @@ class _MenuHamburguesasState extends State<MenuHamburguesas> {
   }
 }
 
-// Clases de Header y Botones se mantienen exactamente igual abajo...
 class _MenuHeader extends StatelessWidget {
   const _MenuHeader({
     required this.title,
