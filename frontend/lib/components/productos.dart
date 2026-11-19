@@ -374,7 +374,6 @@ class _ProductosState extends State<Productos> {
                   description: producto.descripcion,
                   rawPrice: producto.precio,
                   personalizaciones: producto.personalizaciones,
-                  acompanamientos: producto.acompanamientos,
                   bebidas: producto.bebidas,
                   onAgregarAlCarrito: (item) {
                     CartService.instance.add(
@@ -573,7 +572,6 @@ class _DetalleCategoriaScreenState extends State<_DetalleCategoriaScreen> {
                         description: producto.descripcion,
                         rawPrice: producto.precio,
                         personalizaciones: producto.personalizaciones,
-                        acompanamientos: producto.acompanamientos,
                         bebidas: producto.bebidas,
                         onAgregarAlCarrito: (item) {
                           CartService.instance.add(

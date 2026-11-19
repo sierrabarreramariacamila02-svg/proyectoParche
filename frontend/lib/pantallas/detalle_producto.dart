@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:elparchee/models/producto_model.dart';
 import 'package:elparchee/pantallas/carrito.dart';
@@ -10,10 +11,8 @@ class ProductDetailScreen extends StatefulWidget {
   final String description;
   final double rawPrice;
   final List<String> personalizaciones;
-  final List<OpcionExtraProducto> acompanamientos;
   final List<OpcionExtraProducto> bebidas;
   final List<String> initialPersonalizaciones;
-  final String? initialAcompanamiento;
   final String? initialBebida;
   final bool initialSinCebolla;
   final bool initialSinLechuga;
@@ -29,10 +28,8 @@ class ProductDetailScreen extends StatefulWidget {
     required this.description,
     this.rawPrice = 30000.0,
     this.personalizaciones = const [],
-    this.acompanamientos = const [],
     this.bebidas = const [],
     this.initialPersonalizaciones = const [],
-    this.initialAcompanamiento,
     this.initialBebida,
     this.initialSinCebolla = false,
     this.initialSinLechuga = false,
@@ -41,28 +38,26 @@ class ProductDetailScreen extends StatefulWidget {
   });
 
   @override
-  State<ProductDetailScreen> createState() => _ProductDetailScreenState();
+  State<ProductDetailScreen> createState() =>
+      _ProductDetailScreenState();
 }
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   int cantidad = 1;
   int paginaActualImagen = 0;
+
   final PageController _imageController = PageController();
 
   bool expandirPersonalizaciones = false;
-  bool expandirAcompa = false;
   bool expandirBebidas = false;
 
   List<String> _opcionesPersonalizacion = [];
   Set<String> _personalizacionesSeleccionadas = {};
-  List<OpcionExtraProducto> _listaAcompanamientos = [];
+
   List<OpcionExtraProducto> _listaBebidas = [];
 
   bool sinCebolla = false;
   bool sinLechuga = false;
-
-  String? opcionAcompanamiento;
-  double precioAcompanamiento = 0.0;
 
   String? opcionBebida;
   double precioBebida = 0.0;
@@ -76,8 +71,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   @override
   void didUpdateWidget(covariant ProductDetailScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
+
     if (oldWidget.personalizaciones != widget.personalizaciones ||
-        oldWidget.acompanamientos != widget.acompanamientos ||
         oldWidget.bebidas != widget.bebidas ||
         oldWidget.name != widget.name) {
       _sincronizarDesdeWidget();
@@ -89,40 +84,32 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     sinCebolla = widget.initialSinCebolla;
     sinLechuga = widget.initialSinLechuga;
 
-    _opcionesPersonalizacion = List<String>.from(widget.personalizaciones);
-    _personalizacionesSeleccionadas = Set<String>.from(
-      widget.initialPersonalizaciones,
-    );
-    if (sinCebolla && _opcionesPersonalizacion.contains('Sin Cebolla')) {
+    _opcionesPersonalizacion =
+        List<String>.from(widget.personalizaciones);
+
+    _personalizacionesSeleccionadas =
+        Set<String>.from(widget.initialPersonalizaciones);
+
+    if (sinCebolla &&
+        _opcionesPersonalizacion.contains('Sin Cebolla')) {
       _personalizacionesSeleccionadas.add('Sin Cebolla');
     }
-    if (sinLechuga && _opcionesPersonalizacion.contains('Sin Lechuga')) {
+
+    if (sinLechuga &&
+        _opcionesPersonalizacion.contains('Sin Lechuga')) {
       _personalizacionesSeleccionadas.add('Sin Lechuga');
     }
 
-    _listaAcompanamientos = List<OpcionExtraProducto>.from(
-      widget.acompanamientos,
-    );
     _listaBebidas = List<OpcionExtraProducto>.from(widget.bebidas);
-
-    opcionAcompanamiento = null;
-    precioAcompanamiento = 0.0;
-    if (widget.initialAcompanamiento != null) {
-      final encontrado = _listaAcompanamientos.where(
-        (e) => e.nombre == widget.initialAcompanamiento,
-      );
-      if (encontrado.isNotEmpty) {
-        opcionAcompanamiento = encontrado.first.nombre;
-        precioAcompanamiento = encontrado.first.precio;
-      }
-    }
 
     opcionBebida = null;
     precioBebida = 0.0;
+
     if (widget.initialBebida != null) {
       final encontrada = _listaBebidas.where(
         (e) => e.nombre == widget.initialBebida,
       );
+
       if (encontrada.isNotEmpty) {
         opcionBebida = encontrada.first.nombre;
         precioBebida = encontrada.first.precio;
@@ -143,16 +130,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     const Color orangeColor = Color(0xFFE06D1A);
     const Color darkText = Color(0xFF3E1F1F);
 
-    double precioUnitarioTotal =
-        widget.rawPrice + precioAcompanamiento + precioBebida;
+    double precioUnitarioTotal = widget.rawPrice + precioBebida;
+
     double precioTotal = precioUnitarioTotal * cantidad;
 
     final imagenProducto = widget.imageUrl.isEmpty
         ? 'assets/images/ha.jpg'
         : widget.imageUrl;
-    final List<String> imagenesCarrusel = List.filled(3, imagenProducto);
 
-    final int totalPersonalizaciones = _personalizacionesSeleccionadas.length;
+    final List<String> imagenesCarrusel =
+        List.filled(3, imagenProducto);
+
+    final int totalPersonalizaciones =
+        _personalizacionesSeleccionadas.length;
 
     return Scaffold(
       backgroundColor: bgBeige,
@@ -178,12 +168,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 20),
+
             SizedBox(
               height: 220,
               child: PageView.builder(
                 controller: _imageController,
                 itemCount: imagenesCarrusel.length,
-                onPageChanged: (i) => setState(() => paginaActualImagen = i),
+                onPageChanged: (i) {
+                  setState(() => paginaActualImagen = i);
+                },
                 itemBuilder: (_, i) => Container(
                   margin: const EdgeInsets.symmetric(horizontal: 4),
                   child: ClipRRect(
@@ -211,7 +204,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 ),
               ),
             ),
+
             const SizedBox(height: 10),
+
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
@@ -230,7 +225,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 ),
               ),
             ),
+
             const SizedBox(height: 16),
+
             Text(
               widget.price,
               style: const TextStyle(
@@ -239,7 +236,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
+
             const SizedBox(height: 6),
+
             Text(
               widget.name,
               style: const TextStyle(
@@ -248,7 +247,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
+
             const SizedBox(height: 8),
+
             Text(
               widget.description,
               style: TextStyle(
@@ -257,6 +258,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 height: 1.4,
               ),
             ),
+
             const SizedBox(height: 24),
 
             // PERSONALIZACIONES
@@ -268,27 +270,35 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               statusText: totalPersonalizaciones > 0 ? 'Listo' : null,
               isStatusGreen: true,
               isExpanded: expandirPersonalizaciones,
-              onTap: () => setState(
-                () => expandirPersonalizaciones = !expandirPersonalizaciones,
-              ),
+              onTap: () {
+                setState(() {
+                  expandirPersonalizaciones =
+                      !expandirPersonalizaciones;
+                });
+              },
               children: _opcionesPersonalizacion.isEmpty
                   ? [
                       const Padding(
                         padding: EdgeInsets.all(16),
                         child: Text(
                           'No hay personalizaciones configuradas para este producto.',
-                          style: TextStyle(color: Colors.black54, fontSize: 14),
+                          style: TextStyle(
+                            color: Colors.black54,
+                            fontSize: 14,
+                          ),
                         ),
                       ),
                     ]
                   : _opcionesPersonalizacion.map((opcion) {
-                      final marcada = _personalizacionesSeleccionadas.contains(
-                        opcion,
-                      );
+                      final marcada =
+                          _personalizacionesSeleccionadas.contains(opcion);
+
                       return CheckboxListTile(
                         title: Text(
                           opcion,
-                          style: const TextStyle(fontWeight: FontWeight.w500),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                         value: marcada,
                         activeColor: orangeColor,
@@ -302,59 +312,20 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             } else {
                               _personalizacionesSeleccionadas.remove(opcion);
                             }
-                            sinCebolla = _personalizacionesSeleccionadas
-                                .contains('Sin Cebolla');
-                            sinLechuga = _personalizacionesSeleccionadas
-                                .contains('Sin Lechuga');
-                          });
-                        },
-                      );
-                    }).toList(),
-            ),
-            const SizedBox(height: 12),
 
-            // ACOMPAÑAMIENTOS
-            _buildAccordionSection(
-              title: 'Acompanamientos',
-              subtitle: _listaAcompanamientos.isEmpty
-                  ? 'Sin acompañamientos configurados en administración'
-                  : 'Puedes seleccionar una opción',
-              statusText: opcionAcompanamiento != null ? 'Listo' : null,
-              isStatusGreen: true,
-              isExpanded: expandirAcompa,
-              onTap: () => setState(() => expandirAcompa = !expandirAcompa),
-              children: _listaAcompanamientos.isEmpty
-                  ? [
-                      const Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Text(
-                          'No hay acompañamientos configurados para este producto.',
-                          style: TextStyle(color: Colors.black54, fontSize: 14),
-                        ),
-                      ),
-                    ]
-                  : _listaAcompanamientos.map((acomp) {
-                      final seleccionado = opcionAcompanamiento == acomp.nombre;
-                      return _buildSquareOption(
-                        text: acomp.nombre,
-                        priceText: acomp.precio > 0
-                            ? '${acomp.precio.toStringAsFixed(0)} COP'
-                            : 'Gratis',
-                        isSelected: seleccionado,
-                        onTap: () {
-                          setState(() {
-                            if (seleccionado) {
-                              opcionAcompanamiento = null;
-                              precioAcompanamiento = 0.0;
-                            } else {
-                              opcionAcompanamiento = acomp.nombre;
-                              precioAcompanamiento = acomp.precio;
-                            }
+                            sinCebolla =
+                                _personalizacionesSeleccionadas
+                                    .contains('Sin Cebolla');
+
+                            sinLechuga =
+                                _personalizacionesSeleccionadas
+                                    .contains('Sin Lechuga');
                           });
                         },
                       );
                     }).toList(),
             ),
+
             const SizedBox(height: 12),
 
             // BEBIDAS
@@ -366,19 +337,28 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               statusText: opcionBebida != null ? 'Listo' : null,
               isStatusGreen: true,
               isExpanded: expandirBebidas,
-              onTap: () => setState(() => expandirBebidas = !expandirBebidas),
+              onTap: () {
+                setState(() {
+                  expandirBebidas = !expandirBebidas;
+                });
+              },
               children: _listaBebidas.isEmpty
                   ? [
                       const Padding(
                         padding: EdgeInsets.all(16),
                         child: Text(
                           'No hay bebidas configuradas para este producto.',
-                          style: TextStyle(color: Colors.black54, fontSize: 14),
+                          style: TextStyle(
+                            color: Colors.black54,
+                            fontSize: 14,
+                          ),
                         ),
                       ),
                     ]
                   : _listaBebidas.map((bebida) {
-                      final seleccionada = opcionBebida == bebida.nombre;
+                      final seleccionada =
+                          opcionBebida == bebida.nombre;
+
                       return _buildSquareOption(
                         text: bebida.nombre,
                         priceText: bebida.precio > 0
@@ -399,12 +379,17 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       );
                     }).toList(),
             ),
+
             const SizedBox(height: 80),
           ],
         ),
       ),
+
       bottomSheet: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
         decoration: const BoxDecoration(
           color: Colors.white,
           boxShadow: [
@@ -429,9 +414,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     IconButton(
                       icon: const Icon(Icons.remove, size: 16),
                       onPressed: () {
-                        if (cantidad > 1) setState(() => cantidad--);
+                        if (cantidad > 1) {
+                          setState(() => cantidad--);
+                        }
                       },
                     ),
+
                     Text(
                       '$cantidad',
                       style: const TextStyle(
@@ -439,14 +427,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+
                     IconButton(
                       icon: const Icon(Icons.add, size: 16),
-                      onPressed: () => setState(() => cantidad++),
+                      onPressed: () {
+                        setState(() => cantidad++);
+                      },
                     ),
                   ],
                 ),
               ),
+
               const SizedBox(width: 12),
+
               SizedBox(
                 width: 175,
                 child: ElevatedButton(
@@ -462,7 +455,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     elevation: 0,
                   ),
                   onPressed: () {
-                    final listaPers = _personalizacionesSeleccionadas.toList();
+                    final listaPers =
+                        _personalizacionesSeleccionadas.toList();
+
                     final itemActualizado = {
                       "nombre": widget.name,
                       "precio": precioUnitarioTotal.toInt(),
@@ -472,7 +467,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       "description": widget.description,
                       "rawPrice": widget.rawPrice,
                       "personalizaciones": listaPers,
-                      "acompanamiento": opcionAcompanamiento,
                       "bebida": opcionBebida,
                       "sinCebolla": sinCebolla,
                       "sinLechuga": sinLechuga,
@@ -531,19 +525,27 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     required VoidCallback onTap,
   }) {
     const Color orangeColor = Color(0xFFE06D1A);
+
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Expanded(
               child: Text(
                 text,
-                style: const TextStyle(fontSize: 15, color: Colors.black87),
+                style: const TextStyle(
+                  fontSize: 15,
+                  color: Colors.black87,
+                ),
               ),
             ),
+
             Text(
               priceText,
               style: TextStyle(
@@ -552,20 +554,30 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 color: Colors.grey[700],
               ),
             ),
+
             const SizedBox(width: 12),
+
             Container(
               width: 22,
               height: 22,
               decoration: BoxDecoration(
-                color: isSelected ? orangeColor : Colors.transparent,
+                color: isSelected
+                    ? orangeColor
+                    : Colors.transparent,
                 border: Border.all(
-                  color: isSelected ? orangeColor : Colors.grey.shade600,
+                  color: isSelected
+                      ? orangeColor
+                      : Colors.grey.shade600,
                   width: 2,
                 ),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: isSelected
-                  ? const Icon(Icons.check, size: 16, color: Colors.white)
+                  ? const Icon(
+                      Icons.check,
+                      size: 16,
+                      color: Colors.white,
+                    )
                   : null,
             ),
           ],
@@ -588,7 +600,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
         ],
       ),
       child: Column(
@@ -605,7 +621,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             ),
             subtitle: Text(
               subtitle,
-              style: TextStyle(color: Colors.grey[600], fontSize: 13),
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 13,
+              ),
             ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
@@ -617,7 +636,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: isStatusGreen ? Colors.green : Colors.transparent,
+                      color: isStatusGreen
+                          ? Colors.green
+                          : Colors.transparent,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -629,7 +650,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       ),
                     ),
                   ),
-                if (statusText != null) const SizedBox(width: 8),
+
+                if (statusText != null)
+                  const SizedBox(width: 8),
+
                 Icon(
                   isExpanded
                       ? Icons.keyboard_arrow_up
@@ -639,7 +663,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               ],
             ),
           ),
-          if (isExpanded) ...[const Divider(height: 1), ...children],
+
+          if (isExpanded) ...[
+            const Divider(height: 1),
+            ...children,
+          ],
         ],
       ),
     );

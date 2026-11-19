@@ -73,7 +73,6 @@ class _MenuOtrosState extends State<MenuOtros> {
           description: prod.descripcion,
           rawPrice: prod.precio,
           personalizaciones: prod.personalizaciones,
-          acompanamientos: prod.acompanamientos,
           bebidas: prod.bebidas,
         ),
       ),

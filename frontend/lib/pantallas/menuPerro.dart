@@ -77,7 +77,6 @@ class _MenuPerroState extends State<MenuPerro> {
           description: prod.descripcion,
           rawPrice: prod.precio,
           personalizaciones: prod.personalizaciones,
-          acompanamientos: prod.acompanamientos,
           bebidas: prod.bebidas,
         ),
       ),

@@ -39,7 +39,6 @@ class _MenuHamburguesasState extends State<MenuHamburguesas> {
           description: item.descripcion,
           rawPrice: item.precio,
           personalizaciones: item.personalizaciones,
-          acompanamientos: item.acompanamientos,
           bebidas: item.bebidas,
         ),
       ),

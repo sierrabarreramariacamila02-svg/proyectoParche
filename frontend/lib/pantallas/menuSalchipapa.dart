@@ -71,7 +71,7 @@ class _SalchipapasMenuState extends State<SalchipapasMenu> {
           description: prod.descripcion,
           rawPrice: prod.precio,
           personalizaciones: prod.personalizaciones,
-          acompanamientos: prod.acompanamientos,
+  
           bebidas: prod.bebidas,
         ),
       ),
