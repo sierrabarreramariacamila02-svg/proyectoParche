@@ -330,20 +330,26 @@ class _ProductosState extends State<Productos> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const Carrito()),
-          );
-        },
-        backgroundColor: AppColors.buttonOrange,
-        elevation: 4,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.shopping_cart, color: Colors.white),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: const CustomerBottomNavigation(selectedIndex: 0),
+      floatingActionButton: _adminMode
+          ? null
+          : FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const Carrito()),
+                );
+              },
+              backgroundColor: AppColors.buttonOrange,
+              elevation: 4,
+              shape: const CircleBorder(),
+              child: const Icon(Icons.shopping_cart, color: Colors.white),
+            ),
+      floatingActionButtonLocation: _adminMode
+          ? null
+          : FloatingActionButtonLocation.centerDocked,
+      bottomNavigationBar: _adminMode
+          ? null
+          : const CustomerBottomNavigation(selectedIndex: 0),
     );
   }
 
