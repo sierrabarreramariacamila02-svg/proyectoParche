@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "1089175526478-9jbg5604eorv74e70slder89ieg7imgr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.elparche.app",
+            "certificate_hash": "fbd268b808222e5ef77502c71e48739711f884f6"
+          }
+        },
+        {
           "client_id": "1089175526478-es0rabg3qipbiimn1qua6cudkbn8msbn.apps.googleusercontent.com",
           "client_type": 3
         }
