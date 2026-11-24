@@ -250,3 +250,37 @@ export const solicitarRecuperacion = async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 };
+
+export const verificarCodigoRecuperacion = async (req, res) => {
+  const correo = String(req.body?.email || '').trim();
+  const codigo = String(req.body?.codigo || '').trim();
+
+  if (!correo || !/^\d{6}$/.test(codigo)) {
+    return res.status(400).json({
+      error: 'El correo y un código de 6 dígitos son obligatorios'
+    });
+  }
+
+  try {
+    const { data: usuario, error } = await supabase
+      .from('usuario')
+      .select('id')
+      .eq('email', correo)
+      .eq('codigo_recuperacion', codigo)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error al verificar código de recuperación:', error);
+      return res.status(500).json({ error: 'No se pudo verificar el código' });
+    }
+
+    if (!usuario) {
+      return res.status(400).json({ error: 'El código de recuperación no es válido' });
+    }
+
+    return res.status(200).json({ message: 'Código verificado correctamente' });
+  } catch (error) {
+    console.error('Error al verificar código de recuperación:', error);
+    return res.status(500).json({ error: 'No se pudo verificar el código' });
+  }
+};

@@ -8,7 +8,6 @@ import 'package:elparchee/pantallas/detalle_producto.dart';
 import 'package:elparchee/pantallas/manual_usuario.dart';
 import 'package:elparchee/pantallas/notificaciones.dart';
 import 'package:elparchee/services/cart_service.dart';
-import 'package:elparchee/services/destacado_service.dart';
 import 'package:elparchee/services/producto_service.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -26,6 +25,7 @@ class Productos extends StatefulWidget {
 
 class _ProductosState extends State<Productos> {
   final PageController _controller = PageController();
+  final ProductoService _productoService = ProductoService();
   int _paginaActual = 0;
   List<ProductoModel> _listaDestacados = [];
   bool _isLoading = true;
@@ -70,7 +70,6 @@ class _ProductosState extends State<Productos> {
   @override
   void initState() {
     super.initState();
-    DestacadoService.cambios.addListener(_alCambiarDestacados);
     _cargarProductosHome();
     _cargarDatosUsuario();
   }
@@ -90,21 +89,17 @@ class _ProductosState extends State<Productos> {
     });
   }
 
-  void _alCambiarDestacados() {
-    if (mounted) _cargarProductosHome();
-  }
-
   Future<void> _cargarProductosHome() async {
     setState(() {
       _isLoading = true;
       _errorCarga = null;
     });
     try {
-      final lista = await DestacadoService.obtener();
+      final productos = await _productoService.obtenerProductos();
       if (!mounted) return;
       setState(() {
-        _listaDestacados = lista
-            .map((destacado) => destacado.toProducto())
+        _listaDestacados = productos
+            .where((producto) => producto.destacado)
             .toList();
         _isLoading = false;
       });
@@ -497,7 +492,6 @@ class _ProductosState extends State<Productos> {
 
   @override
   void dispose() {
-    DestacadoService.cambios.removeListener(_alCambiarDestacados);
     _controller.dispose();
     super.dispose();
   }

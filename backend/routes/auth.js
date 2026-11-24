@@ -1,5 +1,11 @@
 import express from 'express';
-import { login, registro, verificarCuenta, solicitarRecuperacion } from '../controllers/auth.js';
+import {
+  login,
+  registro,
+  verificarCuenta,
+  solicitarRecuperacion,
+  verificarCodigoRecuperacion
+} from '../controllers/auth.js';
 import { autenticarConGoogle } from '../controllers/googleAuth.js';
 
 
@@ -14,6 +20,7 @@ router.post('/verificar', verificarCuenta);
 router.post('/verificarCuenta',verificarCuenta);
 router.post('/verify-code',verificarCuenta);
 router.post('/password', solicitarRecuperacion);
+router.post('/verify-recovery-code', verificarCodigoRecuperacion);
 
 
 export default router;

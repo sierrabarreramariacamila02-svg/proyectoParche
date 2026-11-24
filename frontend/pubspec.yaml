@@ -1,7 +1,7 @@
 name: elparchee
 description: "A new Flutter project."
 publish_to: 'none'
-version: 0.1.0+1
+version: 0.1.0+2
 
 environment:
   sdk: ^3.12.2
@@ -24,11 +24,11 @@ dependencies:
   flutter_local_notifications: ^17.2.4
   supabase_flutter: ^2.18.3
   syncfusion_flutter_pdfviewer: ^31.2.2
+  pdfx: ^2.9.0
  
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  pdfx: ^2.9.0
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
 

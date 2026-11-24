@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../services/user_service.dart';
 
 class ConfirmacionCodigo extends StatefulWidget {
   final String destino;
@@ -20,6 +21,8 @@ class _ConfirmacionCodigoState extends State<ConfirmacionCodigo> {
   final _focos = List.generate(6, (_) => FocusNode());
   Timer? _timer;
   int _segundos = 600;
+  bool _verificando = false;
+  bool _verificado = false;
 
   @override
   void initState() {
@@ -52,15 +55,34 @@ class _ConfirmacionCodigoState extends State<ConfirmacionCodigo> {
       '${(_segundos ~/ 60).toString().padLeft(2, '0')}:'
       '${(_segundos % 60).toString().padLeft(2, '0')}';
 
-  void _verificar() {
+  Future<void> _verificar() async {
     final codigo = _controladores.map((c) => c.text).join();
-    if (codigo.length < 6) {
+    if (codigo.length != 6) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Ingresa los 6 dígitos')));
       return;
     }
-    // TODO: aquí valida el código con tu backend
+
+    setState(() => _verificando = true);
+    try {
+      await UserService().verificarCodigoRecuperacion(widget.destino, codigo);
+      if (!mounted) return;
+      _timer?.cancel();
+      setState(() => _verificado = true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Código verificado correctamente')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString().replaceFirst('Exception: ', '')),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _verificando = false);
+    }
   }
 
   Widget _casilla(int i) {
@@ -162,7 +184,9 @@ class _ConfirmacionCodigoState extends State<ConfirmacionCodigo> {
                     width: 220,
                     height: 46,
                     child: ElevatedButton(
-                      onPressed: _verificar,
+                      onPressed: _verificando || _verificado
+                          ? null
+                          : _verificar,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _boton,
                         foregroundColor: Colors.black,
@@ -170,10 +194,20 @@ class _ConfirmacionCodigoState extends State<ConfirmacionCodigo> {
                           borderRadius: BorderRadius.circular(24),
                         ),
                       ),
-                      child: const Text(
-                        'Verificar',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
+                      child: _verificando
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(
+                              _verificado ? 'Verificado' : 'Verificar',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                     ),
                   ),
                   const SizedBox(height: 24),

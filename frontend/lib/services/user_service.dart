@@ -127,6 +127,37 @@ class UserService {
     }
   }
 
+  Future<void> verificarCodigoRecuperacion(
+    String email,
+    String codigo,
+  ) async {
+    final url = Uri.parse('${ApiConfig.baseUrl}/auth/verify-recovery-code');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: ApiConfig.headers,
+        body: jsonEncode({'email': email.trim(), 'codigo': codigo.trim()}),
+      );
+
+      if (response.statusCode == 200) return;
+
+      final contentType = response.headers['content-type'] ?? '';
+      if (contentType.contains('application/json')) {
+        final errorData = jsonDecode(response.body) as Map<String, dynamic>;
+        throw Exception(
+          errorData['error'] ?? 'Error al verificar el código de recuperación',
+        );
+      }
+
+      throw Exception(
+        'Servidor no disponible o ruta no encontrada (Código ${response.statusCode})',
+      );
+    } catch (e) {
+      throw Exception(e.toString().replaceAll('Exception: ', ''));
+    }
+  }
+
   // Petición POST para autenticar con Google (Login / Registro unificado)
   Future<Map<String, dynamic>> autenticarConGoogleBackend(
     String idToken,
