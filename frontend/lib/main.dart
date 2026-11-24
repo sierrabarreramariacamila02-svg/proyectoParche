@@ -3,6 +3,7 @@ import 'package:elparchee/pantallas/bienvenidos.dart';
 import 'package:elparchee/pantallas/inicio.dart';
 import 'package:elparchee/pantallas/inicioSesion.dart';
 import 'package:elparchee/pantallas/verificacion.dart';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -23,7 +24,7 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   debugPrint('Mensaje recibido en segundo plano: ${message.messageId}');
 }
 
@@ -75,6 +76,20 @@ void main() async {
 
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
+  if (defaultTargetPlatform == TargetPlatform.android ||
+      defaultTargetPlatform == TargetPlatform.iOS) {
+    await flutterLocalNotificationsPlugin.initialize(
+      const InitializationSettings(
+        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+        iOS: DarwinInitializationSettings(
+          requestAlertPermission: false,
+          requestBadgePermission: false,
+          requestSoundPermission: false,
+        ),
+      ),
+    );
+  }
+
   await flutterLocalNotificationsPlugin
       .resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin
@@ -100,9 +115,48 @@ class _MainAppState extends State<MainApp> {
 
   // Configurar permisos, suscripción a temas y escucha de notificaciones
   void _setupNotifications() async {
-    FirebaseMessaging messaging = FirebaseMessaging.instance;
+    final messaging = FirebaseMessaging.instance;
 
-    NotificationSettings settings = await messaging.requestPermission(
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      if (defaultTargetPlatform != TargetPlatform.android &&
+          defaultTargetPlatform != TargetPlatform.iOS) {
+        return;
+      }
+
+      final notification = message.notification;
+      final title = notification?.title ?? message.data['title']?.toString();
+      final body = notification?.body ?? message.data['body']?.toString();
+      if (title == null && body == null) return;
+
+      flutterLocalNotificationsPlugin.show(
+        message.messageId.hashCode,
+        title,
+        body,
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            channel.id,
+            channel.name,
+            channelDescription: channel.description,
+            icon: '@mipmap/ic_launcher',
+          ),
+          iOS: const DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
+        ),
+      );
+    });
+
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      await messaging.setForegroundNotificationPresentationOptions(
+        alert: false,
+        badge: false,
+        sound: false,
+      );
+    }
+
+    final settings = await messaging.requestPermission(
       alert: true,
       badge: true,
       sound: true,
@@ -111,8 +165,10 @@ class _MainAppState extends State<MainApp> {
     debugPrint('Estado de permisos: ${settings.authorizationStatus}');
 
     // Obtener el Token FCM del dispositivo
-    String? token = await messaging.getToken();
-    debugPrint("FCM Token: $token");
+    final token = await messaging.getToken();
+    if (token == null) {
+      debugPrint('No se pudo obtener el token FCM');
+    }
 
     // Suscribir automáticamente al usuario al tema de promociones
     try {
@@ -121,29 +177,6 @@ class _MainAppState extends State<MainApp> {
     } catch (e) {
       debugPrint("Error al suscribirse al tema de promociones: $e");
     }
-
-    // Escuchar mensajes en primer plano y mostrarlos visualmente
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      debugPrint('¡Notificación recibida en primer plano!');
-      RemoteNotification? notification = message.notification;
-      AndroidNotification? android = message.notification?.android;
-
-      if (notification != null && android != null) {
-        flutterLocalNotificationsPlugin.show(
-          notification.hashCode,
-          notification.title,
-          notification.body,
-          NotificationDetails(
-            android: AndroidNotificationDetails(
-              channel.id,
-              channel.name,
-              channelDescription: channel.description,
-              icon: '@mipmap/ic_launcher', // Icono de la app
-            ),
-          ),
-        );
-      }
-    });
   }
 
   @override
